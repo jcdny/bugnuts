@@ -175,6 +175,15 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) os.Error {
 				s.Map.AddDestination(loc)
 				s.Map.AddLand(loc, s.ViewRadius2)
 			}
+		case "h":
+			if len(words) < 4 {
+				log.Panicf("Invalid command format (not enough parameters for hill): \"%s\"", line)
+			}
+			Row, _ := strconv.Atoi(words[1])
+			Col, _ := strconv.Atoi(words[2])
+			Ant, _ := strconv.Atoi(words[3])
+			loc := s.Map.FromRowCol(Row, Col)
+			s.Map.AddHill(loc, Item(Ant))
 		case "d":
 			if len(words) < 4 {
 				log.Panicf("Invalid command format (not enough parameters for dead ant): \"%s\"", line)

@@ -39,50 +39,81 @@ const (
 	PLAYER23
 	PLAYER24
 	PLAYER25
+	MY_HILL
+	HILL1
+	HILL2
+	HILL3
+	HILL4
+	HILL5
+	HILL6
+	HILL7
+	HILL8
+	HILL9
+	HILL10
+	HILL11
+	HILL12
+	HILL13
+	HILL14
+	HILL15
+	HILL16
+	HILL17
+	HILL18
+	HILL19
+	HILL20
+	HILL21
+	HILL22
+	HILL23
+	HILL24
+	HILL25
 )
 
 //Symbol returns the symbol for the ascii diagram
 func (o Item) Symbol() byte {
-	switch o {
-	case UNKNOWN:
+	switch {
+	case o == UNKNOWN:
 		return '.'
-	case WATER:
+	case o == WATER:
 		return '%'
-	case FOOD:
+	case o == FOOD:
 		return '*'
-	case LAND:
+	case o == LAND:
 		return ' '
-	case DEAD:
+	case o == DEAD:
 		return '!'
-	}
-
-	if o < MY_ANT || o > PLAYER25 {
+	case o >= MY_ANT && o <= PLAYER25:
+		return byte(o) + 'a'
+	case o >= MY_HILL && o <= HILL25:
+		return byte(o) - byte(MY_HILL) + 'A'
+	default:
 		log.Panicf("invalid item: %v", o)
 	}
 
-	return byte(o) + 'a'
+	return '.'
 }
 
 //FromSymbol reverses Symbol
 func FromSymbol(ch byte) Item {
-	switch ch {
-	case '.':
+	switch {
+	case ch == '.':
 		return UNKNOWN
-	case '%':
+	case ch == '%':
 		return WATER
-	case '*':
+	case ch == '*':
 		return FOOD
-	case ' ':
+	case ch == ' ':
 		return LAND
-	case '!':
+	case ch == '!':
 		return DEAD
-	}
-	if ch < 'a' || ch > 'z' {
+	case ch >= 'a' && ch <= 'z':
+		return Item(ch - 'a')
+	case ch >= 'A' && ch <= 'Z':
+		return Item(ch - 'A')
+	default:
 		log.Panicf("invalid item symbol: %v", ch)
 	}
-	return Item(ch) + 'a'
-}
 
+	return UNKNOWN
+}
 
 //Location combines (Row, Col) coordinate pairs for use as keys in maps (and in a 1d array)
 type Location int
@@ -93,6 +124,7 @@ type Map struct {
 
 	itemGrid []Item
 
+	Hills        map[Location]Item
 	Ants         map[Location]Item
 	Dead         map[Location]Item
 	Water        map[Location]bool
@@ -135,6 +167,7 @@ func (m *Map) Reset() {
 			m.itemGrid[i] = WATER
 		}
 	}
+	m.Hills = make(map[Location]Item)
 	m.Ants = make(map[Location]Item)
 	m.Dead = make(map[Location]Item)
 	m.Food = make(map[Location]bool)
@@ -154,6 +187,11 @@ func (m *Map) AddWater(loc Location) {
 func (m *Map) AddAnt(loc Location, ant Item) {
 	m.Ants[loc] = ant
 	m.itemGrid[loc] = ant
+}
+
+func (m *Map) AddHill(loc Location, ant Item) {
+	m.Hills[loc] = ant
+	m.itemGrid[loc] = ant + MY_HILL
 }
 
 //AddLand adds a circle of land centered on the given location
@@ -200,7 +238,7 @@ func (m *Map) RemoveDestination(loc Location) {
 	m.Destinations[loc] = false, false
 }
 
-//SafeDestination will tell you if the given location is a 
+//SafeDestination will tell you if the given location is a
 //safe place to dispatch an ant. It considers water and both
 //ants that have already sent an order and those that have not.
 func (m *Map) SafeDestination(loc Location) bool {
@@ -237,7 +275,6 @@ func (m *Map) FromLocation(loc Location) (Row, Col int) {
 	Col = int(loc) % m.Cols
 	return
 }
-
 
 //Direction represents the direction concept for issuing orders.
 type Direction int
