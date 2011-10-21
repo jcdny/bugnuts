@@ -11,4 +11,5 @@ GOFILES=\
 include $(GOROOT)/src/Make.cmd
 
 dist:
-	zip tmp/dist.zip *.go
+	zip tmp/dist.zip $(GOFILES)
+
