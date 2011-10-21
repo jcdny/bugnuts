@@ -9,3 +9,6 @@ GOFILES=\
 	MyBot.go\
 
 include $(GOROOT)/src/Make.cmd
+
+dist:
+	zip tmp/dist.zip *.go
