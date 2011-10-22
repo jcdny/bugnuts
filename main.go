@@ -11,7 +11,7 @@ func main() {
 	var s State
 
 	in := bufio.NewReader(os.Stdin)
-	
+
 	err := s.Start(in)
 	if err != nil {
 		log.Panicf("Start() failed (%s)", err)

@@ -16,7 +16,7 @@ type Bot interface {
 
 //State keeps track of everything we need to know about the state of the game
 type State struct {
-	in *bufio.Reader
+	in            *bufio.Reader
 	LoadTime      int   //in milliseconds
 	TurnTime      int   //in milliseconds
 	Rows          int   //number of rows in the map

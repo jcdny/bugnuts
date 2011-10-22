@@ -13,3 +13,8 @@ include $(GOROOT)/src/Make.cmd
 dist:
 	zip tmp/dist.zip $(GOFILES)
 
+
+.PHONY: gofmt
+gofmt:
+	gofmt -w $(GOFILES)
+
