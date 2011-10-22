@@ -14,10 +14,9 @@ type Bot interface {
 	DoTurn(s *State) os.Error
 }
 
-var stdin = bufio.NewReader(os.Stdin)
-
 //State keeps track of everything we need to know about the state of the game
 type State struct {
+	in *bufio.Reader
 	LoadTime      int   //in milliseconds
 	TurnTime      int   //in milliseconds
 	Rows          int   //number of rows in the map
@@ -33,10 +32,11 @@ type State struct {
 }
 
 //Start takes the initial parameters from stdin
-func (s *State) Start() os.Error {
+func (s *State) Start(reader *bufio.Reader) os.Error {
 
+	s.in = reader
 	for {
-		line, err := stdin.ReadString('\n')
+		line, err := s.in.ReadString('\n')
 		if err != nil {
 			return err
 		}
@@ -101,7 +101,7 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) os.Error {
 	os.Stdout.Write([]byte("go\n"))
 
 	for {
-		line, err := stdin.ReadString('\n')
+		line, err := s.in.ReadString('\n')
 		if err != nil {
 			if err == os.EOF {
 				return err
@@ -118,7 +118,6 @@ func (s *State) Loop(b Bot, BetweenTurnWork func()) os.Error {
 		if line == "go" {
 			b.DoTurn(s)
 
-			//end turn
 			s.endTurn()
 
 			BetweenTurnWork()
