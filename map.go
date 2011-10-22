@@ -3,25 +3,25 @@ package main
 import (
 	"log"
 )
+
 type Map struct {
 	Rows int
 	Cols int
 
-	Grid []Item
+	Grid    []Item
 	Visible []bool
-	Seen []Seen
+	Seen    []Seen
 }
-
 
 //Direction represents the direction concept for issuing orders.
 type Direction byte
 
 const (
-        North Direction = 'n'
-        East = 'e'
-        South = 's'
-        West = 'w'
-        NoMovement = '-'
+	North      Direction = 'n'
+	East                 = 'e'
+	South                = 's'
+	West                 = 'w'
+	NoMovement           = '-'
 )
 
 type Seen byte
@@ -33,20 +33,18 @@ const (
 )
 
 func (d Direction) String() string {
-        switch d {
-        case North:
-                return "n"
-        case South:
-                return "s"
-        case West:
-                return "w"
-        case East:
-                return "e"
-        case NoMovement:
-                return "-"
-        }
-        log.Panicf("%v is not a valid direction", d)
-        return ""
+	switch d {
+	case North:
+		return "n"
+	case South:
+		return "s"
+	case West:
+		return "w"
+	case East:
+		return "e"
+	case NoMovement:
+		return "-"
+	}
+	log.Panicf("%v is not a valid direction", d)
+	return ""
 }
-
-

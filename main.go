@@ -12,12 +12,12 @@ func main() {
 	in := bufio.NewReader(os.Stdin)
 
 	err := s.Start(in)
-	if (err != nil) {
+	if err != nil {
 		log.Panicf("Start(in) failed (%s)", err)
 	}
-	
+
 	log.Printf("State:\n%v\n", &s)
-	
+
 	me := NewBot(&s)
 
 	for {
@@ -26,14 +26,14 @@ func main() {
 		if err == os.EOF || line == "end" {
 			break
 		}
-		
+
 		//generate orders
-		
+
 		//emit orders
-		
+
 		//think while hanging out.
 	}
 
 	log.Printf("Bot Result %v", me)
-	
+
 }

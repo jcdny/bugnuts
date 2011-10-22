@@ -11,29 +11,28 @@ import (
 
 //State keeps track of everything we need to know about the state of the game
 type State struct {
-	in            *bufio.Reader
+	in *bufio.Reader
 	// Game parameter set
 
-        LoadTime      int   //in milliseconds
-        TurnTime      int   //in milliseconds
-        Rows          int   //number of rows in the map
-        Cols          int   //number of columns in the map
-        Turns         int   //maximum number of turns in the game
-        ViewRadius2   int   //view radius squared
-        AttackRadius2 int   //battle radius squared
-        SpawnRadius2  int   //spawn radius squared
-        PlayerSeed    int64 //random player seed
-        Turn          int   //current turn number
+	LoadTime      int   //in milliseconds
+	TurnTime      int   //in milliseconds
+	Rows          int   //number of rows in the map
+	Cols          int   //number of columns in the map
+	Turns         int   //maximum number of turns in the game
+	ViewRadius2   int   //view radius squared
+	AttackRadius2 int   //battle radius squared
+	SpawnRadius2  int   //spawn radius squared
+	PlayerSeed    int64 //random player seed
+	Turn          int   //current turn number
 
-        Map *Map
+	Map *Map
 }
-
 
 //Start takes the initial parameters from stdin
 //Reads through the "ready" line.
 func (s *State) Start(reader *bufio.Reader) os.Error {
 	s.in = reader
-	
+
 	for {
 		line, err := s.in.ReadString('\n')
 
@@ -49,7 +48,7 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 		if line == "ready" {
 			break
 		}
-		
+
 		words := strings.SplitN(line, " ", 2)
 		if len(words) != 2 {
 			log.Printf("Invaid param line \"%s\"", line)
@@ -65,13 +64,13 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 			s.PlayerSeed = param64
 			continue
 		}
-		
+
 		param, err := strconv.Atoi(words[1])
 		if err != nil {
 			log.Printf("Parse failed for \"%s\" (%v)", line, err)
 			continue
 		}
-		
+
 		switch words[0] {
 		case "loadtime":
 			s.LoadTime = param
@@ -96,7 +95,7 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 		}
 
 	}
-	
+
 	s.Map = s.NewMap()
 
 	if s.PlayerSeed != 0 {
@@ -106,18 +105,16 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 	return nil
 }
 
-
 func (s *State) NewMap() *Map {
-	size := s.Rows*s.Cols
+	size := s.Rows * s.Cols
 	m := &Map{
-	Grid: make([]Item, size),
-	Seen: make([]Seen, size),
-	Visible: make([]bool, size),
+		Grid:    make([]Item, size),
+		Seen:    make([]Seen, size),
+		Visible: make([]bool, size),
 	}
-	
+
 	return m
 }
-
 
 func (s *State) String() string {
 	str := ""
@@ -142,12 +139,12 @@ func (s *State) ToLocation(p Point) Location {
 }
 
 func (s *State) ToPoint(l Location) (p Point) {
-	p = Point{r:int(l) / s.Cols, c: int(l) % s.Cols}
+	p = Point{r: int(l) / s.Cols, c: int(l) % s.Cols}
 
 	return
 }
 
-func (s* State) ParseTurn() (line string, err os.Error) {
+func (s *State) ParseTurn() (line string, err os.Error) {
 	for {
 		line, err = s.in.ReadString('\n')
 
@@ -177,12 +174,12 @@ func (s* State) ParseTurn() (line string, err os.Error) {
 			}
 			if turn != s.Turn+1 {
 				log.Printf("Turn number out of sync, expected %v got %v", s.Turn+1, turn)
-			} 
+			}
 			s.Turn = turn
-			
+
 			continue
 		}
-		
+
 		if len(words) < 3 || len(words) > 4 {
 			log.Printf("Invalid command format: \"%s\"", line)
 			continue
@@ -226,7 +223,7 @@ func (s* State) ParseTurn() (line string, err os.Error) {
 			log.Printf("Unknown turn data \"%s\"", line)
 		}
 	}
-	
+
 	// exit condition above is "go" or "end" or error on readline.
 	return
 }
@@ -249,5 +246,3 @@ func (s *State) AddDeadAnt(p Point, Player int) {
 
 func (s *State) AddHill(p Point, Player int) {
 }
-
-

@@ -10,13 +10,13 @@ type MyBot struct {
 
 //Bot interface defines what we need from a bot
 type Bot interface {
-        DoTurn(s *State) os.Error
+	DoTurn(s *State) os.Error
 }
 
 //NewBot creates a new instance of your bot
 func NewBot(s *State) Bot {
 	mb := &MyBot{
-		//do any necessary initialization here
+	//do any necessary initialization here
 	}
 
 	return mb
