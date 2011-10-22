@@ -2,11 +2,12 @@ include $(GOROOT)/src/Make.inc
 
 TARG=MyBot
 GOFILES=\
-	ants.go\
+	tables.go\
+	state.go\
 	map.go\
-	main.go\
-	debugging.go\
 	MyBot.go\
+	main.go
+
 
 include $(GOROOT)/src/Make.cmd
 
@@ -14,7 +15,9 @@ dist:
 	zip tmp/dist.zip $(GOFILES)
 
 
-.PHONY: gofmt
+.PHONY: gofmt test
 gofmt:
 	gofmt -w $(GOFILES)
 
+test:
+	./MyBot < testdata/stream1.dat
