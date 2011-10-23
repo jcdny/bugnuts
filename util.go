@@ -4,13 +4,22 @@ import (
 	"math"
 )
 
-const (
-	MinInt = -1 << 31
-	MaxInt = int(^uint(0) >> 1)
-)
+// Utility to implement manhattan distance sorting on a slice of Point Offsets
+// TODO think about how to do this in context of torus.  Assumes Offset < side/2
+type OffsetSlice []Point
+func (p OffsetSlice) Len() int {return len(p)}
+func (p OffsetSlice) Less(i, j int) bool { return Abs(p[i].r) + Abs(p[i].c) < Abs(p[j].r) + Abs(p[j].c) }
+func (p OffsetSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+
+func Abs(i int) int {
+	if i < 0 {
+		return -i
+	}
+	return i
+}
 
 func Max(x []int) int {
-	xm := MinInt
+	xm := math.MinInt32
 	for _, y := range x {
 		if y > xm {
 			xm = y
@@ -21,7 +30,7 @@ func Max(x []int) int {
 }
 
 func Min(x []int) int {
-	xm := MaxInt
+	xm := math.MaxInt32
 	for _, y := range x {
 		if y < xm {
 			xm = y
@@ -54,7 +63,7 @@ func GenCircleTable(r2 int) []Point {
 			}
 		}
 	}
-
+	
 	return v
 }
 

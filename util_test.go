@@ -2,6 +2,9 @@ package main
 
 import (
 	"testing"
+	"math"
+	"sort"
+	"log"
 )
 
 type Lists struct {
@@ -14,7 +17,7 @@ func TestMinMax(t *testing.T) {
 		{[]int{1}, 1, 1},
 		{[]int{1, 1, 1, 1, 1, 1}, 1, 1},
 		{[]int{1, 0, -1}, -1, 1},
-		{[]int{}, MaxInt, MinInt},
+		{[]int{}, math.MaxInt32, math.MinInt32},
 	}
 
 	for _, l := range L {
@@ -34,6 +37,9 @@ func TestGenCircleTable(t *testing.T) {
 	if len(v) != len(exp7100) {
 		t.Errorf("GenCircleTable(7) expected %v got %v", exp7100, v)
 	}
+
+	sort.Sort(OffsetSlice(v))
+	log.Printf("%T %v", v, v)
 
 	v = GenCircleTable(1)
 	if len(v) != 5 {

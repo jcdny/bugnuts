@@ -377,24 +377,25 @@ func (s *State) UpdateSeen(p Point) {
 
 func (s *State) DoTurn() {
 	sv := []Point{{-1, 0}, {1, 0}, {0, 1}, {0, -1}}
-	maxint := int(^uint(0) >> 1)
 	for _, p := range s.Ants {
-		best := maxint
+		best := math.MinInt32
 		var score [4]int
 		for d, op := range sv {
 			tp := s.PointAdd(p, op)
 			if s.validPoint(tp) {
 				if rand.Intn(8) == 0 {
-					score[d] = -100
+					score[d] = 500
 				} else {
-					score[d] = s.Score(p, s.ViewAdd[d])
+					score[d] = s.Score(p, tp, s.ViewAdd[d])
 				}
-				if score[d] < best {
+				if score[d] > best {
 					best = score[d]
 				}
 			}
 		}
-		if best < maxint {
+		
+		//log.Printf("%v %v %v", p, score, best)
+		if best > math.MinInt32 {
 			var bestd []int
 			for d, try := range score {
 				if try == best {
@@ -402,7 +403,6 @@ func (s *State) DoTurn() {
 				}
 			}
 			pp := rand.Perm(len(bestd))[0]
-			//log.Printf("%v %v %v %v", p, score, bestd, pp)
 			// Swap the current and target cells
 			tp := s.PointAdd(p, sv[bestd[pp]])
 			s.Map.Grid[s.ToLocation(tp)] = MY_ANT
@@ -414,20 +414,42 @@ func (s *State) DoTurn() {
 
 }
 
-func (s *State) Score(p Point, pv []Point) int {
+func (s *State) Score(p, tp Point, pv []Point) int {
 	score := 0
+	
+	// Score for explore
 	for _, op := range pv {
 		seen := s.Map.Seen[s.ToLocation(s.PointAdd(p, op))]
 		switch {
 		case seen < 1:
-			score += -50
-		case seen > s.Turn-3:
 			score += 10
-		default:
-			score += 0
+		case seen > s.Turn-1:
+			score -= 2
 		}
 	}
+	
+	// Score for item distances
+	for _, op := range s.ViewPoints {
+		item := s.Map.Grid[s.ToLocation(s.PointAdd(tp, op))]
+		if (item != LAND && item != WATER) {
+			d := Abs(op.c) + Abs(op.r)
+			//log.Printf("%v %v %d %d", tp, op, d, item)
 
+			if (item == MY_HILL) {
+				score -= 48 + 4 * Max([]int{d, 8})
+			}
+			if (item > MY_HILL && item < HILL10) {
+				score += 100 - 5 * Min([]int{d, 12})
+			}
+			if (item == FOOD) {
+				score += 100 - 12 * Min([]int{d, 12})
+			}
+			if (item == MY_ANT) {
+				score -= 20 + 2 * Max([]int{d, 10})				
+			}
+		}
+	}		
+	
 	return score
 }
 
