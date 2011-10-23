@@ -120,7 +120,6 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 	// Step innovation cache
 	add, remove := moveChangeCache(s.ViewRadius2, s.ViewPoints)
 	s.ViewAdd = add
-	log.Printf("was %v", add)
 	s.ViewRem = remove
 
 	// Food and Ant things
@@ -417,7 +416,6 @@ func (s *State) DoTurn() {
 
 func (s *State) Score(p Point, pv []Point) int {
 	score := 0
-	log.Printf("%v", pv)
 	for _, op := range pv {
 		seen := s.Map.Seen[s.ToLocation(s.PointAdd(p, op))]
 		switch {

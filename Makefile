@@ -2,6 +2,7 @@ include $(GOROOT)/src/Make.inc
 
 TARG=MyBot
 GOFILES=\
+	util.go\
 	tables.go\
 	state.go\
 	map.go\

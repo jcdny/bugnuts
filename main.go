@@ -46,6 +46,7 @@ func Run(in *bufio.Reader) {
 	//s.DumpSeen()
 	//s.DumpMap()
 
-	log.Printf("Bot Result %v", me)
-
+	if false {
+		log.Printf("Bot Result %v", me)
+	}
 }
