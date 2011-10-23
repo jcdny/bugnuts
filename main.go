@@ -7,9 +7,14 @@ import (
 )
 
 func main() {
-	var s State
 
 	in := bufio.NewReader(os.Stdin)
+
+	Run(in)
+}
+
+func Run(in *bufio.Reader) {
+	var s State
 
 	err := s.Start(in)
 	if err != nil {
@@ -21,18 +26,23 @@ func main() {
 	me := NewBot(&s)
 
 	for {
-		// TURN PARSE
-		line, err := s.ParseTurn()
+		// Reset for Next Parse
+
+		line, err := s.ParseTurn() // TURN PARSE
 		if err == os.EOF || line == "end" {
 			break
 		}
 
-		//generate orders
+		//log.Printf("Generating orders turn %d", s.Turn)
+		// generate orders
 
-		//emit orders
+		// additional thinking til timeout
 
-		//think while hanging out.
+		// emit orders
 	}
+
+	s.DumpSeen()
+	s.DumpMap()
 
 	log.Printf("Bot Result %v", me)
 

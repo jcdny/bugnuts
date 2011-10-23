@@ -4,6 +4,7 @@ import (
 	"os"
 	"log"
 	"rand"
+	"math"
 	"strconv"
 	"bufio"
 	"strings"
@@ -25,6 +26,14 @@ type State struct {
 	PlayerSeed    int64 //random player seed
 	Turn          int   //current turn number
 
+	// Cached circles etc...
+	Radius        int
+	ViewPoints    []Point
+	ViewLocations []Location
+	ViewAdd       [][]Point // NSEW points added
+	ViewRem       [][]Point // NSEW points removed
+
+	// Map State
 	Map *Map
 }
 
@@ -96,7 +105,17 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 
 	}
 
+	// Initialize Maps and cache some precalculated results
 	s.Map = s.NewMap()
+
+	// collection of viewpoints
+	s.ViewPoints = GenCircleTable(s.ViewRadius2)
+	s.ViewLocations = s.ToLocations(s.ViewPoints)
+	s.Radius = int(math.Sqrt(float64(s.ViewRadius2)))
+
+	add, remove := moveChangeCache(s.ViewRadius2, s.ViewPoints)
+	s.ViewAdd = add
+	s.ViewRem = remove
 
 	if s.PlayerSeed != 0 {
 		rand.Seed(s.PlayerSeed)
@@ -108,18 +127,17 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 func (s *State) NewMap() *Map {
 	size := s.Rows * s.Cols
 	m := &Map{
-		Grid:    make([]Item, size),
-		Seen:    make([]Seen, size),
-		Visible: make([]bool, size),
+		Grid: make([]Item, size),
+		Seen: make([]int, size),
 	}
 
 	return m
 }
 
-func (s *State) String() string {
+func (s *State) ParamsToString() string {
 	str := ""
 
-	str += "turn " + strconv.Itoa(s.Turn) + "\n"
+	str += "turn 0\n"
 	str += "loadtime " + strconv.Itoa(s.LoadTime) + "\n"
 	str += "turntime " + strconv.Itoa(s.TurnTime) + "\n"
 	str += "rows " + strconv.Itoa(s.Rows) + "\n"
@@ -134,8 +152,48 @@ func (s *State) String() string {
 	return str
 }
 
+func (s *State) String() string {
+	str := ""
+
+	str += "turn " + strconv.Itoa(s.Turn) + "\n"
+	str += "rows " + strconv.Itoa(s.Rows) + "\n"
+	str += "cols " + strconv.Itoa(s.Cols) + "\n"
+	str += "player_seed " + strconv.Itoa64(s.PlayerSeed) + "\n"
+	return str
+}
+
+func (s *State) Donut(p Point) Point {
+	if p.r < 0 {
+		p.r += s.Rows
+	}
+	if p.r >= s.Rows {
+		p.r -= s.Rows
+	}
+	if p.c < 0 {
+		p.c += s.Cols
+	}
+	if p.c >= s.Cols {
+		p.c -= s.Cols
+	}
+
+	return p
+}
+
+// Take a Point and return a Location
 func (s *State) ToLocation(p Point) Location {
+	p = s.Donut(p)
 	return Location(p.r*s.Cols + p.c)
+}
+
+//Take a slice of Point and return a slice of Location
+//Used for offsets so it does not donut things.
+func (s *State) ToLocations(pv []Point) []Location {
+	lv := make([]Location, len(pv), len(pv)) // maybe use cap(pv)
+	for i, p := range pv {
+		lv[i] = Location(p.r*s.Cols + p.c)
+	}
+
+	return lv
 }
 
 func (s *State) ToPoint(l Location) (p Point) {
@@ -144,7 +202,22 @@ func (s *State) ToPoint(l Location) (p Point) {
 	return
 }
 
+func (s *State) PointAdd(p1, p2 Point) Point {
+	return s.Donut(Point{r: p1.r + p2.r, c: p1.c + p2.c})
+}
+
+func (s *State) ResetGrid() {
+	for i, t := range s.Map.Seen {
+		if t == s.Turn {
+			if s.Map.Grid[i] > LAND {
+				s.Map.Grid[i] = LAND
+			}
+		}
+	}
+}
+
 func (s *State) ParseTurn() (line string, err os.Error) {
+
 	for {
 		line, err = s.in.ReadString('\n')
 
@@ -172,6 +245,9 @@ func (s *State) ParseTurn() (line string, err os.Error) {
 			if err != nil {
 				log.Printf("Atoi error %s \"%v\"", line, err)
 			}
+
+			s.ResetGrid() // TODO Mysterious to have it here...
+
 			if turn != s.Turn+1 {
 				log.Printf("Turn number out of sync, expected %v got %v", s.Turn+1, turn)
 			}
@@ -237,12 +313,51 @@ func (s *State) AddFood(p Point) {
 }
 
 func (s *State) AddAnt(p Point, Player int) {
-	s.Map.Grid[s.ToLocation(p)] = MY_ANT + Item(Player)
-
+	if s.Map.Grid[s.ToLocation(p)] <= MY_HILL {
+		s.Map.Grid[s.ToLocation(p)] = MY_ANT + Item(Player)
+		if Player == 0 {
+			s.UpdateLand(p)
+			s.UpdateSeen(p)
+		}
+	}
 }
 
 func (s *State) AddDeadAnt(p Point, Player int) {
 }
 
 func (s *State) AddHill(p Point, Player int) {
+	s.Map.Grid[s.ToLocation(p)] = MY_HILL + Item(Player)
+}
+
+func (s *State) UpdateLand(p Point) {
+	if p.c > s.Radius && p.c+s.Radius < s.Cols && p.r > s.Radius && p.r+s.Radius < s.Rows {
+		// In interior of map so use loc offsets
+		l := s.ToLocation(p)
+		for _, offset := range s.ViewLocations {
+			if s.Map.Grid[l+offset] == UNKNOWN {
+				s.Map.Grid[l+offset] = LAND
+			}
+		}
+	} else {
+		for _, op := range s.ViewPoints {
+			l := s.ToLocation(s.PointAdd(p, op))
+			if s.Map.Grid[l] == UNKNOWN {
+				s.Map.Grid[l] = LAND
+			}
+		}
+	}
+}
+
+func (s *State) UpdateSeen(p Point) {
+	if p.c > s.Radius && p.c+s.Radius < s.Cols && p.r > s.Radius && p.r+s.Radius < s.Rows {
+		// In interior of map so use loc offsets
+		l := s.ToLocation(p)
+		for _, offset := range s.ViewLocations {
+			s.Map.Seen[l+offset] = s.Turn
+		}
+	} else {
+		for _, op := range s.ViewPoints {
+			s.Map.Seen[s.ToLocation(s.PointAdd(p, op))] = s.Turn
+		}
+	}
 }

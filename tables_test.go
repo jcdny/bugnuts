@@ -2,7 +2,6 @@ package main
 
 import (
 	"testing"
-	"log"
 )
 
 func TestItemMap(t *testing.T) {
@@ -19,7 +18,7 @@ func TestItemMap(t *testing.T) {
 
 func TestGenCircleTable(t *testing.T) {
 	exp7100 := []int{0, -201, -200, -199, -102, -101, -100, -99, -98, -2, -1, 1, 2, 98, 99, 100, 101, 102, 199, 200, 201}
-
+	
 	v := GenCircleTable(7)
 	if len(v) != len(exp7100) {
 		t.Errorf("GenCircleTable(7) expected %v got %v", exp7100, v)
@@ -35,8 +34,24 @@ func TestGenCircleTable(t *testing.T) {
 		t.Errorf("GenCircleTable(0) expected len=1 got %v", v)
 	}
 
-	for i := 0; i <= 10; i += 1 {
+	/* // test range of i
+	 for i := 0; i <= 10; i += 1 {
 		v = GenCircleTable(i)
 		log.Printf("r2=%5d %5d %v", i, len(v), v)
-	}
+	 }
+	 */
 }
+
+func TestChange(t *testing.T) {
+	r2 := 7
+	v := GenCircleTable(r2)
+	add, remove := moveChangeCache(r2, v)
+
+	if len(add) != 4 || len(remove) != 4 {
+		t.Errorf("moveChangeCache sizes are wrong add: %v remove: %v", add, remove)
+	}
+	// log.Printf("Adds   %v", add)
+	// log.Printf("Remove %v", remove)
+	
+}
+
