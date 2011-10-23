@@ -52,6 +52,17 @@ func max(x []int) int {
 	return xm
 }
 
+func min(x []int) int {
+	xm := int(^uint(0) >> 1)
+	for _, y := range x {
+		if y < xm {
+			xm = y
+		}
+	}
+
+	return xm
+}
+
 func (s *State) DumpSeen() {
 	mseen := max(s.Map.Seen)
 	str := ""

@@ -8,6 +8,7 @@ import (
 	"strconv"
 	"bufio"
 	"strings"
+	"fmt"
 )
 
 //State keeps track of everything we need to know about the state of the game
@@ -32,6 +33,9 @@ type State struct {
 	ViewLocations []Location
 	ViewAdd       [][]Point // NSEW points added
 	ViewRem       [][]Point // NSEW points removed
+
+	Ants []Point          // My Ants
+	Food map[Location]int // Food Seen
 
 	// Map State
 	Map *Map
@@ -113,9 +117,15 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 	s.ViewLocations = s.ToLocations(s.ViewPoints)
 	s.Radius = int(math.Sqrt(float64(s.ViewRadius2)))
 
+	// Step innovation cache
 	add, remove := moveChangeCache(s.ViewRadius2, s.ViewPoints)
 	s.ViewAdd = add
+	log.Printf("was %v", add)
 	s.ViewRem = remove
+
+	// Food and Ant things
+	s.Food = make(map[Location]int)
+	s.Ants = make([]Point, 0, 500)
 
 	if s.PlayerSeed != 0 {
 		rand.Seed(s.PlayerSeed)
@@ -247,6 +257,7 @@ func (s *State) ParseTurn() (line string, err os.Error) {
 			}
 
 			s.ResetGrid() // TODO Mysterious to have it here...
+			s.Ants = s.Ants[:0]
 
 			if turn != s.Turn+1 {
 				log.Printf("Turn number out of sync, expected %v got %v", s.Turn+1, turn)
@@ -309,7 +320,9 @@ func (s *State) AddWater(p Point) {
 }
 
 func (s *State) AddFood(p Point) {
-	s.Map.Grid[s.ToLocation(p)] = FOOD
+	l := s.ToLocation(p)
+	s.Map.Grid[l] = FOOD
+	s.Food[l] = s.Turn // Save food seen to check if its moved.
 }
 
 func (s *State) AddAnt(p Point, Player int) {
@@ -318,6 +331,7 @@ func (s *State) AddAnt(p Point, Player int) {
 		if Player == 0 {
 			s.UpdateLand(p)
 			s.UpdateSeen(p)
+			s.Ants = append(s.Ants, p) // Track my ants
 		}
 	}
 }
@@ -360,4 +374,77 @@ func (s *State) UpdateSeen(p Point) {
 			s.Map.Seen[s.ToLocation(s.PointAdd(p, op))] = s.Turn
 		}
 	}
+}
+
+func (s *State) DoTurn() {
+	sv := []Point{{-1, 0}, {1, 0}, {0, 1}, {0, -1}}
+	maxint := int(^uint(0) >> 1)
+	for _, p := range s.Ants {
+		best := maxint
+		var score [4]int
+		for d, op := range sv {
+			tp := s.PointAdd(p, op)
+			if s.validPoint(tp) {
+				if rand.Intn(8) == 0 {
+					score[d] = -100
+				} else {
+					score[d] = s.Score(p, s.ViewAdd[d])
+				}
+				if score[d] < best {
+					best = score[d]
+				}
+			}
+		}
+		if best < maxint {
+			var bestd []int
+			for d, try := range score {
+				if try == best {
+					bestd = append(bestd, d)
+				}
+			}
+			pp := rand.Perm(len(bestd))[0]
+			//log.Printf("%v %v %v %v", p, score, bestd, pp)
+			// Swap the current and target cells
+			tp := s.PointAdd(p, sv[bestd[pp]])
+			s.Map.Grid[s.ToLocation(tp)] = MY_ANT
+			s.Map.Grid[s.ToLocation(p)] = LAND
+			fmt.Fprintf(os.Stdout, "o %d %d %c\n", p.r, p.c, ([4]byte{'n', 's', 'e', 'w'})[bestd[pp]])
+		}
+	}
+	fmt.Fprintf(os.Stdout, "go\n")
+
+}
+
+func (s *State) Score(p Point, pv []Point) int {
+	score := 0
+	log.Printf("%v", pv)
+	for _, op := range pv {
+		seen := s.Map.Seen[s.ToLocation(s.PointAdd(p, op))]
+		switch {
+		case seen < 1:
+			score += -50
+		case seen > s.Turn-3:
+			score += 10
+		default:
+			score += 0
+		}
+	}
+
+	return score
+}
+
+func (s *State) validPoint(p Point) bool {
+	sv := []Point{{-1, 0}, {1, 0}, {0, 1}, {0, -1}}
+	tgt := s.Map.Grid[s.ToLocation(p)]
+	if tgt == FOOD || tgt == LAND {
+		for _, op := range sv {
+			//make sure there is an exit
+			ep := s.PointAdd(p, op)
+			tgt := s.Map.Grid[s.ToLocation(ep)]
+			if tgt == FOOD || tgt == LAND {
+				return true
+			}
+		}
+	}
+	return false
 }

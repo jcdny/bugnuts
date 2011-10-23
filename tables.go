@@ -140,9 +140,9 @@ func moveChangeCache(r2 int, v []Point) (add [][]Point, remove [][]Point) {
 			for r := 0; r < size; r++ {
 				switch {
 				case m[c+r*size] > 0:
-					av = append(av, Point{r: r - off, c: c - off})
-				case m[c+r*size] < 0:
 					rv = append(rv, Point{r: r - off, c: c - off})
+				case m[c+r*size] < 0:
+					av = append(av, Point{r: r - off, c: c - off})
 				}
 			}
 		}

@@ -4,6 +4,7 @@ import (
 	"log"
 	"bufio"
 	"os"
+	"fmt"
 )
 
 func main() {
@@ -21,9 +22,10 @@ func Run(in *bufio.Reader) {
 		log.Panicf("Start(in) failed (%s)", err)
 	}
 
-	log.Printf("State:\n%v\n", &s)
+	//log.Printf("State:\n%v\n", &s)
 
 	me := NewBot(&s)
+	fmt.Fprintf(os.Stdout, "go\n")
 
 	for {
 		// Reset for Next Parse
@@ -34,15 +36,15 @@ func Run(in *bufio.Reader) {
 		}
 
 		//log.Printf("Generating orders turn %d", s.Turn)
-		// generate orders
+		s.DoTurn() // generate orders
 
 		// additional thinking til timeout
 
 		// emit orders
 	}
 
-	s.DumpSeen()
-	s.DumpMap()
+	//s.DumpSeen()
+	//s.DumpMap()
 
 	log.Printf("Bot Result %v", me)
 
