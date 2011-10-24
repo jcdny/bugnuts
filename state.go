@@ -383,7 +383,7 @@ func (s *State) DoTurn() {
 		for d, op := range sv {
 			tp := s.PointAdd(p, op)
 			if s.validPoint(tp) {
-				if rand.Intn(8) == 0 {
+				if false && rand.Intn(8) == 0 {
 					score[d] = 500
 				} else {
 					score[d] = s.Score(p, tp, s.ViewAdd[d])
@@ -391,10 +391,15 @@ func (s *State) DoTurn() {
 				if score[d] > best {
 					best = score[d]
 				}
+			} else {
+				score[d] = -9999
 			}
 		}
 
-		//log.Printf("%v %v %v", p, score, best)
+		if Debug > 2 {
+			log.Printf("TURN %d point %v score %v best %v", s.Turn, p, score, best)
+		}
+
 		if best > math.MinInt32 {
 			var bestd []int
 			for d, try := range score {
@@ -422,41 +427,64 @@ func (s *State) Score(p, tp Point, pv []Point) int {
 		seen := s.Map.Seen[s.ToLocation(s.PointAdd(p, op))]
 		switch {
 		case seen < 1:
-			score += 10
-		case seen > s.Turn-1:
-			score -= 2
+			score += 2
+		case seen > s.Turn-2:
+			score -= 1
 		}
 	}
+	score = score * 17 / len(pv)
 
-	// Score for item distances
+	if Debug > 3 {
+		log.Printf("p %v tp %v explore score %d", p, tp, score)
+	}
+
+	// Score for nearby items
 	for _, op := range s.ViewPoints {
 		item := s.Map.Grid[s.ToLocation(s.PointAdd(tp, op))]
+		inc := 0
+		iname := ""
 		if item != LAND && item != WATER {
+			//log.Printf("%v %v %d %d",p, tp, op, d, item)
 			d := Abs(op.c) + Abs(op.r)
-			//log.Printf("%v %v %d %d", tp, op, d, item)
 
 			if item == MY_HILL {
-				score -= 48 + 4*Max([]int{d, 8})
+				iname = "my hill"
+				inc = -32 + 4*Min([]int{d, 8})
 			}
 			if item > MY_HILL && item < HILL10 {
-				score += 100 - 5*Min([]int{d, 12})
+				iname = "enemy hill"
+				inc = 1500 - 100*Min([]int{d, 10})
 			}
 			if item == FOOD {
-				score += 100 - 12*Min([]int{d, 12})
+				iname = "food"
+				if d == 1 {
+					inc = 1000
+				} else {
+					inc = 120 - 12*Min([]int{d, 10})
+				}
 			}
-			if item == MY_ANT {
-				score -= 20 + 2*Max([]int{d, 10})
+			if item == MY_ANT && d > 1 {
+				iname = "my ant"
+				inc = -30 + 5*Min([]int{d, 6})
 			}
 		}
+		score += inc
+		if Debug > 3 && iname != "" {
+			log.Printf("tp %v (at %v) %s worth %d",
+				tp, op, iname, inc)
+		}
 	}
-
+	if Debug > 3 {
+		log.Printf("p %v tp %v total score %d",
+			p, tp, score)
+	}
 	return score
 }
 
 func (s *State) validPoint(p Point) bool {
 	sv := []Point{{-1, 0}, {1, 0}, {0, 1}, {0, -1}}
 	tgt := s.Map.Grid[s.ToLocation(p)]
-	if tgt == FOOD || tgt == LAND {
+	if tgt == FOOD || tgt == LAND || (tgt > MY_HILL && tgt <= HILL10) {
 		for _, op := range sv {
 			//make sure there is an exit
 			ep := s.PointAdd(p, op)
