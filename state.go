@@ -393,7 +393,7 @@ func (s *State) DoTurn() {
 				}
 			}
 		}
-		
+
 		//log.Printf("%v %v %v", p, score, best)
 		if best > math.MinInt32 {
 			var bestd []int
@@ -416,7 +416,7 @@ func (s *State) DoTurn() {
 
 func (s *State) Score(p, tp Point, pv []Point) int {
 	score := 0
-	
+
 	// Score for explore
 	for _, op := range pv {
 		seen := s.Map.Seen[s.ToLocation(s.PointAdd(p, op))]
@@ -427,29 +427,29 @@ func (s *State) Score(p, tp Point, pv []Point) int {
 			score -= 2
 		}
 	}
-	
+
 	// Score for item distances
 	for _, op := range s.ViewPoints {
 		item := s.Map.Grid[s.ToLocation(s.PointAdd(tp, op))]
-		if (item != LAND && item != WATER) {
+		if item != LAND && item != WATER {
 			d := Abs(op.c) + Abs(op.r)
 			//log.Printf("%v %v %d %d", tp, op, d, item)
 
-			if (item == MY_HILL) {
-				score -= 48 + 4 * Max([]int{d, 8})
+			if item == MY_HILL {
+				score -= 48 + 4*Max([]int{d, 8})
 			}
-			if (item > MY_HILL && item < HILL10) {
-				score += 100 - 5 * Min([]int{d, 12})
+			if item > MY_HILL && item < HILL10 {
+				score += 100 - 5*Min([]int{d, 12})
 			}
-			if (item == FOOD) {
-				score += 100 - 12 * Min([]int{d, 12})
+			if item == FOOD {
+				score += 100 - 12*Min([]int{d, 12})
 			}
-			if (item == MY_ANT) {
-				score -= 20 + 2 * Max([]int{d, 10})				
+			if item == MY_ANT {
+				score -= 20 + 2*Max([]int{d, 10})
 			}
 		}
-	}		
-	
+	}
+
 	return score
 }
 

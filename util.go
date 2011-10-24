@@ -7,9 +7,10 @@ import (
 // Utility to implement manhattan distance sorting on a slice of Point Offsets
 // TODO think about how to do this in context of torus.  Assumes Offset < side/2
 type OffsetSlice []Point
-func (p OffsetSlice) Len() int {return len(p)}
-func (p OffsetSlice) Less(i, j int) bool { return Abs(p[i].r) + Abs(p[i].c) < Abs(p[j].r) + Abs(p[j].c) }
-func (p OffsetSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+
+func (p OffsetSlice) Len() int           { return len(p) }
+func (p OffsetSlice) Less(i, j int) bool { return Abs(p[i].r)+Abs(p[i].c) < Abs(p[j].r)+Abs(p[j].c) }
+func (p OffsetSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func Abs(i int) int {
 	if i < 0 {
@@ -63,7 +64,7 @@ func GenCircleTable(r2 int) []Point {
 			}
 		}
 	}
-	
+
 	return v
 }
 
