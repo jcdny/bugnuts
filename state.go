@@ -5,10 +5,10 @@ import (
 	"log"
 	"rand"
 	"math"
-	"strconv"
 	"bufio"
-	"strings"
 	"fmt"
+	"strconv"
+	"strings"
 )
 
 //State keeps track of everything we need to know about the state of the game
@@ -110,7 +110,7 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 	}
 
 	// Initialize Maps and cache some precalculated results
-	s.Map = s.NewMap()
+	s.Map = NewMap(s.Rows, s.Cols, -1)
 
 	// collection of viewpoints
 	s.ViewPoints = GenCircleTable(s.ViewRadius2)
@@ -131,16 +131,6 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 	}
 
 	return nil
-}
-
-func (s *State) NewMap() *Map {
-	size := s.Rows * s.Cols
-	m := &Map{
-		Grid: make([]Item, size),
-		Seen: make([]int, size),
-	}
-
-	return m
 }
 
 func (s *State) ParamsToString() string {
