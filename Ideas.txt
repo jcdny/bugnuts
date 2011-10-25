@@ -30,3 +30,8 @@ PRI:
 gather food
 max explore + visible dirt
 avoid enemies
+
+
+
+ants.fluxid.pl
+bugnuts_v3 donuts

@@ -62,38 +62,37 @@ func NewMap(rows, cols, players int) *Map {
 	return m
 }
 
-func (s *State) DumpSeen() {
-	mseen := Max(s.Map.Seen)
-	str := ""
-
-	for r := 0; r < s.Rows; r++ {
-		for c := 0; c < s.Cols; c++ {
-			str += strconv.Itoa(s.Map.Seen[r*s.Cols+c] * 10 / (mseen + 1))
-		}
-		str += "\n"
-	}
-
-	log.Printf("Turn %d\n%v\n", s.Turn, str)
+func (m *Map) Size() int {
+	return m.Rows * m.Cols
 }
 
-func (s *State) DumpMap() {
-	m := make([]byte, len(s.Map.Grid))
-	str := ""
-
-	for i, o := range s.Map.Grid {
-		m[i] = o.ToSymbol()
-	}
-
-	for r := 0; r < s.Rows; r++ {
-		for c := 0; c < s.Cols; c++ {
-			str += string(m[r*s.Cols+c])
-		}
-		str += "\n"
-	}
-
-	log.Printf("Turn %d\n%v\n", s.Turn, str)
+func (m *Map) ToLocation(p Point) Location {
+	p = m.Donut(p)
+	return Location(p.r * m.Cols + p.c)
 }
 
+func (m *Map) Donut(p Point) Point {
+	if p.r < 0 {
+		p.r += m.Rows
+	}
+	if p.r >= m.Rows {
+		p.r -= m.Rows
+	}
+	if p.c < 0 {
+		p.c += m.Cols
+	}
+	if p.c >= m.Cols {
+		p.c -= m.Cols
+	}
+
+	return p
+}
+
+func (m *Map) PointAdd(p1, p2 Point) Point {
+	return m.Donut(Point{r: p1.r + p2.r, c: p1.c + p2.c})
+}
+
+		
 func (m *Map) String() string {
 	s := ""
 	s += "rows " + strconv.Itoa(m.Rows) + "\n"
@@ -159,12 +158,12 @@ func MapLoad(in *bufio.Reader) (*Map, os.Error) {
 			if nrow > rows {
 				log.Panicf("Map rows mismatch row %d expected %d", nrow, rows)
 			}
-
-			if len(words[1]) != cols {
+			line = line[2:] // remove "m "
+			if len(line) != cols {
 				log.Panicf("Map line length mismatch line %d, got %d, expected %d", lines, len(words[1]), cols)
 			}
 
-			for _, c := range words[1] {
+			for _, c := range line {
 				m.Grid[loc] = ToItem(byte(c))
 				loc++
 			}

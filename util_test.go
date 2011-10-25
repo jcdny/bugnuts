@@ -4,7 +4,6 @@ import (
 	"testing"
 	"math"
 	"sort"
-	"log"
 )
 
 type Lists struct {
@@ -39,7 +38,7 @@ func TestGenCircleTable(t *testing.T) {
 	}
 
 	sort.Sort(OffsetSlice(v))
-	log.Printf("%T %v", v, v)
+	//log.Printf("%T %v", v, v)
 
 	v = GenCircleTable(1)
 	if len(v) != 5 {
