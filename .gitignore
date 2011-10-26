@@ -7,3 +7,7 @@ TAGS
 MyBot
 tmp
 6.out
+*.err
+*.log
+*.replaygz
+replay/data
