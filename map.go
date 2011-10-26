@@ -17,6 +17,11 @@ type Map struct {
 	Seen []int  // Turn on which cell was last visible.
 }
 
+
+type Point struct {
+	r, c int
+}
+
 //Direction represents the direction concept for issuing orders.
 type Direction int8
 
@@ -88,11 +93,16 @@ func (m *Map) Donut(p Point) Point {
 	return p
 }
 
+func (m *Map) PointEqual(p1, p2 Point) bool {
+	// todo donuts
+	return p1.c == p2.c && p1.r == p2.r
+}
+
 func (m *Map) PointAdd(p1, p2 Point) Point {
 	return m.Donut(Point{r: p1.r + p2.r, c: p1.c + p2.c})
 }
 
-		
+
 func (m *Map) String() string {
 	s := ""
 	s += "rows " + strconv.Itoa(m.Rows) + "\n"

@@ -2,10 +2,6 @@ package main
 
 import ()
 
-type Point struct {
-	r, c int
-}
-
 type Location int
 
 // Item codes from parsing turns

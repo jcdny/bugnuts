@@ -45,3 +45,17 @@ func (q *Queue) Size() int {
 func (q *Queue) Cap() int {
 	return cap(q.c)
 }
+
+func (q *Queue) Position(p Point) int {
+	pos := -1
+
+	for i, qp := range q.c {
+		// assumes we have aleady wrapped.
+		if p.c == qp.c && p.r == qp.r {
+			pos = i
+			break
+		}
+	}
+
+	return pos
+}

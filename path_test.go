@@ -5,6 +5,7 @@ import (
 	"os"
 	"log"
 	"bufio"
+	"strconv"
 )
 
 func TestMapLoad(t *testing.T) {
@@ -33,7 +34,7 @@ func TestMapLoad(t *testing.T) {
 	}
 }
 
-func TestMapFill(t *testing.T) {
+func xTestMapFill(t *testing.T) {
 	var m *Map = nil
 
 	// fill.2 Point{r:4, c:5}
@@ -108,8 +109,8 @@ func MapFill(m *Map, origin Point) (*Fill, int, int) {
 	// need an extra rotate to handle gap at end...
 	//
 
-	cw := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}, {0, -1}}
-	diag := []Point{{-1, 1}, {1, 1}, {1, -1}, {-1, -1}, {-1, 1}}
+	cw := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}}
+	diag := []Point{{-1, 1}, {1, 1}, {1, -1}, {-1, -1}}
 
 	f := m.NewFill()
 
@@ -130,26 +131,28 @@ func MapFill(m *Map, origin Point) (*Fill, int, int) {
 		validlast := false
 
 		for i, s := range diag {
-			// on a given diagonal just go until we 
-			// stop finding same depth
+			// on a given diagonal just go until we
+			// stop finding same depth.
+
 			for {
 				// Debug lets not infinite loop
-				if safe++; safe > 1000 {
-					log.Panicf("Oh No Crazytime")
-				}
+				if safe++; safe > 1000 { log.Panicf("Oh No Crazytime") }
 
 				fillp := m.PointAdd(p, cw[i])
 				nloc := m.ToLocation(fillp)
 
-				// log.Printf("p: %v np: %v i: %d item: %c d: %d", p, fillp, i, m.Grid[nloc].ToSymbol(), f.Depth[nloc])
+				// log.Printf("p: %v np: %v i: %d item: %c d: %d",
+				// p, fillp, i, m.Grid[nloc].ToSymbol(), f.Depth[nloc])
 
-
-				if m.Grid[nloc] != WATER && f.Depth[nloc] == 0 {
-					f.Depth[nloc] = newDepth
-					// Queue a new start point
-					if !validlast {
-						q.Q(fillp)
-						log.Printf("Q %v", fillp)
+				if m.Grid[nloc] != WATER {
+					if f.Depth[nloc] == 0 {
+						if !validlast {
+							if q.Position(fillp) == -1 {
+								q.Q(fillp)
+								log.Printf("Q %v", fillp)
+							}
+						}
+						f.Depth[nloc] = newDepth
 					}
 					validlast = true
 				} else {
@@ -158,7 +161,9 @@ func MapFill(m *Map, origin Point) (*Fill, int, int) {
 
 				np := m.PointAdd(p, s)
 				nloc = m.ToLocation(np)
-				log.Printf("p %v np %v fillp %v %v", p, np, fillp, f)
+
+				log.Printf("%s", PrettyFill(m, f, p, q, Depth))
+
 				if f.Depth[nloc] == Depth {
 					p = np
 				} else {
@@ -172,18 +177,47 @@ func MapFill(m *Map, origin Point) (*Fill, int, int) {
 
 }
 
-// ...#.....
-// ...#.3...
-// ...#323..
-// ...#2123.
-// ...#323..
-// .....3...
-// #########
 
-// ...#.....
-// ...#.....
-// ...#.2...
-// ...#212..
-// ...#.2...
-// .........
-// #########
+// Program to dump the fill and q state in a pretty format.
+// @ or # is current pos, . is unvisited, % is water
+// A is a point in the queue
+func PrettyFill(m *Map, f *Fill, p Point, q *Queue, Depth uint16) string {
+	s := ""
+	for i, d := range f.Depth {
+		curp := Point{r: i / f.Cols, c: i % f.Cols}
+
+		if curp.c == 0 {
+			switch curp.r {
+			case 1:
+				s += "  Depth: " + strconv.Itoa(int(Depth))
+			case 2:
+				s += "  QSize: " + strconv.Itoa(q.Size())
+			}
+			s += "\n"
+		}
+
+		qpos := q.Position(curp)
+
+		if m.PointEqual(p, curp) {
+			if qpos < 0 {
+				s += "@" // point
+			} else {
+				s += "#" // point with point already in q
+			}
+		} else if qpos < 0 {
+			if d == 0 {
+				if m.Grid[i] == WATER {
+					s += "%"
+				} else {
+					s += "."
+				}
+			} else {
+				s += string('0' + byte((d-1)%10))
+			}
+		} else {
+			s += string('A' + qpos%26)
+		}
+	}
+
+	return s
+}
