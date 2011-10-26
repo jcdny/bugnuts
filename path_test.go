@@ -30,11 +30,14 @@ func TestMapLoad(t *testing.T) {
 			t.Errorf("Invalid load of map m == nil")
 		}
 
-		log.Printf("%v", m) // TODO test String() func round trip.
+		// log.Printf("%v", m) 
+
+		// TODO test String() func round trip.
+		// TODO test error handling make err return
 	}
 }
 
-func xTestMapFill(t *testing.T) {
+func TestMapFill(t *testing.T) {
 	var m *Map = nil
 
 	// fill.2 Point{r:4, c:5}
@@ -109,8 +112,8 @@ func MapFill(m *Map, origin Point) (*Fill, int, int) {
 	// need an extra rotate to handle gap at end...
 	//
 
-	cw := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}}
-	diag := []Point{{-1, 1}, {1, 1}, {1, -1}, {-1, -1}}
+	Directions := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}} // w n e s
+	Diagonals := []Point{{-1, 1}, {1, 1}, {1, -1}, {-1, -1}}
 
 	f := m.NewFill()
 
@@ -121,67 +124,85 @@ func MapFill(m *Map, origin Point) (*Fill, int, int) {
 
 	for !q.Empty() {
 		p := q.DQ()
-		log.Printf("DQ %v", p)
 
 		Depth := f.Depth[m.ToLocation(p)]
 		newDepth := Depth + 1
 
-		log.Printf("Start from %v step %d to %d Map:\n%v", p, Depth, newDepth, f)
+		log.Printf("DQ'd %v step %d to %d Map:\n%v", p, Depth, newDepth, f)
 
 		validlast := false
+		d, ed := 0, 4
 
-		for i, s := range diag {
-			// on a given diagonal just go until we
-			// stop finding same depth.
+		// loop over directions
+		for d, ed := 0, 4; d < ed; d++ {
+			if safe++; safe > 1000 { log.Panicf("Oh No Crazytime") }
+			dir = Directions[d%4]
 
-			for {
-				// Debug lets not infinite loop
-				if safe++; safe > 1000 { log.Panicf("Oh No Crazytime") }
+			fillp := m.PointAdd(p, dir)
+			floc := m.ToLocation(fillp)
 
-				fillp := m.PointAdd(p, cw[i])
-				nloc := m.ToLocation(fillp)
+			log.Printf("%s", PrettyFill(m, f, p, fillp, q, Depth))
 
-				// log.Printf("p: %v np: %v i: %d item: %c d: %d",
-				// p, fillp, i, m.Grid[nloc].ToSymbol(), f.Depth[nloc])
+			if m.Grid[nloc] != WATER && f.Depth[nloc] == 0 {
+				if !validlast {
+					q.Q(fillp)
+				}
 
-				if m.Grid[nloc] != WATER {
-					if f.Depth[nloc] == 0 {
-						if !validlast {
-							if q.Position(fillp) == -1 {
-								q.Q(fillp)
-								log.Printf("Q %v", fillp)
-							}
+				validlast == true
+				diagdone := false
+
+				// We have at least 1 valid square.  Try and move diagonally
+			D:
+				for _, diag := range Diag {
+					dp := p
+					dfillp := fp
+
+					for {
+						dp = m.PointAdd(dp, diag)
+						dloc = m.ToLocation(dp)
+						dfillp = m.PointAdd(dfillp, diag)
+						dfloc = m.ToLocation(dfillp)
+
+						if m.Grid[dfloc] != WATER && f.Depth[dloc] == Depth {
+							// Set the previous point and step the floc forward
+							f.Depth[floc] == newDepth
+							floc = dfloc
+							diagdone = true
+						} else if diagdone {
+							// TODO set d, ed, p, dir, validlast to continue
+							// need to be careful to make sure properly
+							// oriented.
+							d--
+							ed = d + 4
+							p = dp
+
+							// since we did a diagonal quit looking for others.
+							break D
 						}
-						f.Depth[nloc] = newDepth
 					}
-					validlast = true
-				} else {
-					validlast = false
 				}
 
-				np := m.PointAdd(p, s)
-				nloc = m.ToLocation(np)
-
-				log.Printf("%s", PrettyFill(m, f, p, q, Depth))
-
-				if f.Depth[nloc] == Depth {
-					p = np
-				} else {
-					break
-				}
+				// Fallen out of diagonal code.  We always emerge here
+				// with p set to the new location and d and ed set to
+				// apply normal rules to the new loc pointer and set the
+				// current position
+				f.Depth[floc] == newDepth
+			} else {
+				validlast == false
 			}
-		}
+
 	}
 
 	return f, 0, int(newDepth - 1)
 
 }
 
+func 
 
 // Program to dump the fill and q state in a pretty format.
 // @ or # is current pos, . is unvisited, % is water
 // A is a point in the queue
-func PrettyFill(m *Map, f *Fill, p Point, q *Queue, Depth uint16) string {
+func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string {
 	s := ""
 	for i, d := range f.Depth {
 		curp := Point{r: i / f.Cols, c: i % f.Cols}
@@ -204,6 +225,8 @@ func PrettyFill(m *Map, f *Fill, p Point, q *Queue, Depth uint16) string {
 			} else {
 				s += "#" // point with point already in q
 			}
+		} else if m.PointEqual(fillp, curp) {
+				s += "*"
 		} else if qpos < 0 {
 			if d == 0 {
 				if m.Grid[i] == WATER {
