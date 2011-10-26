@@ -36,7 +36,8 @@ func TestMapLoad(t *testing.T) {
 func TestMapFill(t *testing.T) {
 	var m *Map = nil
 
-	f, err := os.Open("testdata/maps/fill.2")
+	// fill.2 Point{r:4, c:5}
+	f, err := os.Open("testdata/maps/fill.3")
 
 	if err != nil {
 		t.Errorf("Open failed: %v", err)
@@ -58,7 +59,7 @@ func TestMapFill(t *testing.T) {
 		log.Printf("%v", m) // TODO test String() func round trip.
 
 		// find a hill for start
-		f, mQ,mD := MapFill(m, Point{r:4, c:5})
+		f, mQ, mD := MapFill(m, Point{r: 3, c: 3})
 
 		log.Printf("mQ: %v mD: %v f::\n%v\n", mQ, mD, f)
 	}
@@ -66,16 +67,16 @@ func TestMapFill(t *testing.T) {
 
 type Fill struct {
 	// add offset and wrap flag for subfill work
-	Rows int
-	Cols int
+	Rows  int
+	Cols  int
 	Depth []uint16
 }
 
 func (m *Map) NewFill() *Fill {
 	f := &Fill{
-		Depth:    make([]uint16, m.Size(), m.Size()),
-		Rows: m.Rows,
-		Cols: m.Cols,
+		Depth: make([]uint16, m.Size(), m.Size()),
+		Rows:  m.Rows,
+		Cols:  m.Cols,
 	}
 
 	return f
@@ -84,13 +85,13 @@ func (m *Map) NewFill() *Fill {
 func (f *Fill) String() string {
 	s := ""
 	for i, d := range f.Depth {
-		if i % f.Cols == 0 {
-			s+= "\n"
+		if i%f.Cols == 0 {
+			s += "\n"
 		}
 		if d == 0 {
-			s += "%"
+			s += "."
 		} else {
-			s += string('a'+byte(d % 10))
+			s += string('a' + byte((d-1)%26))
 		}
 	}
 
@@ -104,8 +105,11 @@ func MapFill(m *Map, origin Point) (*Fill, int, int) {
 	safe := 0
 
 	// CW search for next step
-	cw := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}}
-	diag := []Point{{-1, 1}, {1, 1}, {1, -1}, {-1, -1}}
+	// need an extra rotate to handle gap at end...
+	//
+
+	cw := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}, {0, -1}}
+	diag := []Point{{-1, 1}, {1, 1}, {1, -1}, {-1, -1}, {-1, 1}}
 
 	f := m.NewFill()
 
@@ -116,61 +120,55 @@ func MapFill(m *Map, origin Point) (*Fill, int, int) {
 
 	for !q.Empty() {
 		p := q.DQ()
+		log.Printf("DQ %v", p)
 
 		Depth := f.Depth[m.ToLocation(p)]
 		newDepth := Depth + 1
 
 		log.Printf("Start from %v step %d to %d Map:\n%v", p, Depth, newDepth, f)
 
-		vlast := false
+		validlast := false
 
-		done := false
-		for !done {
-			done = true
+		for i, s := range diag {
+			// on a given diagonal just go until we 
+			// stop finding same depth
+			for {
+				// Debug lets not infinite loop
+				if safe++; safe > 1000 {
+					log.Panicf("Oh No Crazytime")
+				}
 
-			for i, s := range diag {
-				// on a given diagonal just go until we 
-				// stop finding same depth
-				for {
-					// Debug lets not infinite loop
-					if safe++; safe > 500 {
-						log.Panicf("Oh No Crazytime")
+				fillp := m.PointAdd(p, cw[i])
+				nloc := m.ToLocation(fillp)
+
+				// log.Printf("p: %v np: %v i: %d item: %c d: %d", p, fillp, i, m.Grid[nloc].ToSymbol(), f.Depth[nloc])
+
+
+				if m.Grid[nloc] != WATER && f.Depth[nloc] == 0 {
+					f.Depth[nloc] = newDepth
+					// Queue a new start point
+					if !validlast {
+						q.Q(fillp)
+						log.Printf("Q %v", fillp)
 					}
+					validlast = true
+				} else {
+					validlast = false
+				}
 
-					fillp := m.PointAdd(p, cw[i])
-					nloc := m.ToLocation(fillp)
-
-					log.Printf("p: %v np: %v i: %d item: %c d: %d", 
-						p, fillp, i, m.Grid[nloc].ToSymbol(), f.Depth[nloc])
-
-
-					if m.Grid[nloc] != WATER {
-						if f.Depth[nloc] == 0 {
-							f.Depth[nloc] = newDepth
-							// Queue a new start point
-							if !vlast {
-								q.Q(fillp)
-							}
-							vlast = true
-						}
-					} else {
-						vlast = false
-					}
-
-					np := m.PointAdd(p, s)
-					nloc = m.ToLocation(np)
-
-					if f.Depth[nloc] == Depth {
-						p = np
-					} else {
-						break
-					}
+				np := m.PointAdd(p, s)
+				nloc = m.ToLocation(np)
+				log.Printf("p %v np %v fillp %v %v", p, np, fillp, f)
+				if f.Depth[nloc] == Depth {
+					p = np
+				} else {
+					break
 				}
 			}
 		}
 	}
 
-	return f,0,int(newDepth-1)
+	return f, 0, int(newDepth - 1)
 
 }
 
