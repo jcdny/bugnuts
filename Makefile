@@ -3,6 +3,7 @@ include $(GOROOT)/src/Make.inc
 TARG=MyBot
 GOFILES=\
 	queue.go\
+	fill.go\
 	util.go\
 	tables.go\
 	state.go\
