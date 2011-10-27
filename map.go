@@ -158,3 +158,36 @@ func MapLoad(in *bufio.Reader) (*Map, os.Error) {
 
 	return m, err
 }
+
+
+func (m *Map) HillLocations() ([]Location) {
+	// find a hill for start
+	hills := []Location{}
+
+	for i, item := range m.Grid {
+		if item.IsHill() {
+			hills = append(hills, Location(i))
+		}
+	}
+
+	return hills
+}
+
+
+func MapLoadFile(file string) (*Map, os.Error) {
+	var m *Map = nil
+
+	f, err := os.Open(file)
+
+	if err != nil {
+		return nil, err
+	} else {
+		defer f.Close()
+
+		in := bufio.NewReader(f)
+		m, err = MapLoad(in)
+	}
+
+	return m, err
+}
+

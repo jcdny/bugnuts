@@ -4,29 +4,12 @@ import (
 	"testing"
 	"os"
 	"log"
-	"bufio"
+	"image"
 )
-
-func MapLoadFile(file string) (*Map, os.Error) {
-	var m *Map = nil
-
-	f, err := os.Open(file)
-
-	if err != nil {
-		return nil, err
-	} else {
-		defer f.Close()
-
-		in := bufio.NewReader(f)
-		m, err = MapLoad(in)
-	}
-
-	return m, err
-}
 
 func TestMapLoad(t *testing.T) {
 
-	file := "testdata/maps/fill.1"
+	file := "testdata/maps/big"
 	m, err := MapLoadFile(file)
 
 	if err != os.EOF {
@@ -35,11 +18,12 @@ func TestMapLoad(t *testing.T) {
 	if m == nil {
 		t.Errorf("Invalid load of map m == nil")
 	}
+	m.WriteDebugImage("_test", 0, func (c, r int) image.NRGBAColor { return m.At(r, c) })
 }
 
 func TestMapFill(t *testing.T) {
 	file := "testdata/maps/maze_04p_01.map" // fill.2 Point{r:4, c:5}
-	//file := "testdata/maps/fill.2"
+	// file := "testdata/maps/fill.2"
 	m, err := MapLoadFile(file)
 
 	if err != os.EOF {
@@ -49,22 +33,16 @@ func TestMapFill(t *testing.T) {
 	}
 
 	// log.Printf("%v", m) // TODO test String() func round trip.
-
-	fs, mQ, mD := SlowMapFill(m, []Point{{r: 0, c: 0}})
-	log.Printf("SlowFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, fs)
-
-	// find a hill for start
 	p := []Point{}
-	for i, item := range m.Grid {
-		if item.IsHill() {
-			p = append(p, m.ToPoint(Location(i)))
-		}
+	for _, hill := range m.HillLocations() {
+		p = append(p, m.ToPoint(hill))
 	}
 
-	fs, mQ, mD = SlowMapFill(m, p)
-
+	fs, mQ, mD := SlowMapFill(m, p[0:1])
 	log.Printf("SlowFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, fs)
 
+	fs, mQ, mD = SlowMapFill(m, p)
+	log.Printf("SlowFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, fs)
 }
 
 func BenchmarkSlowMapFill(b *testing.B) {
