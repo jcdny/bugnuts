@@ -15,10 +15,10 @@ func TestQ(t *testing.T) {
 	}
 
 	if p := q.DQ(); p.c != 1 {
-		t.Errorf("Expected %v got %v", Point{c: 1} , p)
+		t.Errorf("Expected %v got %v", Point{c: 1}, p)
 	}
 
-	for i:= 3; i < 10; i++ {
+	for i := 3; i < 10; i++ {
 		q.Q(Point{c: i})
 	}
 
@@ -39,7 +39,7 @@ func TestQ(t *testing.T) {
 		t.Errorf("Queue Size should be 0 got %#v", q)
 	}
 
-	if ! q.Empty() {
+	if !q.Empty() {
 		t.Errorf("Queue q.Empty should be true")
 	}
 }

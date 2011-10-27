@@ -12,9 +12,9 @@ cd $ROOT/data
 mkdir -p $HOST || exit 1
 cd $HOST
 
-D="`expr $GAME / 100`"
 
 while [ $GAME -lt 1400 ]; do
+    D="`expr $GAME / 1000`"
     OUT=$D/replay.$GAME
     if [ -f $OUT]; then
         echo "INFO: found game $GAME"

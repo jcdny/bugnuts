@@ -487,7 +487,6 @@ func (s *State) validPoint(p Point) bool {
 	return false
 }
 
-
 func (s *State) DumpSeen() {
 	mseen := Max(s.Map.Seen)
 	str := ""
@@ -519,4 +518,3 @@ func (s *State) DumpMap() {
 
 	log.Printf("Turn %d\n%v\n", s.Turn, str)
 }
-

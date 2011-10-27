@@ -1,6 +1,6 @@
 package main
 
-import(
+import (
 	"log"
 	"strconv"
 )
@@ -11,7 +11,6 @@ type Fill struct {
 	Cols  int
 	Depth []uint16
 }
-
 
 func (m *Map) NewFill() *Fill {
 	f := &Fill{
@@ -38,7 +37,6 @@ func (f *Fill) String() string {
 
 	return s
 }
-
 
 // Program to dump the fill and q state in a pretty format.
 // @ or # is current pos, . is unvisited, % is water
@@ -72,7 +70,7 @@ func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string 
 				s += "#" // point with point already in q
 			}
 		} else if m.PointEqual(fillp, curp) {
-				s += "*"
+			s += "*"
 		} else if qpos < 0 {
 			if d == 0 {
 				if m.Grid[i] == WATER {
@@ -91,32 +89,33 @@ func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string 
 	return s
 }
 
-
 func SlowMapFill(m *Map, origin Point) (*Fill, int, int) {
 	newDepth := uint16(1) // dont start with 0 since 0 means not visited.
 	safe := 0
 
 	f := m.NewFill()
-	
+
 	q := QNew(100)
-	
+
 	q.Q(origin)
 	f.Depth[m.ToLocation(origin)] = newDepth
 
 	Directions := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}} // w n e s
-	
+
 	for !q.Empty() {
-		if safe++; safe > 4*len(f.Depth) { log.Panicf("Oh No Crazytime") }
+		if safe++; safe > 4*len(f.Depth) {
+			log.Panicf("Oh No Crazytime")
+		}
 
 		p := q.DQ()
-		
+
 		Depth := f.Depth[m.ToLocation(p)]
 		newDepth := Depth + 1
-		
+
 		for _, d := range Directions {
 			fillp := m.PointAdd(p, d)
 			floc := m.ToLocation(fillp)
-			
+
 			if m.Grid[floc] != WATER && f.Depth[floc] == 0 {
 				q.Q(fillp)
 				f.Depth[floc] = newDepth
@@ -126,15 +125,10 @@ func SlowMapFill(m *Map, origin Point) (*Fill, int, int) {
 
 	return f, 0, 0
 }
-		
-		
-	
-
-
 
 // Generate a fill from Map m return fill slice, max Q size, max depth
 func MapFill(m *Map, origin Point) (*Fill, int, int) {
-	
+
 	newDepth := uint16(1) // dont start with 0 since 0 means not visited.
 	safe := 0
 
@@ -199,5 +193,3 @@ func MapFill(m *Map, origin Point) (*Fill, int, int) {
 	return f, 0, int(newDepth - 1)
 
 }
-
-		

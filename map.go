@@ -17,38 +17,8 @@ type Map struct {
 	Seen []int  // Turn on which cell was last visible.
 }
 
-
 type Point struct {
 	r, c int
-}
-
-//Direction represents the direction concept for issuing orders.
-type Direction int8
-
-const (
-	North Direction = iota
-	East
-	South
-	West
-	NoMovement
-)
-
-func (d Direction) String() string {
-	switch d {
-	case North:
-		return "n"
-	case South:
-		return "s"
-	case West:
-		return "w"
-	case East:
-		return "e"
-	case NoMovement:
-		return "-"
-	}
-
-	log.Printf("%v is not a valid direction", d)
-	return "-"
 }
 
 func NewMap(rows, cols, players int) *Map {
@@ -73,7 +43,7 @@ func (m *Map) Size() int {
 
 func (m *Map) ToLocation(p Point) Location {
 	p = m.Donut(p)
-	return Location(p.r * m.Cols + p.c)
+	return Location(p.r*m.Cols + p.c)
 }
 
 func (m *Map) Donut(p Point) Point {
@@ -101,7 +71,6 @@ func (m *Map) PointEqual(p1, p2 Point) bool {
 func (m *Map) PointAdd(p1, p2 Point) Point {
 	return m.Donut(Point{r: p1.r + p2.r, c: p1.c + p2.c})
 }
-
 
 func (m *Map) String() string {
 	s := ""
@@ -168,6 +137,7 @@ func MapLoad(in *bufio.Reader) (*Map, os.Error) {
 			if nrow > rows {
 				log.Panicf("Map rows mismatch row %d expected %d", nrow, rows)
 			}
+
 			line = line[2:] // remove "m "
 			if len(line) != cols {
 				log.Panicf("Map line length mismatch line %d, got %d, expected %d", lines, len(words[1]), cols)

@@ -12,15 +12,19 @@ cd $ROOT/data
 mkdir -p $HOST || exit 1
 cd $HOST
 
-D="`expr $GAME / 100`"
 
 while [ $GAME -lt 7500 ]; do
+    D="`expr $GAME / 1000`"
+        mkdir -p $D
+    DEST="$D/replay.$GAME"
+    SOURCE=${BASE}.$GAME
     if [ -f $D/replay.$GAME ]; then
-        echo "INFO: found game $GAME"
+        echo "INFO: found game $DEST"
     else
-        echo "INFO: getting $GAME"
-        curl --create-dirs -o $D/replay.$GAME ${BASE}.$GAME || echo ouch
-        sleep 5 
+        echo "INFO: getting $SOURCE"
+        echo curl --create-dirs -o $D/replay.$GAME ${BASE}.$GAME || echo ouch
+        ls -1l $DEST
+        sleep 5
     fi
     GAME="`expr $GAME + 1`"
 done

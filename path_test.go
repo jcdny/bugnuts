@@ -63,28 +63,25 @@ func TestMapFill(t *testing.T) {
 
 		// find a hill for start
 		fs, mQ, mD := SlowMapFill(m, Point{r: 3, c: 3})
-		
+
 		log.Printf("SlowFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, fs)
 		ff, mQ, mD := MapFill(m, Point{r: 3, c: 3})
 		log.Printf("FastFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, ff)
 	}
 }
 
-
-
 func BenchmarkSlowMapFill(b *testing.B) {
 	var m *Map = nil
 
 	// fill.2 Point{r:4, c:5}
 	f, _ := os.Open("testdata/maps/fill.2")
-	
+
 	defer f.Close()
 	in := bufio.NewReader(f)
 	m, _ = MapLoad(in)
 
-
 	// find a hill for start
-	for i := 0; i < b.N; i++ {		
+	for i := 0; i < b.N; i++ {
 		SlowMapFill(m, Point{r: 3, c: 3})
 	}
 
@@ -95,16 +92,14 @@ func BenchmarkFastMapFill(b *testing.B) {
 
 	// fill.2 Point{r:4, c:5}
 	f, _ := os.Open("testdata/maps/fill.2")
-	
+
 	defer f.Close()
 	in := bufio.NewReader(f)
 	m, _ = MapLoad(in)
 
-
 	// find a hill for start
-	for i := 0; i < b.N; i++ {		
+	for i := 0; i < b.N; i++ {
 		MapFill(m, Point{r: 3, c: 3})
 	}
 
 }
-
