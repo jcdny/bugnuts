@@ -52,7 +52,6 @@ func (m *Map) ToPoint(l Location) (p Point) {
 	return
 }
 
-
 func (m *Map) Donut(p Point) Point {
 	if p.r < 0 {
 		p.r += m.Rows

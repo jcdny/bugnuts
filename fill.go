@@ -91,7 +91,7 @@ func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string 
 
 func SlowMapFill(m *Map, origin []Point) (*Fill, int, int) {
 	Directions := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}} // w n e s
-	newDepth := uint16(1) // dont start with 0 since 0 means not visited.
+	newDepth := uint16(1)                                   // dont start with 0 since 0 means not visited.
 
 	safe := 0
 
@@ -107,7 +107,7 @@ func SlowMapFill(m *Map, origin []Point) (*Fill, int, int) {
 	for !q.Empty() {
 		// just for sanity...
 		if safe++; safe > 100*len(f.Depth) {
-			log.Panicf("Oh No Crazytime %d %d",  len(f.Depth), safe)
+			log.Panicf("Oh No Crazytime %d %d", len(f.Depth), safe)
 		}
 
 		p := q.DQ()
