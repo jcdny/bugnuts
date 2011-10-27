@@ -46,6 +46,13 @@ func (m *Map) ToLocation(p Point) Location {
 	return Location(p.r*m.Cols + p.c)
 }
 
+func (m *Map) ToPoint(l Location) (p Point) {
+	p = Point{r: int(l) / m.Cols, c: int(l) % m.Cols}
+
+	return
+}
+
+
 func (m *Map) Donut(p Point) Point {
 	if p.r < 0 {
 		p.r += m.Rows

@@ -22,7 +22,6 @@ const (
 	PLAYER7
 	PLAYER8
 	PLAYER9
-	PLAYER10
 	MY_HILL
 	HILL1
 	HILL2
@@ -33,7 +32,6 @@ const (
 	HILL7
 	HILL8
 	HILL9
-	HILL10
 	MY_DEAD
 	DEAD1
 	DEAD2
@@ -44,15 +42,26 @@ const (
 	DEAD7
 	DEAD8
 	DEAD9
-	DEAD10
+	MY_HILLANT
+	HILLANT1
+	HILLANT2
+	HILLANT3
+	HILLANT4
+	HILLANT5
+	HILLANT6
+	HILLANT7
+	HILLANT8
+	HILLANT9
 	MAX_ITEM
 	INVALID_ITEM Item = 255
 )
 
 var itemToSym = [256]byte{' ', '%', '*', '.',
-	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', 'k',
-	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K',
-	'!', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z'}
+	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+	'!', 'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r',
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+}
 
 var symToItem [256]Item
 
@@ -64,9 +73,6 @@ func init() {
 	for i := UNKNOWN; i < MAX_ITEM; i++ {
 		symToItem[itemToSym[i]] = i
 	}
-	for j := 0; j < 10; j++ {
-		symToItem['0'+j] = MY_HILL + Item(j)
-	}
 }
 
 // Map an Item code to a character
@@ -77,4 +83,19 @@ func (o Item) ToSymbol() byte {
 // Map a character to an Item code
 func ToItem(c byte) Item {
 	return symToItem[c]
+}
+
+func (o Item) IsHill() bool {
+	if (o >= MY_HILL && o <= HILL9) || (o >= MY_HILLANT && o <= HILLANT9) {
+		return true
+	}
+
+	return false
+}
+func (o Item) IsEnemyHill() bool {
+	if (o > MY_HILL && o <= HILL9) || (o > MY_HILLANT && o <= HILLANT9) {
+		return true
+	}
+
+	return false
 }

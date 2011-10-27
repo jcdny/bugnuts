@@ -89,22 +89,25 @@ func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string 
 	return s
 }
 
-func SlowMapFill(m *Map, origin Point) (*Fill, int, int) {
+func SlowMapFill(m *Map, origin []Point) (*Fill, int, int) {
+	Directions := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}} // w n e s
 	newDepth := uint16(1) // dont start with 0 since 0 means not visited.
+
 	safe := 0
 
 	f := m.NewFill()
 
 	q := QNew(100)
 
-	q.Q(origin)
-	f.Depth[m.ToLocation(origin)] = newDepth
-
-	Directions := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}} // w n e s
+	for _, p := range origin {
+		q.Q(p)
+		f.Depth[m.ToLocation(p)] = newDepth
+	}
 
 	for !q.Empty() {
-		if safe++; safe > 4*len(f.Depth) {
-			log.Panicf("Oh No Crazytime")
+		// just for sanity...
+		if safe++; safe > 100*len(f.Depth) {
+			log.Panicf("Oh No Crazytime %d %d",  len(f.Depth), safe)
 		}
 
 		p := q.DQ()
@@ -116,7 +119,7 @@ func SlowMapFill(m *Map, origin Point) (*Fill, int, int) {
 			fillp := m.PointAdd(p, d)
 			floc := m.ToLocation(fillp)
 
-			if m.Grid[floc] != WATER && f.Depth[floc] == 0 {
+			if m.Grid[floc] != WATER && (f.Depth[floc] == 0 || f.Depth[floc] > newDepth) {
 				q.Q(fillp)
 				f.Depth[floc] = newDepth
 			}

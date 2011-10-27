@@ -195,12 +195,6 @@ func (s *State) ToLocations(pv []Point) []Location {
 	return lv
 }
 
-func (s *State) ToPoint(l Location) (p Point) {
-	p = Point{r: int(l) / s.Cols, c: int(l) % s.Cols}
-
-	return
-}
-
 func (s *State) PointAdd(p1, p2 Point) Point {
 	return s.Donut(Point{r: p1.r + p2.r, c: p1.c + p2.c})
 }
@@ -441,7 +435,7 @@ func (s *State) Score(p, tp Point, pv []Point) int {
 				iname = "my hill"
 				inc = -32 + 4*Min([]int{d, 8})
 			}
-			if item > MY_HILL && item < HILL10 {
+			if item.IsEnemyHill() {
 				iname = "enemy hill"
 				inc = 1500 - 100*Min([]int{d, 10})
 			}
@@ -474,7 +468,7 @@ func (s *State) Score(p, tp Point, pv []Point) int {
 func (s *State) validPoint(p Point) bool {
 	sv := []Point{{-1, 0}, {1, 0}, {0, 1}, {0, -1}}
 	tgt := s.Map.Grid[s.ToLocation(p)]
-	if tgt == FOOD || tgt == LAND || (tgt > MY_HILL && tgt <= HILL10) {
+	if tgt == FOOD || tgt == LAND || tgt.IsEnemyHill() {
 		for _, op := range sv {
 			//make sure there is an exit
 			ep := s.PointAdd(p, op)
