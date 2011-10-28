@@ -6,10 +6,39 @@ import (
 	"rand"
 	"math"
 	"bufio"
-	"fmt"
 	"strconv"
 	"strings"
 )
+
+const (
+	MaxPlayers int = 10
+)
+
+type Parameters struct {
+	ExpireFood int // If food is older than this many turns we assume someone has gotten it
+}
+
+type Statistics struct {
+	Dead []map[Location]int // Death count per location by player
+	Died [MaxPlayers]int    // count of suicides by player
+}
+
+
+type Hill struct {
+	Location Location
+	Player   int // The owner of the hill
+	Found    int // Turn we no longer saw it
+	Seen     int // Last turn we saw it
+	Killed   int // First Turn we no longer saw it
+	Killer   int // Who we think killed it, may be a guess
+	Nearest   int // enemy nearest to hill
+	NLocation Location // Location of nearest enemy
+
+	guess    bool // Are we guessing location
+	Ants     []Location // The ants we saw to define a bounding box
+	AntTurn  int  // The turn we saw them
+	maxerror int // the maximum steps to bound the unkown location
+}
 
 //State keeps track of everything we need to know about the state of the game
 type State struct {
@@ -27,15 +56,20 @@ type State struct {
 	PlayerSeed    int64 //random player seed
 	Turn          int   //current turn number
 
-	// Cached circles etc...
+	// Cached circles etc.
 	Radius        int
 	ViewPoints    []Point
 	ViewLocations []Location
 	ViewAdd       [][]Point // NSEW points added
 	ViewRem       [][]Point // NSEW points removed
 
-	Ants []Point          // My Ants
-	Food map[Location]int // Food Seen
+	Ants  []map[Location]int // Ant lists List by playerid value is turn seen
+	Hills map[Location]*Hill // Hill list
+	Food  map[Location]int   // Food Seen
+
+	// Parameter Set
+	Parms *Parameters
+	Stats *Statistics
 
 	// Map State
 	Map *Map
@@ -124,41 +158,20 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 
 	// Food and Ant things
 	s.Food = make(map[Location]int)
-	s.Ants = make([]Point, 0, 500)
+	s.Ants = make([]map[Location]int, MaxPlayers)
+	s.Hills = make(map[Location]*Hill)
+	s.Stats = &Statistics {
+		Dead: make([]map[Location]int, MaxPlayers),
+	}
+	s.Parms = &Parameters{
+		ExpireFood: 10,
+	}
 
 	if s.PlayerSeed != 0 {
 		rand.Seed(s.PlayerSeed)
 	}
 
 	return nil
-}
-
-func (s *State) ParamsToString() string {
-	str := ""
-
-	str += "turn 0\n"
-	str += "loadtime " + strconv.Itoa(s.LoadTime) + "\n"
-	str += "turntime " + strconv.Itoa(s.TurnTime) + "\n"
-	str += "rows " + strconv.Itoa(s.Rows) + "\n"
-	str += "cols " + strconv.Itoa(s.Cols) + "\n"
-	str += "turns " + strconv.Itoa(s.Turns) + "\n"
-	str += "viewradius2 " + strconv.Itoa(s.ViewRadius2) + "\n"
-	str += "attackradius2 " + strconv.Itoa(s.AttackRadius2) + "\n"
-	str += "spawnradius2 " + strconv.Itoa(s.SpawnRadius2) + "\n"
-	str += "player_seed " + strconv.Itoa64(s.PlayerSeed) + "\n"
-	str += "ready\n"
-
-	return str
-}
-
-func (s *State) String() string {
-	str := ""
-
-	str += "turn " + strconv.Itoa(s.Turn) + "\n"
-	str += "rows " + strconv.Itoa(s.Rows) + "\n"
-	str += "cols " + strconv.Itoa(s.Cols) + "\n"
-	str += "player_seed " + strconv.Itoa64(s.PlayerSeed) + "\n"
-	return str
 }
 
 func (s *State) Donut(p Point) Point {
@@ -240,7 +253,8 @@ func (s *State) ParseTurn() (line string, err os.Error) {
 			}
 
 			s.ResetGrid() // TODO Mysterious to have it here...
-			s.Ants = s.Ants[:0]
+			// should food clear any visibles, Remove if visible this turn
+
 
 			if turn != s.Turn+1 {
 				log.Printf("Turn number out of sync, expected %v got %v", s.Turn+1, turn)
@@ -268,7 +282,8 @@ func (s *State) ParseTurn() (line string, err os.Error) {
 			log.Printf("Atoi error %s \"%v\"", line, err)
 			continue
 		}
-		p := Point{r: Row, c: Col}
+
+		loc := s.Map.ToLocation(Point{r: Row, c: Col})
 
 		if len(words) > 3 {
 			Player, err = strconv.Atoi(words[3])
@@ -278,64 +293,122 @@ func (s *State) ParseTurn() (line string, err os.Error) {
 			}
 		}
 
+		// Now handle items
+
 		switch words[0] {
 		case "f":
-			s.AddFood(p)
+			s.AddFood(loc)
 		case "w":
-			s.AddWater(p)
+			s.AddWater(loc)
 		case "a":
-			s.AddAnt(p, Player)
+			s.AddAnt(loc, Player)
 		case "h":
-			s.AddHill(p, Player)
+			s.AddHill(loc, Player)
 		case "d":
-			s.AddDeadAnt(p, Player)
+			s.AddDeadAnt(loc, Player)
 		default:
 			log.Printf("Unknown turn data \"%s\"", line)
 		}
 	}
 
+	s.ProcessState() // Updater for all things visible
+
 	// exit condition above is "go" or "end" or error on readline.
 	return
 }
 
-func (s *State) AddWater(p Point) {
-	s.Map.Grid[s.ToLocation(p)] = WATER
+func (s *State) AddWater(loc Location) {
+	s.Map.Grid[loc] = WATER
 }
 
-func (s *State) AddFood(p Point) {
-	l := s.ToLocation(p)
-	s.Map.Grid[l] = FOOD
-	s.Food[l] = s.Turn // Save food seen to check if its moved.
+func (s *State) AddFood(loc Location) {
+	s.Food[loc] = s.Turn
 }
 
-func (s *State) AddAnt(p Point, Player int) {
-	if s.Map.Grid[s.ToLocation(p)] <= MY_HILL {
-		s.Map.Grid[s.ToLocation(p)] = MY_ANT + Item(Player)
-		if Player == 0 {
-			s.UpdateLand(p)
-			s.UpdateSeen(p)
-			s.Ants = append(s.Ants, p) // Track my ants
+func (s *State) AddAnt(loc Location, player int) {
+	if s.Ants[player] == nil {
+		s.Ants[player] = make(map[Location]int)
+		// TODO New ant seen - start guessing hill loc
+	}
+	s.Ants[player][loc] = s.Turn
+
+	if player == 0 {
+		s.UpdateSeen(loc)
+		s.UpdateLand(loc)
+	}
+
+	// TODO move this all to the inference step, should not be here!
+
+	// Handle tracking Razes
+	hill, found := s.Hills[loc]
+
+	if found && !hill.guess {
+		// for guesses we will update those when we validate
+		// visibles - the guess location is by definition visible
+		// since we got an ant in our location
+
+		if hill.Seen == s.Turn {
+			if hill.Player != player {
+				// TODO work out how to infer raze - do we get the hill
+				// sent with the player on the round after raze?
+				// I assume not but need to check.
+				//
+				// If not this state should be treated as an error
+				log.Printf("Error? player %d on hill player %d hill at %v",
+					player, hill.Player, s.Map.ToPoint(loc))
+			}
+		} else if hill.Killed < 0 {
+			// we found a hill in the hash but its not marked killed
+			// Mark it killed by the ant we found standing on it.
+			// could be wrong ofc.
+			hill.Killed = s.Turn
+			hill.Killer = player
 		}
 	}
 }
 
-func (s *State) AddDeadAnt(p Point, Player int) {
+func (s *State) AddDeadAnt(loc Location, player int) {
+	if s.Stats.Dead[player] == nil {
+		s.Stats.Dead[player] = make(map[Location]int)
+	}
+	s.Stats.Dead[player][loc]++
+	s.Stats.Died[player]++
+
+	// TODO track suicides/sacrifices and who the killer was.
 }
 
-func (s *State) AddHill(p Point, Player int) {
-	s.Map.Grid[s.ToLocation(p)] = MY_HILL + Item(Player)
+func (s *State) AddHill(loc Location, player int) {
+	if hill, found := s.Hills[loc]; found {
+		hill.Seen = s.Turn
+		hill.guess = false
+	} else {
+		s.Hills[loc] = &Hill{
+			Location: loc,
+			Player:   player,
+			Found:    s.Turn,
+			Seen:     s.Turn,
+			Killed:   0,
+			Killer:   -1,
+			Nearest: -1,
+			NLocation: -1,
+			guess:    false,
+		}
+	}
 }
 
-func (s *State) UpdateLand(p Point) {
-	if p.c > s.Radius && p.c+s.Radius < s.Cols && p.r > s.Radius && p.r+s.Radius < s.Rows {
+// Todo This could all be done in one step.  Also viewer count.
+// Obvious optimizations: watch Adjacent Seen cells and do incremental updating.
+func (s *State) UpdateLand(loc Location) {
+	p := s.Map.ToPoint(loc)
+	if p.c > s.Radius && p.c < s.Cols-s.Radius && p.r > s.Radius && p.r < s.Rows-s.Radius {
 		// In interior of map so use loc offsets
-		l := s.ToLocation(p)
 		for _, offset := range s.ViewLocations {
-			if s.Map.Grid[l+offset] == UNKNOWN {
-				s.Map.Grid[l+offset] = LAND
+			if s.Map.Grid[loc+offset] == UNKNOWN {
+				s.Map.Grid[loc+offset] = LAND
 			}
 		}
 	} else {
+		// non interior point lets go slow
 		for _, op := range s.ViewPoints {
 			l := s.ToLocation(s.PointAdd(p, op))
 			if s.Map.Grid[l] == UNKNOWN {
@@ -345,12 +418,12 @@ func (s *State) UpdateLand(p Point) {
 	}
 }
 
-func (s *State) UpdateSeen(p Point) {
-	if p.c > s.Radius && p.c+s.Radius < s.Cols && p.r > s.Radius && p.r+s.Radius < s.Rows {
+func (s *State) UpdateSeen(loc Location) {
+	p := s.Map.ToPoint(loc)
+	if p.c > s.Radius && p.c < s.Cols-s.Radius && p.r > s.Radius && p.r < s.Rows-s.Radius {
 		// In interior of map so use loc offsets
-		l := s.ToLocation(p)
 		for _, offset := range s.ViewLocations {
-			s.Map.Seen[l+offset] = s.Turn
+			s.Map.Seen[loc+offset] = s.Turn
 		}
 	} else {
 		for _, op := range s.ViewPoints {
@@ -359,156 +432,94 @@ func (s *State) UpdateSeen(p Point) {
 	}
 }
 
-func (s *State) DoTurn() {
-	sv := []Point{{-1, 0}, {1, 0}, {0, 1}, {0, -1}}
-	for _, p := range s.Ants {
-		best := math.MinInt32
-		var score [4]int
-		for d, op := range sv {
-			tp := s.PointAdd(p, op)
-			if s.validPoint(tp) {
-				if false && rand.Intn(8) == 0 {
-					score[d] = 500
+
+
+
+func (s *State) ParamsToString() string {
+	str := ""
+
+	str += "turn 0\n"
+	str += "loadtime " + strconv.Itoa(s.LoadTime) + "\n"
+	str += "turntime " + strconv.Itoa(s.TurnTime) + "\n"
+	str += "rows " + strconv.Itoa(s.Rows) + "\n"
+	str += "cols " + strconv.Itoa(s.Cols) + "\n"
+	str += "turns " + strconv.Itoa(s.Turns) + "\n"
+	str += "viewradius2 " + strconv.Itoa(s.ViewRadius2) + "\n"
+	str += "attackradius2 " + strconv.Itoa(s.AttackRadius2) + "\n"
+	str += "spawnradius2 " + strconv.Itoa(s.SpawnRadius2) + "\n"
+	str += "player_seed " + strconv.Itoa64(s.PlayerSeed) + "\n"
+
+	return str
+}
+
+func (s *State) String() string {
+	str := ""
+
+	str += "turn " + strconv.Itoa(s.Turn) + "\n"
+	str += "rows " + strconv.Itoa(s.Rows) + "\n"
+	str += "cols " + strconv.Itoa(s.Cols) + "\n"
+	str += "player_seed " + strconv.Itoa64(s.PlayerSeed) + "\n"
+	return str
+}
+
+
+
+func (s *State) ProcessState() {
+	// Assumes the loc data has all been read, and Seen/Land updated
+
+	// Nuke all food > Turn N
+	for loc, seen := range s.Food {
+		// Better would be to compute expected pickup time give neighbors
+		// in the pathing step and only revert to this when there were no
+		// visible neighbors.
+		//
+		// Should track that anyway since does not make sense to run for 
+		// food another bot will certainly get unless its to enter combat.
+
+		if s.Map.Seen[loc] > seen || seen < s.Turn - s.Parms.ExpireFood {
+			s.Food[loc] = 0, false
+		} else {
+			s.Map.Grid[loc] = FOOD
+		}
+	}
+
+	for loc, hill := range s.Hills {
+		if hill.Killed == 0 {
+			if s.Map.Seen[loc] > hill.Seen {
+				if hill.guess {
+					// We just guessed at a location anyway, just remove for now
+					s.Hills[loc] = &Hill{}, false
+
+					// update the guess
 				} else {
-					score[d] = s.Score(p, tp, s.ViewAdd[d])
+					// We don't see the hill to mark as killed by whoever we think was closest
+					hill.Killed = s.Turn
+					hill.Killer = hill.Nearest
 				}
-				if score[d] > best {
-					best = score[d]
-				}
+			}
+		} else {
+			s.Map.Grid[loc] = MY_HILL + Item(hill.Player)
+		}
+	}
+
+	for player, ants := range s.Ants {
+		for loc, seen := range ants {
+			if seen < s.Map.Seen[loc] || (player == 0 && seen < s.Turn) {
+				ants[loc] = 0, false
 			} else {
-				score[d] = -9999
-			}
-		}
-
-		if Debug > 2 {
-			log.Printf("TURN %d point %v score %v best %v", s.Turn, p, score, best)
-		}
-
-		if best > math.MinInt32 {
-			var bestd []int
-			for d, try := range score {
-				if try == best {
-					bestd = append(bestd, d)
-				}
-			}
-			pp := rand.Perm(len(bestd))[0]
-			// Swap the current and target cells
-			tp := s.PointAdd(p, sv[bestd[pp]])
-			s.Map.Grid[s.ToLocation(tp)] = MY_ANT
-			s.Map.Grid[s.ToLocation(p)] = LAND
-			fmt.Fprintf(os.Stdout, "o %d %d %c\n", p.r, p.c, ([4]byte{'n', 's', 'e', 'w'})[bestd[pp]])
-		}
-	}
-	fmt.Fprintf(os.Stdout, "go\n")
-
-}
-
-func (s *State) Score(p, tp Point, pv []Point) int {
-	score := 0
-
-	// Score for explore
-	for _, op := range pv {
-		seen := s.Map.Seen[s.ToLocation(s.PointAdd(p, op))]
-		switch {
-		case seen < 1:
-			score += 2
-		case seen > s.Turn-2:
-			score -= 1
-		}
-	}
-	score = score * 17 / len(pv)
-
-	if Debug > 3 {
-		log.Printf("p %v tp %v explore score %d", p, tp, score)
-	}
-
-	// Score for nearby items
-	for _, op := range s.ViewPoints {
-		item := s.Map.Grid[s.ToLocation(s.PointAdd(tp, op))]
-		inc := 0
-		iname := ""
-		if item != LAND && item != WATER {
-			//log.Printf("%v %v %d %d",p, tp, op, d, item)
-			d := Abs(op.c) + Abs(op.r)
-
-			if item == MY_HILL {
-				iname = "my hill"
-				inc = -32 + 4*Min([]int{d, 8})
-			}
-			if item.IsEnemyHill() {
-				iname = "enemy hill"
-				inc = 1500 - 100*Min([]int{d, 10})
-			}
-			if item == FOOD {
-				iname = "food"
-				if d == 1 {
-					inc = 1000
+				if s.Map.Grid[loc].IsHill() {
+					s.Map.Grid[loc] = MY_HILLANT + Item(player)
 				} else {
-					inc = 120 - 12*Min([]int{d, 10})
+					s.Map.Grid[loc] = MY_ANT + Item(player)
 				}
 			}
-			if item == MY_ANT && d > 1 {
-				iname = "my ant"
-				inc = -30 + 5*Min([]int{d, 6})
-			}
-		}
-		score += inc
-		if Debug > 3 && iname != "" {
-			log.Printf("tp %v (at %v) %s worth %d",
-				tp, op, iname, inc)
+			// TODO if the ant was visble last turn, not now and there is an ant
+			// we can see 1 step away from where it was assume the new ant is
+			// TODO think more about this.
+
+			// Also think about diffusing ants, assuming appearing ants match missing ones
 		}
 	}
-	if Debug > 3 {
-		log.Printf("p %v tp %v total score %d",
-			p, tp, score)
-	}
-	return score
 }
 
-func (s *State) validPoint(p Point) bool {
-	sv := []Point{{-1, 0}, {1, 0}, {0, 1}, {0, -1}}
-	tgt := s.Map.Grid[s.ToLocation(p)]
-	if tgt == FOOD || tgt == LAND || tgt.IsEnemyHill() {
-		for _, op := range sv {
-			//make sure there is an exit
-			ep := s.PointAdd(p, op)
-			tgt := s.Map.Grid[s.ToLocation(ep)]
-			if tgt == FOOD || tgt == LAND {
-				return true
-			}
-		}
-	}
-	return false
-}
 
-func (s *State) DumpSeen() {
-	mseen := Max(s.Map.Seen)
-	str := ""
-
-	for r := 0; r < s.Rows; r++ {
-		for c := 0; c < s.Cols; c++ {
-			str += strconv.Itoa(s.Map.Seen[r*s.Cols+c] * 10 / (mseen + 1))
-		}
-		str += "\n"
-	}
-
-	log.Printf("Turn %d\n%v\n", s.Turn, str)
-}
-
-func (s *State) DumpMap() {
-	m := make([]byte, len(s.Map.Grid))
-	str := ""
-
-	for i, o := range s.Map.Grid {
-		m[i] = o.ToSymbol()
-	}
-
-	for r := 0; r < s.Rows; r++ {
-		for c := 0; c < s.Cols; c++ {
-			str += string(m[r*s.Cols+c])
-		}
-		str += "\n"
-	}
-
-	log.Printf("Turn %d\n%v\n", s.Turn, str)
-}

@@ -2,6 +2,8 @@ include $(GOROOT)/src/Make.inc
 
 TARG=MyBot
 GOFILES=\
+	v3.go\
+	pallettes.go\
 	debugging.go\
 	queue.go\
 	fill.go\

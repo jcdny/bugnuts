@@ -1,5 +1,5 @@
 #!/bin/bash
-GAME=1000
+GAME=20000
 HOST=aichallenge.org
 BASE=http://aichallenge.org/game/0/
 ROOT=~/src/ai/bot/replay
@@ -13,7 +13,7 @@ mkdir -p $HOST || exit 1
 cd $HOST
 
 
-while [ $GAME -lt 20000 ]; do
+while [ $GAME -lt 25000 ]; do
     D="`expr $GAME / 1000`"
 
     DEST=$D/$GAME.replaygz

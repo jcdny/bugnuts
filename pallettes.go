@@ -1,3 +1,9 @@
+package main
+
+import (
+	"image"
+)
+
 func (o Item) Color() image.NRGBAColor {
 	switch o {
 	case UNKNOWN:
