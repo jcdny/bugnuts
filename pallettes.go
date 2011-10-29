@@ -4,6 +4,14 @@ import (
 	"image"
 )
 
+type ImageLayer struct {
+	name  string
+	l     []uint8
+	m     *Map
+	pal   image.NRGBAColor
+	color image.ColorImage
+}
+
 func (o Item) Color() image.NRGBAColor {
 	switch o {
 	case UNKNOWN:

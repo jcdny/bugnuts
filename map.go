@@ -6,6 +6,7 @@ import (
 	"os"
 	"bufio"
 	"strings"
+	"fmt"
 )
 
 type Map struct {
@@ -19,6 +20,10 @@ type Map struct {
 
 type Point struct {
 	r, c int
+}
+
+func (p *Point) String() string {
+	return fmt.Sprintf("r:%d s:%d", p.r, p.c)
 }
 
 func NewMap(rows, cols, players int) *Map {
@@ -159,8 +164,7 @@ func MapLoad(in *bufio.Reader) (*Map, os.Error) {
 	return m, err
 }
 
-
-func (m *Map) HillLocations() ([]Location) {
+func (m *Map) HillLocations() []Location {
 	// find a hill for start
 	hills := []Location{}
 
@@ -172,7 +176,6 @@ func (m *Map) HillLocations() ([]Location) {
 
 	return hills
 }
-
 
 func MapLoadFile(file string) (*Map, os.Error) {
 	var m *Map = nil
@@ -191,3 +194,34 @@ func MapLoadFile(file string) (*Map, os.Error) {
 	return m, err
 }
 
+func MapValidate(ref *Map, gen *Map) (int, string) {
+	out := ""
+	count := 0
+
+	if gen.Rows != ref.Rows || gen.Cols != ref.Cols {
+		out += fmt.Sprintf("Map size mismatch: refence map r:%d c:%d and generated map r:%d c:%d\n",
+			ref.Rows, ref.Cols, gen.Rows, gen.Cols)
+		count++
+	} else {
+		for i, item := range gen.Grid {
+			if item != UNKNOWN && item != ref.Grid[i] &&
+				(item == WATER || ref.Grid[i] == WATER ||
+					item.IsHill() != gen.Grid[i].IsHill()) {
+				out += fmt.Sprintf("%v ref %s gen %s\n", gen.ToPoint(Location(i)), ref.Grid[i], item)
+				count++
+			}
+		}
+	}
+	return count, out
+}
+
+//Take a slice of Point and return a slice of Location
+//Used for offsets so it does not donut things.
+func (m *Map) ToPoints(lv []Location) []Point {
+	pv := make([]Point, len(lv), len(lv))
+	for i, l := range lv {
+		pv[i] = m.ToPoint(l)
+	}
+
+	return pv
+}

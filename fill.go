@@ -89,7 +89,7 @@ func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string 
 	return s
 }
 
-func SlowMapFill(m *Map, origin []Point) (*Fill, int, int) {
+func MapFill(m *Map, origin []Point) (*Fill, int, int) {
 	Directions := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}} // w n e s
 	newDepth := uint16(1)                                   // dont start with 0 since 0 means not visited.
 
@@ -130,7 +130,7 @@ func SlowMapFill(m *Map, origin []Point) (*Fill, int, int) {
 }
 
 // Generate a fill from Map m return fill slice, max Q size, max depth
-func MapFill(m *Map, origin Point) (*Fill, int, int) {
+func ExpMapFill(m *Map, origin Point) (*Fill, int, int) {
 
 	newDepth := uint16(1) // dont start with 0 since 0 means not visited.
 	safe := 0

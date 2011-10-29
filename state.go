@@ -23,21 +23,20 @@ type Statistics struct {
 	Died [MaxPlayers]int    // count of suicides by player
 }
 
-
 type Hill struct {
-	Location Location
-	Player   int // The owner of the hill
-	Found    int // Turn we no longer saw it
-	Seen     int // Last turn we saw it
-	Killed   int // First Turn we no longer saw it
-	Killer   int // Who we think killed it, may be a guess
-	Nearest   int // enemy nearest to hill
+	Location  Location
+	Player    int      // The owner of the hill
+	Found     int      // Turn we no longer saw it
+	Seen      int      // Last turn we saw it
+	Killed    int      // First Turn we no longer saw it
+	Killer    int      // Who we think killed it, may be a guess
+	Nearest   int      // enemy nearest to hill
 	NLocation Location // Location of nearest enemy
 
-	guess    bool // Are we guessing location
+	guess    bool       // Are we guessing location
 	Ants     []Location // The ants we saw to define a bounding box
-	AntTurn  int  // The turn we saw them
-	maxerror int // the maximum steps to bound the unkown location
+	AntTurn  int        // The turn we saw them
+	maxerror int        // the maximum steps to bound the unkown location
 }
 
 //State keeps track of everything we need to know about the state of the game
@@ -160,7 +159,7 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 	s.Food = make(map[Location]int)
 	s.Ants = make([]map[Location]int, MaxPlayers)
 	s.Hills = make(map[Location]*Hill)
-	s.Stats = &Statistics {
+	s.Stats = &Statistics{
 		Dead: make([]map[Location]int, MaxPlayers),
 	}
 	s.Parms = &Parameters{
@@ -383,15 +382,15 @@ func (s *State) AddHill(loc Location, player int) {
 		hill.guess = false
 	} else {
 		s.Hills[loc] = &Hill{
-			Location: loc,
-			Player:   player,
-			Found:    s.Turn,
-			Seen:     s.Turn,
-			Killed:   0,
-			Killer:   -1,
-			Nearest: -1,
+			Location:  loc,
+			Player:    player,
+			Found:     s.Turn,
+			Seen:      s.Turn,
+			Killed:    0,
+			Killer:    -1,
+			Nearest:   -1,
 			NLocation: -1,
-			guess:    false,
+			guess:     false,
 		}
 	}
 }
@@ -432,9 +431,6 @@ func (s *State) UpdateSeen(loc Location) {
 	}
 }
 
-
-
-
 func (s *State) ParamsToString() string {
 	str := ""
 
@@ -462,8 +458,6 @@ func (s *State) String() string {
 	return str
 }
 
-
-
 func (s *State) ProcessState() {
 	// Assumes the loc data has all been read, and Seen/Land updated
 
@@ -476,7 +470,7 @@ func (s *State) ProcessState() {
 		// Should track that anyway since does not make sense to run for 
 		// food another bot will certainly get unless its to enter combat.
 
-		if s.Map.Seen[loc] > seen || seen < s.Turn - s.Parms.ExpireFood {
+		if s.Map.Seen[loc] > seen || seen < s.Turn-s.Parms.ExpireFood {
 			s.Food[loc] = 0, false
 		} else {
 			s.Map.Grid[loc] = FOOD
@@ -522,4 +516,18 @@ func (s *State) ProcessState() {
 	}
 }
 
+func (s *State) FoodLocations() (l []Location) {
+	for loc, _ := range s.Food {
+		l = append(l, Location(loc))
+	}
+	return l
+}
 
+func (s *State) EnemyHillLocations() (l []Location) {
+	for loc, hill := range s.Hills {
+		if hill.Player > 0 && hill.Killed == 0 {
+			l = append(l, Location(loc))
+		}
+	}
+	return l
+}

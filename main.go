@@ -9,42 +9,65 @@ import (
 )
 
 var Debug int = 0
+var runBot string
+var mapFile string
 
 func init() {
 	flag.IntVar(&Debug, "d", 0, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
+	flag.StringVar(&runBot, "b", "v4", "Which bot to run")
+	flag.StringVar(&mapFile, "m", "", "Map file, if provided will be used to validate generated map, hill guessing etc.")
+
 	flag.Parse()
 }
 
 func main() {
+	var s State
+	var bot Bot
 
 	in := bufio.NewReader(os.Stdin)
 
-	Run(in)
-}
-
-func Run(in *bufio.Reader) {
-	var s State
-
 	err := s.Start(in)
+
 	if err != nil {
 		log.Panicf("Start(in) failed (%s)", err)
-	}
-
-	if Debug > 1 {
+	} else if Debug > 1 {
 		log.Printf("State:\n%v\n", &s)
 	}
 
-	me := NewBot(&s)
+	// Set up bot
+	switch runBot {
+	case "v3":
+		bot = NewBotV3(&s)
+	case "v4":
+		bot = NewBotV4(&s)
+	default:
+		log.Printf("Unkown bot %s, choose from v3 or v4", runBot)
+		return
+	}
+
+	var refmap *Map
+	if mapFile != "" {
+		refmap, _ = MapLoadFile("testdata/maps/" + mapFile)
+	}
+
+	// TODO Time from load to measure other bots calc time in preload.
+	// Send go to tell server we are ready to process turns
 	fmt.Fprintf(os.Stdout, "go\n")
 
 	for {
-		// Reset for Next Parse
+		// RESET FOR NEXT PARSE
 
-		line, err := s.ParseTurn() // TURN PARSE
+		// READ TURN INFO FROM SERVER
+		turn, err := s.ParseTurn()
 
-		// State Validation
+		if refmap != nil {
+			count, out := MapValidate(refmap, s.Map)
+			if count > 0 {
+				log.Print(out)
+			}
+		}
 
-		if err == os.EOF || line == "end" {
+		if err == os.EOF || turn == "end" {
 			break
 		}
 
@@ -52,11 +75,9 @@ func Run(in *bufio.Reader) {
 			log.Printf("TURN %d Generating orders turn", s.Turn)
 		}
 		// Generate order list
-		s.DoTurn()
+		bot.DoTurn(&s)
 
-		// Validation of orders
-
-		// additional thinking til timeout
+		// additional thinking til near timeout
 
 		// emit orders
 	}
@@ -69,6 +90,6 @@ func Run(in *bufio.Reader) {
 	//s.DumpMap()
 
 	if Debug > 0 {
-		log.Printf("Bot Result %v", me)
+		log.Printf("Bot Result %v", bot)
 	}
 }

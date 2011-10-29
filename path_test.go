@@ -18,7 +18,7 @@ func TestMapLoad(t *testing.T) {
 	if m == nil {
 		t.Errorf("Invalid load of map m == nil")
 	}
-	m.WriteDebugImage("_test", 0, func (c, r int) image.NRGBAColor { return m.At(r, c) })
+	m.WriteDebugImage("_test", 0, func(c, r int) image.NRGBAColor { return m.At(r, c) })
 }
 
 func TestMapFill(t *testing.T) {
@@ -38,10 +38,10 @@ func TestMapFill(t *testing.T) {
 		p = append(p, m.ToPoint(hill))
 	}
 
-	fs, mQ, mD := SlowMapFill(m, p[0:1])
+	fs, mQ, mD := MapFill(m, p[0:1])
 	log.Printf("SlowFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, fs)
 
-	fs, mQ, mD = SlowMapFill(m, p)
+	fs, mQ, mD = MapFill(m, p)
 	log.Printf("SlowFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, fs)
 }
 
@@ -55,7 +55,7 @@ func BenchmarkSlowMapFill(b *testing.B) {
 
 	// TODO find a hill for start
 	for i := 0; i < b.N; i++ {
-		SlowMapFill(m, []Point{{r: 3, c: 3}})
+		MapFill(m, []Point{{r: 3, c: 3}})
 	}
 
 }

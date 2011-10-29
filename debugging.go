@@ -20,14 +20,13 @@ func (ih ImageHelper) ColorModel() image.ColorModel {
 }
 
 func (ih ImageHelper) Bounds() image.Rectangle {
-	fmt.Printf("Bounds are 0,0,%d,%d\n",ih.m.Cols*4, ih.m.Rows*4)
+	fmt.Printf("Bounds are 0,0,%d,%d\n", ih.m.Cols*4, ih.m.Rows*4)
 	return image.Rect(0, 0, ih.m.Cols*4, ih.m.Rows*4)
 }
 
 func (ih ImageHelper) At(x, y int) image.Color {
 	return ih.pixel(y/4, x/4)
 }
-
 
 //implement Image for fancy image debugging
 func (m *Map) ColorModel() image.ColorModel {
@@ -40,7 +39,6 @@ func (m *Map) At(x, y int) image.NRGBAColor {
 	loc := m.ToLocation(Point{y, x})
 	return m.Grid[loc].Color()
 }
-
 
 func (m *Map) WriteDebugImage(Desc string, seq int, At func(row, col int) image.NRGBAColor) {
 
@@ -67,10 +65,6 @@ func (m *Map) WriteDebugImage(Desc string, seq int, At func(row, col int) image.
 		log.Panicf("Couldn't encode png (%s)", err)
 	}
 }
-
-
-
-
 
 func (s *State) DumpSeen() {
 	mseen := Max(s.Map.Seen)

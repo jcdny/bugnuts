@@ -9,19 +9,32 @@ import (
 	"rand"
 )
 
-func (s *State) DoTurn() {
+type BotV3 struct {
+
+}
+
+//NewBot creates a new instance of your bot
+func NewBotV3(s *State) Bot {
+	mb := &BotV3{
+	//do any necessary initialization here
+	}
+
+	return mb
+}
+
+func (bot *BotV3) DoTurn(s *State) os.Error {
 	sv := []Point{{-1, 0}, {1, 0}, {0, 1}, {0, -1}}
-	for loc,_ := range (s.Ants[0]) {
+	for loc, _ := range s.Ants[0] {
 		p := s.Map.ToPoint(loc)
 		best := math.MinInt32
 		var score [4]int
 		for d, op := range sv {
 			tp := s.PointAdd(p, op)
-			if s.validPoint(tp) {
+			if bot.validPoint(s, tp) {
 				if false && rand.Intn(8) == 0 {
 					score[d] = 500
 				} else {
-					score[d] = s.Score(p, tp, s.ViewAdd[d])
+					score[d] = bot.Score(s, p, tp, s.ViewAdd[d])
 				}
 				if score[d] > best {
 					best = score[d]
@@ -52,9 +65,10 @@ func (s *State) DoTurn() {
 	}
 	fmt.Fprintf(os.Stdout, "go\n")
 
+	return nil
 }
 
-func (s *State) Score(p, tp Point, pv []Point) int {
+func (bot *BotV3) Score(s *State, p, tp Point, pv []Point) int {
 	score := 0
 
 	// Score for explore
@@ -116,7 +130,7 @@ func (s *State) Score(p, tp Point, pv []Point) int {
 	return score
 }
 
-func (s *State) validPoint(p Point) bool {
+func (bot *BotV3) validPoint(s *State, p Point) bool {
 	sv := []Point{{-1, 0}, {1, 0}, {0, 1}, {0, -1}}
 	tgt := s.Map.Grid[s.ToLocation(p)]
 	if tgt == FOOD || tgt == LAND || tgt.IsEnemyHill() {
@@ -131,4 +145,3 @@ func (s *State) validPoint(p Point) bool {
 	}
 	return false
 }
-
