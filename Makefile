@@ -2,6 +2,7 @@ include $(GOROOT)/src/Make.inc
 
 TARG=MyBot
 GOFILES=\
+	BotV0.go\
 	Botv3.go\
 	Botv4.go\
 	pallettes.go\
