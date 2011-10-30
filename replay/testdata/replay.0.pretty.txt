@@ -1,0 +1,144 @@
+{
+    "challenge": "ants", 
+    "game_id": 0, 
+    "game_length": 288, 
+    "location": "localhost", 
+    "playernames": [
+        "bot.sh", 
+        "bugnutsv3", 
+        "HunterBot.py", 
+        "GreedyBot.py"
+    ], 
+    "playerturns": [
+        288, 
+        203, 
+        288, 
+        143
+    ], 
+    "rank": [
+        0, 
+        1, 
+        3, 
+        1
+    ], 
+    "replaydata": {
+        "ants": [
+            [
+                25, 
+                13, 
+                0, 
+                10, 
+                0, 
+                "swssseesss"
+            ], 
+            [
+                9, 
+                47, 
+                284, 
+                285, 
+                2, 
+                "n"
+            ]
+        ], 
+        "attackradius2": 5, 
+        "bonus": [
+            0, 
+            0, 
+            0, 
+            0
+        ], 
+        "cutoff": "rank stabilized", 
+        "engine_seed": 42, 
+        "food": [
+            [
+                12, 
+                0, 
+                0, 
+                1, 
+                3
+            ], 
+            [
+                43, 
+                81, 
+                288, 
+                289
+            ]
+        ], 
+        "food_rate": 6, 
+        "food_start": 102, 
+        "food_turn": 12, 
+        "hills": [
+            [
+                57, 
+                61, 
+                2, 
+                258
+            ], 
+            [
+                41, 
+                37, 
+                3, 
+                86
+            ]
+        ], 
+        "hive_history": [
+            [
+                0, 
+                1, 
+                ...
+            ], 
+            [
+                0, 
+                1, 
+                0, 
+                0
+            ]
+        ], 
+        "loadtime": 3000, 
+        "map": {
+            "cols": 96, 
+            "data": [
+                "...%%%.....%%......%%%.....%%%.....%%%...a.%%%%%%%%%%%....%%%.....%%%%.a...%%%.....%%%....%%%...", 
+                ...
+                "..%%%%.......%....%%%%...a.%.......%%.....%%..%...%%%......%%%.....%%%.....%%.....%%%%....%.%%a."
+            ], 
+            "rows": 64
+        }, 
+        "player_seed": 42, 
+        "players": 4, 
+        "ranking_turn": 258, 
+        "revision": 3, 
+        "scores": [
+            [
+                6, 
+                6, 
+                ...
+                34
+            ], 
+            [
+                6, 
+                6, 
+                ...
+                4
+            ]
+        ], 
+        "spawnradius2": 1, 
+        "turns": 1000, 
+        "turntime": 1000, 
+        "viewradius2": 77, 
+        "winning_turn": 33
+    }, 
+    "replayformat": "json", 
+    "score": [
+        34, 
+        4, 
+        2, 
+        4
+    ], 
+    "status": [
+        "survived", 
+        "eliminated", 
+        "survived", 
+        "eliminated"
+    ]
+}
