@@ -87,72 +87,48 @@ func ReplayUnmarshal(b []byte) (*Match, os.Error) {
 }
 
 func (a *AntHistory) UnmarshalJSON(b []byte) os.Error {
-	var err os.Error
+	var ah = make([]interface{}, 0, 6)
 
-	str := strings.TrimRight(strings.TrimLeft(string(b), "[ "), " ]")
-	item := strings.SplitN(str, ", ", 6)
-
-	if len(item) != 6 {
+	err := json.Unmarshal(b, &ah)
+	if err != nil {
+		return err
+	}
+	if len(ah) != 6 {
 		return os.NewError("Invalid AntHistory JSON:" + string(b))
 	}
 
-	a.Row, err = strconv.Atoi(item[0])
-	if err != nil {
-		return err
-	}
-	a.Col, err = strconv.Atoi(item[1])
-	if err != nil {
-		return err
-	}
-	a.Start, err = strconv.Atoi(item[2])
-	if err != nil {
-		return err
-	}
-	a.End, err = strconv.Atoi(item[3])
-	if err != nil {
-		return err
-	}
-	a.Player, err = strconv.Atoi(item[4])
-	if err != nil {
-		return err
-	}
-	a.Moves = strings.Trim(item[5], "\"")
+	a.Row = int(ah[0].(float64))
+	a.Col = int(ah[1].(float64))
+	a.Start = int(ah[2].(float64))
+	a.End = int(ah[3].(float64))
+	a.Player = int(ah[4].(float64))
+	a.Moves = ah[5].(string)
 
 	return err
 }
 
 func (h *HillData) UnmarshalJSON(b []byte) os.Error {
 	var err os.Error
+	var h = make([]interface{}, 0, 5)
 
-	str := strings.TrimRight(strings.TrimLeft(string(b), "[ "), " ]")
-	item := strings.SplitN(str, ", ", 5)
-
-	if len(item) != 4 {
+	err := json.Unmarshal(b, &ah)
+	if err != nil {
+		return err
+	} else if len(h) != 4 {
 		return os.NewError("Invalid HillData JSON:" + string(b))
 	}
 
-	h.Row, err = strconv.Atoi(item[0])
-	if err != nil {
-		return err
-	}
-	h.Col, err = strconv.Atoi(item[1])
-	if err != nil {
-		return err
-	}
-	h.Player, err = strconv.Atoi(item[2])
-	if err != nil {
-		return err
-	}
-	h.Razed, err = strconv.Atoi(item[3])
-	if err != nil {
-		return err
-	}
+	a.Row = int(ah[0].(float64))
+	a.Col = int(ah[1].(float64))
+	a.Player = int(ah[2].(float64))
+	h.Razed = int(ah[3].(float64))
 
 	return err
 }
 
 func (f *FoodHistory) UnmarshalJSON(b []byte) os.Error {
 	var err os.Error
+	var f = make([]interface{}, 0, 5)
 
 	str := strings.TrimRight(strings.TrimLeft(string(b), "[ "), " ]")
 	item := strings.SplitN(str, ", ", 5)
