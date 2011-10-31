@@ -14,7 +14,7 @@ type BotV0 struct {
 //NewBot creates a new instance of your bot
 func NewBotV0(s *State) Bot {
 	mb := &BotV0{
-		//do any necessary initialization here
+	//do any necessary initialization here
 	}
 
 	return mb

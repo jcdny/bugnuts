@@ -32,7 +32,7 @@ const (
 	HILL7
 	HILL8
 	HILL9
-	HILL_GUESS  // Not a real hill - our guess
+	HILL_GUESS // Not a real hill - our guess
 	MY_DEAD
 	DEAD1
 	DEAD2
@@ -53,11 +53,11 @@ const (
 	HILLANT7
 	HILLANT8
 	HILLANT9
-	EXPLORE  // An explore goal
-	DEFEND   // A defense spot
-	RALLY    // rally point for future attack
-	BLOCK    // A moved ant or something else preventing stepping in
-	MAX_ITEM 
+	EXPLORE // An explore goal
+	DEFEND  // A defense spot
+	RALLY   // rally point for future attack
+	BLOCK   // A moved ant or something else preventing stepping in
+	MAX_ITEM
 	INVALID_ITEM Item = 255
 )
 
@@ -66,7 +66,7 @@ var itemToSym = [256]byte{' ', '%', '*', '.',
 	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '?',
 	'!', 'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r',
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-	'X', '+', '@', '=', 
+	'X', '+', '@', '=',
 }
 
 var symToItem [256]Item

@@ -15,7 +15,6 @@ const (
 	NoMovement
 )
 
-
 func (d Direction) String() string {
 	switch d {
 	case North:
@@ -34,23 +33,22 @@ func (d Direction) String() string {
 	return "-"
 }
 
-var 	DirectionMap    = map[string]Point{"n": {-1, 0}, "e": {0, -1}, "s": {1, 0}, "w": {0, 1}, "-": {0, 0}}
-var     DirectionOffset = [5]Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}, {0, 0}}
-var	Steps = [4]Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}} // exclude no move
-var     DirectionChar = [5]string{"n", "e", "s", "w", "-"}
-
+var DirectionMap = map[string]Point{"n": {-1, 0}, "e": {0, -1}, "s": {1, 0}, "w": {0, 1}, "-": {0, 0}}
+var DirectionOffset = [5]Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}, {0, 0}}
+var Steps = [4]Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}} // exclude no move
+var DirectionChar = [5]string{"n", "e", "s", "w", "-"}
 
 type Path struct {
-	steps   []Location
+	steps []Location
 
 	// A path can take reference another path
 	refpath *Path
 	offset  int
 }
 
-func (m* Map) PointsToPath(points []Point) *Path {
+func (m *Map) PointsToPath(points []Point) *Path {
 	path := Path{
-	steps: make([]Location, len(points), len(points)),
+		steps: make([]Location, len(points), len(points)),
 	}
 
 	for i, p := range points {

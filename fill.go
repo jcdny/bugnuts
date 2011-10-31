@@ -55,18 +55,16 @@ func (f *Fill) Donut(p Point) Point {
 
 func (f *Fill) PathIn(loc Location) (Location, int) {
 	steps := 0
+	origloc := loc
 	done := false
 	for !done {
 		depth := f.Depth[loc]
 		p := f.ToPoint(loc)
-		
+
 		done = true
 		for _, d := range Steps {
 			np := f.PointAdd(p, d)
 			nl := f.ToLocation(np)
-			if (Debug > 4) {
-				log.Printf("step from %v to %v depth %d to %d\n", p, np, depth, f.Depth[nl])
-			}
 
 			if f.Depth[nl] < depth && f.Depth[nl] > 0 {
 
@@ -78,10 +76,12 @@ func (f *Fill) PathIn(loc Location) (Location, int) {
 		}
 	}
 
+	if Debug > 4 {
+		log.Printf("step from %v to %v depth %d to %d, steps %d\n", f.ToPoint(origloc), f.ToPoint(loc), f.Depth[origloc], f.Depth[loc], steps)
+	}
+
 	return loc, steps
 }
-
-
 
 func (f *Fill) String() string {
 	s := ""
@@ -191,7 +191,6 @@ func MapFill(m *Map, origin map[Location]int) (*Fill, int, int) {
 	return f, 0, 0
 }
 
-
 type Target struct {
 	item  Item
 	loc   Location // Target Location
@@ -211,17 +210,17 @@ func (tset *TargetSet) Add(item Item, loc Location, count, pri int) {
 		// We already have this point in the target set, replace if pri is higher
 		(*tset)[loc] = &Target{
 			item:  item,
-		        loc:   loc,
+			loc:   loc,
 			count: count,
-		pri: pri,
+			pri:   pri,
 		}
 	}
 
 }
 
-func (tset *TargetSet) Pending() int {
+func (tset TargetSet) Pending() int {
 	n := 0
-	for _, t := range *tset {
+	for _, t := range tset {
 		if t.count > 0 {
 			n++
 		}
@@ -240,4 +239,3 @@ func (tset *TargetSet) Active() map[Location]int {
 
 	return tp
 }
-

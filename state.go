@@ -497,10 +497,9 @@ func (s *State) ProcessState() {
 	}
 }
 
-
 func (s *State) FoodUpdate(age int) {
 	// Nuke all stale food
-	
+
 	for loc, seen := range s.Food {
 		// Better would be to compute expected pickup time give neighbors
 		// in the pathing step and only revert to this when there were no
@@ -517,7 +516,6 @@ func (s *State) FoodUpdate(age int) {
 		}
 	}
 }
-
 
 func (s *State) FoodLocations() (l []Location) {
 	for loc, _ := range s.Food {

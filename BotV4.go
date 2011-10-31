@@ -30,7 +30,7 @@ func (bot *BotV4) DoTurn(s *State) os.Error {
 	for _, loc := range s.EnemyHillLocations() {
 		targets = append(targets, loc)
 	}
-	
+
 	tmap := make(map[Location]int, len(targets))
 	for _, loc := range targets {
 		tmap[loc] = 1

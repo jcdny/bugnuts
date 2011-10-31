@@ -7,41 +7,38 @@ import (
 	"rand"
 	"sort"
 	"log"
-	"math"
 )
 
 type BotV5 struct {
 	P *Parameters
 
-	Explore map[Location]Target
-	
+	Explore map[Location]*Target
+
 	IdleAnts []int
 }
 
 //NewBot creates a new instance of your bot
 func NewBotV5(s *State) Bot {
 	mb := &BotV5{
-	P: ParameterSets["V5"],
-	Explore: make(map[Location]Target,0),
+		P:       ParameterSets["V5"],
+		Explore: make(map[Location]*Target, 10),
 	}
 
-	mb.MakeExplorers(s, 1.5)
+	mb.MakeExplorers(s, 1.25)
 	return mb
 }
 
 func (bot *BotV5) MakeExplorers(s *State, scale float64) {
-	
+
 	// Set an initial group of targetpoints
-	t := Target{item: EXPLORE, count: 1, pri: bot.P.Priority[EXPLORE]}
-	stride := int(float64(s.Radius)*scale)
+	stride := int(float64(s.Radius) * scale)
 	if stride <= 0 {
-		stride = 2*s.Radius
+		stride = 2 * s.Radius
 	}
 	for r := 5; r < s.Rows; r += stride {
 		for c := 5; c < s.Cols; c += stride {
 			loc := s.Map.ToLocation(Point{r: r, c: c})
-			t.loc = loc
-			bot.Explore[loc] = t
+			bot.Explore[loc] = &Target{item: EXPLORE, loc: loc, count: 1, pri: bot.P.Priority[EXPLORE]}
 		}
 	}
 }
@@ -50,7 +47,7 @@ func (bot *BotV5) ExploreUpdate(s *State) {
 	// Any explore point which is visible should be nuked
 	for loc, _ := range bot.Explore {
 		if s.Map.Seen[loc] == s.Turn {
-			bot.Explore[loc] = Target{}, false
+			bot.Explore[loc] = &Target{}, false
 		}
 	}
 }
@@ -64,12 +61,16 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 
 	// Run through explore targets
 	for loc, tgt := range bot.Explore {
-		tset[loc] = &tgt
+		tgt.count = 1
+		tset[loc] = tgt
+		if Debug > 4 {
+			log.Printf("Setting explore target at %v: %v", s.Map.ToPoint(loc), tgt)
+		}
 	}
-	
+
 	// Generate list of food and enemy hill points.
 	for _, loc := range s.FoodLocations() {
-		if Debug > 4 { 
+		if Debug > 4 {
 			log.Printf("adding target %v(%d) food pri %d", s.Map.ToPoint(loc), loc, bot.P.Priority[FOOD])
 		}
 		tset.Add(FOOD, loc, 1, bot.P.Priority[FOOD])
@@ -78,24 +79,24 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 	// TODO handle different priorities for different enemies.
 	eh := s.EnemyHillLocations()
 	idle := 0
-	if (s.Turn > 10 && len(eh) > 0) {
+	if s.Turn > 10 && len(eh) > 0 {
 		//log.Printf("IDLE: %d : %d : %d : %v", s.Turn, len(bot.IdleAnts), len(eh), bot.IdleAnts)
-		idle = bot.IdleAnts[s.Turn-2]/len(eh)
-		if idle > 15 { 
+		idle = bot.IdleAnts[s.Turn-2] / len(eh)
+		if idle > 15 {
 			idle = 15
 		}
 	}
 	for _, loc := range eh {
-		tset.Add(HILL1, loc, 1 + idle, bot.P.Priority[HILL1])
+		tset.Add(HILL1, loc, 1+idle, bot.P.Priority[HILL1])
 	}
 
-	if Debug > 4 { 
+	if Debug > 4 {
 		log.Printf("Target set %v", tset)
 	}
 
 	// List of available ants
 	ants := make(map[Location]int, len(s.Ants[0]))
-	for k,v := range s.Ants[0] {
+	for k, v := range s.Ants[0] {
 		ants[k] = v
 	}
 
@@ -103,15 +104,21 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 
 	moves := make(map[Location]Direction, len(ants))
 
-	for iter := 0; iter < 5 && (len(ants) > 0 && tset.Pending() > 0); iter++ {
+	for iter := 0; iter < 15 && len(ants) > 0 && tset.Pending() > 0; iter++ {
+		if Debug > 4 {
+			log.Printf("Location iteration %d, ants: %d, tset.Pending %d", iter, len(ants), tset.Pending())
+		}
+
 		// TODO: Here should update map for fixed ants.
 		f, _, _ := MapFill(s.Map, tset.Active())
-		
+
 		// Make hills infinitely unattractive
-		for _, loc := range s.MyHillLocations() {
+		/* This DOES NOT WORK - can make the hill a local minima.
+			for _, loc := range s.MyHillLocations() {
 			f.Depth[loc] = math.MaxUint16
 		}
-			
+		*/
+
 		// Build list of locations sorted by depth
 		ll := make(map[int][]Location)
 		var dl []int
@@ -131,6 +138,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 				// for a given depth loop over ant locations
 
 				// p := s.Map.ToPoint(loc)
+			STEP:
 				for _, d := range rand.Perm(4) {
 					// find a direction we can step in thats stepable.
 					np := s.Map.PointAdd(s.Map.ToPoint(loc), Steps[d])
@@ -151,31 +159,38 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 							// food as a block.
 							s.Map.Grid[nl] = BLOCK
 							moves[loc] = Direction(d)
+							if Debug > 4 {
+								log.Printf("Removing %v food adjacent", s.Map.ToPoint(loc))
+							}
 							ants[loc] = 0, false
 							tset[nl].count = 0
 						} else {
 							endloc, steps := f.PathIn(nl)
 							tgt, ok := tset[endloc]
+							if Debug > 4 {
+								log.Printf("Found target %v -> %v, end %v %d steps, tgt: %v", s.Map.ToPoint(loc), s.Map.ToPoint(nl), s.Map.ToPoint(endloc), steps, tgt)
+							}
 							if !ok {
-								if (Debug > 4) {
-									log.Printf("pathin from %v(%d)->%v to %v(%d) no matching target.", 
+								if Debug > 3 {
+									log.Printf("pathin from %v(%d)->%v to %v(%d) no matching target.",
 										s.Map.ToPoint(loc), loc, s.Map.ToPoint(nl), s.Map.ToPoint(endloc), endloc)
 								}
 							} else if steps >= 0 && tgt.count > 0 {
 								moves[loc] = Direction(d)
-								tset[endloc].count--
+								tgt.count -= 1
 								s.Map.Grid[nl] = BLOCK
-								ants[loc] = ants[loc], false
+								ants[loc] = 0, false
 							}
 						}
-						break
+						break STEP
 					}
 				}
 			}
 		}
+
 	}
 	// TODO If we have more ants than targets we have bored ants, uptick the # in on hills, add some exploring etc.
-	
+
 	//log.Printf("%d ants with nothing to do", len(ants))
 	bot.IdleAnts = append(bot.IdleAnts, len(ants))
 
