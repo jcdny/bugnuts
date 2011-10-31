@@ -5,7 +5,10 @@ GOFILES=\
 	BotV0.go\
 	Botv3.go\
 	Botv4.go\
+	BotV5.go\
+	direction.go\
 	pallettes.go\
+	parameters.go\
 	debugging.go\
 	queue.go\
 	fill.go\

@@ -1,5 +1,9 @@
 package main
 
+import (
+	"log"
+)
+
 //Direction represents the direction concept for issuing orders.
 type Direction int8
 
@@ -10,6 +14,7 @@ const (
 	West
 	NoMovement
 )
+
 
 func (d Direction) String() string {
 	switch d {
@@ -29,11 +34,11 @@ func (d Direction) String() string {
 	return "-"
 }
 
-const (
-	DirectionMap    = map[string]Point{"n": {-1, 0}, "e": {0, -1}, "s": {1, 0}, "w": {0, 1}, "-": {0, 0}}
-	DirectionOffset = [5]Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}, {0, 0}}
-	DirectionString = [5]string{"n", "e", "s", "w", "-"}
-)
+var 	DirectionMap    = map[string]Point{"n": {-1, 0}, "e": {0, -1}, "s": {1, 0}, "w": {0, 1}, "-": {0, 0}}
+var     DirectionOffset = [5]Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}, {0, 0}}
+var	Steps = [4]Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}} // exclude no move
+var     DirectionChar = [5]string{"n", "e", "s", "w", "-"}
+
 
 type Path struct {
 	steps   []Location
@@ -44,14 +49,14 @@ type Path struct {
 }
 
 func (m* Map) PointsToPath(points []Point) *Path {
-	p := &Path{
-		steps = make([]Location, len(pt), len(pt))
+	path := Path{
+	steps: make([]Location, len(points), len(points)),
 	}
 
 	for i, p := range points {
 		// check pts describe a real path
-		p.steps[i] = m.ToLocation(p)
+		path.steps[i] = m.ToLocation(p)
 	}
 
-	return p
+	return &path
 }

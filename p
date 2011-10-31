@@ -2,7 +2,7 @@
 ROOT=../tools
 ARCH="`uname -s`"
 
-export MAP="testdata/maps/big"
+export MAP="testdata/maps/maze_04p_01.map"
 
 #    --nolaunch \
 
@@ -17,6 +17,6 @@ export MAP="testdata/maps/big"
     --map_file $MAP \
     "$@" \
     "./bot.sh" \
-    "./bin/$ARCH/bugnutsv3" \
+    "./bin/$ARCH/bugnutsv4" \
     "python $ROOT/sample_bots/python/HunterBot.py" \
     "python $ROOT/sample_bots/python/GreedyBot.py"

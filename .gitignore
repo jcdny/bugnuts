@@ -11,3 +11,4 @@ tmp
 *.log
 *.replaygz
 replay/data
+log/

@@ -9,12 +9,6 @@ import (
 	_ "log"
 )
 
-type IntSlice []int
-
-func (p IntSlice) Len() int           { return len(p) }
-func (p IntSlice) Less(i, j int) bool { return p[i] < p[j] }
-func (p IntSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-
 type BotV4 struct {
 
 }
@@ -36,11 +30,15 @@ func (bot *BotV4) DoTurn(s *State) os.Error {
 	for _, loc := range s.EnemyHillLocations() {
 		targets = append(targets, loc)
 	}
-
+	
+	tmap := make(map[Location]int, len(targets))
+	for _, loc := range targets {
+		tmap[loc] = 1
+	}
 	// log.Printf("%v %v", targets, s.Map.ToPoints(targets))
 	// Add search points
 
-	f, _, _ := MapFill(s.Map, s.Map.ToPoints(targets))
+	f, _, _ := MapFill(s.Map, tmap)
 
 	// Build list of locations sorted by depth and attempt to go downhill
 	ll := make(map[int][]Location)

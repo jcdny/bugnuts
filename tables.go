@@ -32,6 +32,7 @@ const (
 	HILL7
 	HILL8
 	HILL9
+	HILL_GUESS  // Not a real hill - our guess
 	MY_DEAD
 	DEAD1
 	DEAD2
@@ -52,15 +53,20 @@ const (
 	HILLANT7
 	HILLANT8
 	HILLANT9
-	MAX_ITEM
+	EXPLORE  // An explore goal
+	DEFEND   // A defense spot
+	RALLY    // rally point for future attack
+	BLOCK    // A moved ant or something else preventing stepping in
+	MAX_ITEM 
 	INVALID_ITEM Item = 255
 )
 
 var itemToSym = [256]byte{' ', '%', '*', '.',
 	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9',
+	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '?',
 	'!', 'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r',
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
+	'X', '+', '@', '=', 
 }
 
 var symToItem [256]Item
@@ -86,14 +92,14 @@ func ToItem(c byte) Item {
 }
 
 func (o Item) IsHill() bool {
-	if (o >= MY_HILL && o <= HILL9) || (o >= MY_HILLANT && o <= HILLANT9) {
+	if (o >= MY_HILL && o <= HILL_GUESS) || (o >= MY_HILLANT && o <= HILLANT9) {
 		return true
 	}
 
 	return false
 }
 func (o Item) IsEnemyHill() bool {
-	if (o > MY_HILL && o <= HILL9) || (o > MY_HILLANT && o <= HILLANT9) {
+	if (o > MY_HILL && o <= HILL_GUESS) || (o > MY_HILLANT && o <= HILLANT9) {
 		return true
 	}
 

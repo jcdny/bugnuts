@@ -9,8 +9,18 @@ import (
 type OffsetSlice []Point
 
 func (p OffsetSlice) Len() int           { return len(p) }
-func (p OffsetSlice) Less(i, j int) bool { return Abs(p[i].r)+Abs(p[i].c) < Abs(p[j].r)+Abs(p[j].c) }
+// Metric is Manhattan distance from origin.
+func (p OffsetSlice) Less(i, j int) bool { return Abs(p[i].r)+Abs(p[i].c) < Abs(p[j].r)+Abs(p[j].c) }  
 func (p OffsetSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+
+type IntSlice []int
+
+func (p IntSlice) Len() int           { return len(p) }
+func (p IntSlice) Less(i, j int) bool { return p[i] < p[j] }
+func (p IntSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+
 
 func Abs(i int) int {
 	if i < 0 {

@@ -22,6 +22,67 @@ func (m *Map) NewFill() *Fill {
 	return f
 }
 
+func (f *Fill) ToLocation(p Point) Location {
+	p = f.Donut(p)
+	return Location(p.r*f.Cols + p.c)
+}
+
+func (f *Fill) ToPoint(l Location) (p Point) {
+	p = Point{r: int(l) / f.Cols, c: int(l) % f.Cols}
+
+	return
+}
+func (f *Fill) PointAdd(p1, p2 Point) Point {
+	return f.Donut(Point{r: p1.r + p2.r, c: p1.c + p2.c})
+}
+
+func (f *Fill) Donut(p Point) Point {
+	if p.r < 0 {
+		p.r += f.Rows
+	}
+	if p.r >= f.Rows {
+		p.r -= f.Rows
+	}
+	if p.c < 0 {
+		p.c += f.Cols
+	}
+	if p.c >= f.Cols {
+		p.c -= f.Cols
+	}
+
+	return p
+}
+
+func (f *Fill) PathIn(loc Location) (Location, int) {
+	steps := 0
+	done := false
+	for !done {
+		depth := f.Depth[loc]
+		p := f.ToPoint(loc)
+		
+		done = true
+		for _, d := range Steps {
+			np := f.PointAdd(p, d)
+			nl := f.ToLocation(np)
+			if (Debug > 4) {
+				log.Printf("step from %v to %v depth %d to %d\n", p, np, depth, f.Depth[nl])
+			}
+
+			if f.Depth[nl] < depth && f.Depth[nl] > 0 {
+
+				loc = nl
+				steps++
+				done = false
+				break
+			}
+		}
+	}
+
+	return loc, steps
+}
+
+
+
 func (f *Fill) String() string {
 	s := ""
 	for i, d := range f.Depth {
@@ -89,9 +150,8 @@ func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string 
 	return s
 }
 
-func MapFill(m *Map, origin []Point) (*Fill, int, int) {
+func MapFill(m *Map, origin map[Location]int) (*Fill, int, int) {
 	Directions := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}} // w n e s
-	newDepth := uint16(1)                                   // dont start with 0 since 0 means not visited.
 
 	safe := 0
 
@@ -99,9 +159,10 @@ func MapFill(m *Map, origin []Point) (*Fill, int, int) {
 
 	q := QNew(100)
 
-	for _, p := range origin {
-		q.Q(p)
-		f.Depth[m.ToLocation(p)] = newDepth
+	for loc, pri := range origin {
+		// log.Printf("Q loc %v pri %d", f.ToPoint(loc), pri)
+		q.Q(f.ToPoint(loc))
+		f.Depth[loc] = uint16(pri)
 	}
 
 	for !q.Empty() {
@@ -119,7 +180,8 @@ func MapFill(m *Map, origin []Point) (*Fill, int, int) {
 			fillp := m.PointAdd(p, d)
 			floc := m.ToLocation(fillp)
 
-			if m.Grid[floc] != WATER && (f.Depth[floc] == 0 || f.Depth[floc] > newDepth) {
+			if m.Grid[floc] != WATER && m.Grid[floc] != BLOCK &&
+				(f.Depth[floc] == 0 || f.Depth[floc] > newDepth) {
 				q.Q(fillp)
 				f.Depth[floc] = newDepth
 			}
@@ -129,70 +191,53 @@ func MapFill(m *Map, origin []Point) (*Fill, int, int) {
 	return f, 0, 0
 }
 
-// Generate a fill from Map m return fill slice, max Q size, max depth
-func ExpMapFill(m *Map, origin Point) (*Fill, int, int) {
 
-	newDepth := uint16(1) // dont start with 0 since 0 means not visited.
-	safe := 0
+type Target struct {
+	item  Item
+	loc   Location // Target Location
+	count int      // how many do we want at this location
+	pri   int      // target priority.
 
-	Directions := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}, {0, -1}}
-	Diagonals := []Point{{-1, 1}, {1, 1}, {1, -1}, {-1, -1}, {-1, 1}}
+	arrivals []int      // Inbound Arrival time
+	player   []int      // Inbound player
+	ant      []Location // Inbound Source
+}
 
-	f := m.NewFill()
+type TargetSet map[Location]*Target
 
-	q := QNew(100) // TODO think more about q cap
-
-	q.Q(origin)
-	f.Depth[m.ToLocation(origin)] = newDepth
-
-	for !q.Empty() {
-		p := q.DQ()
-
-		Depth := f.Depth[m.ToLocation(p)]
-		newDepth := Depth + 1
-
-		validlast := false
-
-		for i, s := range Diagonals {
-			// on a given diagonal just go until we
-			// stop finding same depth
-			for {
-				// Debug lets not infinite loop
-				if safe++; safe > 1000 {
-					log.Panicf("Oh No Crazytime")
-				}
-
-				fillp := m.PointAdd(p, Directions[i])
-				nloc := m.ToLocation(fillp)
-
-				// log.Printf("p: %v np: %v i: %d item: %c d: %d", p, fillp, i, m.Grid[nloc].ToSymbol(), f.Depth[nloc])
-				//log.Printf("%s", PrettyFill(m, f, p, fillp, q, Depth))
-
-				if m.Grid[nloc] != WATER && f.Depth[nloc] == 0 {
-					f.Depth[nloc] = newDepth
-					// Queue a new start point
-					if !validlast {
-						q.Q(fillp)
-						//log.Printf("Q %v", fillp)
-					}
-					validlast = true
-				} else {
-					validlast = false
-				}
-
-				np := m.PointAdd(p, s)
-				nloc = m.ToLocation(np)
-				//log.Printf("p %v np %v fillp %v %v", p, np, fillp, f)
-
-				if f.Depth[nloc] == Depth {
-					p = np
-				} else {
-					break
-				}
-			}
+func (tset *TargetSet) Add(item Item, loc Location, count, pri int) {
+	t, ok := (*tset)[loc]
+	if !ok || t.pri < pri {
+		// We already have this point in the target set, replace if pri is higher
+		(*tset)[loc] = &Target{
+			item:  item,
+		        loc:   loc,
+			count: count,
+		pri: pri,
 		}
 	}
 
-	return f, 0, int(newDepth - 1)
-
 }
+
+func (tset *TargetSet) Pending() int {
+	n := 0
+	for _, t := range *tset {
+		if t.count > 0 {
+			n++
+		}
+	}
+
+	return n
+}
+
+func (tset *TargetSet) Active() map[Location]int {
+	tp := make(map[Location]int, tset.Pending())
+	for _, t := range *tset {
+		if t.count > 0 {
+			tp[t.loc] = t.pri
+		}
+	}
+
+	return tp
+}
+

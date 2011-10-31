@@ -14,10 +14,6 @@ const (
 	MaxPlayers int = 10
 )
 
-type Parameters struct {
-	ExpireFood int // If food is older than this many turns we assume someone has gotten it
-}
-
 type Statistics struct {
 	Dead []map[Location]int // Death count per location by player
 	Died [MaxPlayers]int    // count of suicides by player
@@ -66,12 +62,12 @@ type State struct {
 	Hills map[Location]*Hill // Hill list
 	Food  map[Location]int   // Food Seen
 
-	// Parameter Set
-	Parms *Parameters
 	Stats *Statistics
 
 	// Map State
 	Map *Map
+
+	bot *Bot
 }
 
 //Start takes the initial parameters from stdin
@@ -161,9 +157,6 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 	s.Hills = make(map[Location]*Hill)
 	s.Stats = &Statistics{
 		Dead: make([]map[Location]int, MaxPlayers),
-	}
-	s.Parms = &Parameters{
-		ExpireFood: 10,
 	}
 
 	if s.PlayerSeed != 0 {
@@ -431,7 +424,8 @@ func (s *State) UpdateSeen(loc Location) {
 	}
 }
 
-func (s *State) ParamsToString() string {
+// Take the settings from the state string and emit the header for input.
+func (s *State) SettingsToString() string {
 	str := ""
 
 	str += "turn 0\n"
@@ -460,21 +454,8 @@ func (s *State) String() string {
 
 func (s *State) ProcessState() {
 	// Assumes the loc data has all been read, and Seen/Land updated
-
-	// Nuke all food > Turn N
-	for loc, seen := range s.Food {
-		// Better would be to compute expected pickup time give neighbors
-		// in the pathing step and only revert to this when there were no
-		// visible neighbors.
-		//
-		// Should track that anyway since does not make sense to run for 
-		// food another bot will certainly get unless its to enter combat.
-
-		if s.Map.Seen[loc] > seen || seen < s.Turn-s.Parms.ExpireFood {
-			s.Food[loc] = 0, false
-		} else {
-			s.Map.Grid[loc] = FOOD
-		}
+	for loc, _ := range s.Food {
+		s.Map.Grid[loc] = LAND
 	}
 
 	for loc, hill := range s.Hills {
@@ -516,16 +497,48 @@ func (s *State) ProcessState() {
 	}
 }
 
+
+func (s *State) FoodUpdate(age int) {
+	// Nuke all stale food
+	
+	for loc, seen := range s.Food {
+		// Better would be to compute expected pickup time give neighbors
+		// in the pathing step and only revert to this when there were no
+		// visible neighbors.
+		//
+		// Should track that anyway since does not make sense to run for 
+		// food another bot will certainly get unless its to enter combat.
+
+		if s.Map.Seen[loc] > seen || seen < s.Turn-age {
+			s.Food[loc] = 0, false
+			if s.Map.Grid[loc] == FOOD {
+				s.Map.Grid[loc] = LAND
+			}
+		}
+	}
+}
+
+
 func (s *State) FoodLocations() (l []Location) {
 	for loc, _ := range s.Food {
 		l = append(l, Location(loc))
 	}
+
 	return l
 }
 
 func (s *State) EnemyHillLocations() (l []Location) {
 	for loc, hill := range s.Hills {
 		if hill.Player > 0 && hill.Killed == 0 {
+			l = append(l, Location(loc))
+		}
+	}
+	return l
+}
+
+func (s *State) MyHillLocations() (l []Location) {
+	for loc, hill := range s.Hills {
+		if hill.Player == 0 && hill.Killed == 0 {
 			l = append(l, Location(loc))
 		}
 	}
