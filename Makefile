@@ -3,8 +3,8 @@ include $(GOROOT)/src/Make.inc
 TARG=MyBot
 GOFILES=\
 	BotV0.go\
-	Botv3.go\
-	Botv4.go\
+	BotV3.go\
+	BotV4.go\
 	BotV5.go\
 	direction.go\
 	pallettes.go\

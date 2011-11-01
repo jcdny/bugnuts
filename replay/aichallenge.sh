@@ -1,5 +1,6 @@
 #!/bin/bash
-GAME=20000
+GAME=25000
+END=39000
 HOST=aichallenge.org
 BASE=http://aichallenge.org/game/0/
 ROOT=~/src/ai/bot/replay
@@ -10,10 +11,15 @@ fi
 
 cd $ROOT/data
 mkdir -p $HOST || exit 1
+
+DATE="`date +%Y%m%d-%H%M`"
+LOG="${HOST}.log.$DATE"
+ERR="${HOST}.err.$DATE"
+echo "INFO: getting $HOST games $GAME to $END log $LOG"
+exec > $LOG 2> $ERR
+
 cd $HOST
-
-
-while [ $GAME -lt 25000 ]; do
+while [ $GAME -lt $END ]; do
     D="`expr $GAME / 1000`"
 
     DEST=$D/$GAME.replaygz
@@ -24,7 +30,7 @@ while [ $GAME -lt 25000 ]; do
         echo "INFO: getting $SOURCE"
         curl --create-dirs -o $DEST $SOURCE || echo Ouch
         ls -1l $DEST | grep gz
-        sleep `expr $RANDOM % 8 + 1`
+        sleep `expr $RANDOM % 10 + 1`
     fi
     GAME="`expr $GAME + 1`"
 done
