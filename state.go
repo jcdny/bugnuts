@@ -542,3 +542,7 @@ func (s *State) MyHillLocations() (l []Location) {
 	}
 	return l
 }
+
+func (s *State) SetBlock(l Location) {
+	s.Map.Grid[l] = BLOCK
+}
