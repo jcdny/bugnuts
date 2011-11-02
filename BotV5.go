@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"math"
 	"rand"
 	"sort"
 	"log"
@@ -24,17 +25,18 @@ func NewBotV5(s *State) Bot {
 		Explore: make(map[Location]*Target, 10),
 	}
 
-	mb.MakeExplorers(s, 1.25)
+	mb.MakeExplorers(s, .8)
 	return mb
 }
 
 func (bot *BotV5) MakeExplorers(s *State, scale float64) {
 
 	// Set an initial group of targetpoints
-	stride := int(float64(s.Radius) * scale)
-	if stride <= 0 {
-		stride = 2 * s.Radius
+	if scale <= 0 {
+		scale = 1.0
 	}
+	stride := int(math.Sqrt(float64(s.ViewRadius2)) * scale)
+
 	for r := 5; r < s.Rows; r += stride {
 		for c := 5; c < s.Cols; c += stride {
 			loc := s.Map.ToLocation(Point{r: r, c: c})

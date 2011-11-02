@@ -1,6 +1,6 @@
 #!/bin/bash
 GAME=7500
-END=14500
+END=15700
 HOST=ants.fluxid.pl
 BASE=http://ants.fluxid.pl/replay
 ROOT=~/src/ai/bot/replay
@@ -28,9 +28,9 @@ while [ $GAME -lt $END ]; do
         echo "INFO: found game $DEST"
     else
         echo "INFO: getting $SOURCE"
-        echo curl --create-dirs -o $D/replay.$GAME ${BASE}.$GAME || echo ouch
+        curl --create-dirs -o $D/replay.$GAME ${BASE}.$GAME || echo Ouch
         ls -1l $DEST
-        sleep 5
+        sleep `expr $RANDOM % 10 + 10`
     fi
     GAME="`expr $GAME + 1`"
 done

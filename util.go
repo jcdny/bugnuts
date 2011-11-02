@@ -48,6 +48,49 @@ func Min(x []int) int {
 	return xm
 }
 
+func MinV(v1 int, vn ...int) (m int) {
+	m = v1
+	for _, vi := range vn {
+		if vi < m {
+			m = vi
+		}
+	}
+	return
+}
+
+func MaxV(v1 int, vn ...int) (m int) {
+	m = v1
+	for _, vi := range vn {
+		if vi > m {
+			m = vi
+		}
+	}
+	return
+}
+
+// Convert a set of points to location offsets
+func ToOffsets(pv []Point, cols int) []Location {
+	out := make([]Location, len(pv), len(pv))
+
+	for i, p := range pv {
+		out[i] = Location(p.r*cols + p.c)
+	}
+
+	return out
+}
+
+// Convert a list of location offsets back to signed Points.
+func ToOffsetPoints(loc []Location, cols int) (out []Point) {
+	out = make([]Point, len(loc))
+	for i, l := range loc {
+		out[i] = Point{r: int(l)/cols, c: int(l)%cols}
+	}
+
+	return out
+}
+
+
+
 // Precompute circle points for lookup for a given r2 and number of map columns.
 func GenCircleTable(r2 int) []Point {
 	if r2 < 0 {
@@ -57,10 +100,10 @@ func GenCircleTable(r2 int) []Point {
 	d := int(math.Sqrt(float64(r2)))
 	v := make([]Point, 0, (r2*22)/7+5)
 
-	// Make the origin the first element so you can easily skip it.
+	// Make the origin the first element of the slice so you can easily skip it.
 	p := Point{r: 0, c: 0}
 	v = append(v, p)
-
+	
 	for r := -d; r <= d; r++ {
 		for c := -d; c <= d; c++ {
 			if c != 0 || r != 0 {

@@ -14,8 +14,11 @@ type Map struct {
 	Cols    int
 	Players int
 
-	Grid []Item // Items seen
-	Seen []int  // Turn on which cell was last visible.
+	Grid   []Item   // Items seen
+	Seen   []int    // Turn on which cell was last visible.
+	Threat [][]int8 // how much threat is there on a given cell
+
+	BDist []uint8 // cache of border distance
 }
 
 type Point struct {
@@ -37,6 +40,7 @@ func NewMap(rows, cols, players int) *Map {
 		Players: players,
 		Grid:    make([]Item, rows*cols),
 		Seen:    make([]int, rows*cols),
+		BDist:   BorderDistance(rows, cols),
 	}
 
 	return m
@@ -218,10 +222,28 @@ func MapValidate(ref *Map, gen *Map) (int, string) {
 //Take a slice of Point and return a slice of Location
 //Used for offsets so it does not donut things.
 func (m *Map) ToPoints(lv []Location) []Point {
-	pv := make([]Point, len(lv), len(lv))
+	pv := make([]Point, len(lv))
 	for i, l := range lv {
 		pv[i] = m.ToPoint(l)
 	}
 
 	return pv
 }
+
+
+// Ruturn a uint8 array with distance to border in each cell
+func BorderDistance(rows, cols int) (out []uint8) {
+	if rows > 255 || cols > 255 {
+		log.Panic("Rows or cols > 255 in BorderDist")
+	}
+	out = make([]uint8, rows*cols, rows*cols)
+
+	for r := 0; r < rows; r++ {
+		for c := 0; c < cols; c++ {
+			out[r*cols+c] = uint8(MinV(r+1, c+1, Abs(r-rows), Abs(c-cols)))
+		}
+	}
+
+	return
+}
+
