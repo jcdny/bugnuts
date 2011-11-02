@@ -176,7 +176,17 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 				}
 			}
 		}
-		// TODO If we have more ants than targets we have bored ants, uptick the # in on hills, add some exploring etc.
+
+		// TODO If we have more ants than targets we have bored ants, try to expand viewable area, slice 
+		if tset.Pending() < 1 {
+			fexp, _, _ := MapFill(s.Map, s.Ants[0])
+			loc, N := fexp.Sample(len(ants), s.Turn+10, s.Turn+10) 
+			for i, _ := range loc {
+				tset.Add(EXPLORE, loc[i], N[i], bot.P.Priority[EXPLORE])
+			}
+		}
+		// for now path in on existing ants I guess.
+		
 	}
 
 	//log.Printf("%d ants with nothing to do", len(ants))

@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 	"sort"
+	"rand"
 )
 
 type Fill struct {
@@ -269,4 +270,48 @@ func (f *Fill) Closest(slice []Location) []Location {
 	}
 
 	return slice
+}
+
+
+// Return N random points sampled from a fill with steps between low and hi inclusive.
+// it will return a count > 1 if the sample size is smaller than N
+func (f *Fill) Sample(n, low, hi int) ([]Location, []int) {
+	pool := make([]Location,0,200)
+	for i := 0; i < len(f.Depth); i++ {
+		if i >= low && i <= hi { 
+			pool = append(pool, Location(i))
+		}
+	}
+	if len(pool) == 0 {
+		return nil, nil
+	}
+	
+	over := n/len(pool)
+	perm := rand.Perm(len(pool))[0:n % len(pool)]
+	
+	var count []int
+	if over > 0 {
+		count = make([]int,len(pool), len(pool))
+		for i,_ := range count {
+			count[i] = over
+		}
+	} else {
+		count = make([]int, len(perm), len(perm)) 
+	}
+
+	for i, _ := range perm {	
+		count[i]++
+	}
+
+	if over > 0 {
+		return pool, count
+	} else {
+		pout := make([]Location, len(perm), len(perm))
+		for i, pi := range perm {	
+			pout[i] = pool[pi]
+		}
+		return pout, count
+	}
+	
+	return nil, nil
 }
