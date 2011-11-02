@@ -492,7 +492,7 @@ func (s *State) ProcessState() {
 		}
 	}
 
-	s.ComputeThreat(s.Turn, 0, Masks[s.AttackRadius2].Union, s.Map.Threat[len(s.Map.Threat)])
+	s.ComputeThreat(1, 0, s.attackMask, s.Map.Threat[len(s.Map.Threat)-1])
 
 }
 
@@ -542,7 +542,20 @@ func (s *State) MyHillLocations() (l []Location) {
 	return l
 }
 
-func (s *State) ComputeThreat(turn, player int, mask []Point, slice []int8) {
+// Compute the threat for N turns out (currently only n = 0 or 1)
+// if player > -1 then sum players not including player
+func (s *State) ComputeThreat(turn, player int, mask *Mask, slice []int8) {
+	var mv []Point
+	switch turn {
+	case 1:
+		mv = mask.Union
+	case 0:
+		mv = mask.P
+	default:
+		log.Panicf("Illegal turns out = %d", turn)
+	}
+
+
 	if len(slice) != s.Rows * s.Cols {
 		log.Panic("ComputeThreat slice size mismatch")
 	}
@@ -551,7 +564,7 @@ func (s *State) ComputeThreat(turn, player int, mask []Point, slice []int8) {
 		if (i != player) {
 			for loc, _ := range s.Ants[i] {
 				p := s.Map.ToPoint(loc)
-				for _, op := range mask {
+				for _, op := range mv {
 					slice[s.ToLocation(s.PointAdd(p, op))]++
 				}
 			}
@@ -561,6 +574,16 @@ func (s *State) ComputeThreat(turn, player int, mask []Point, slice []int8) {
 	return
 }
 
+func (s *State) Threat(turn int, l Location) int8 {
+	i := len(s.Map.Threat) - turn + s.Turn - 1
+	if i < 0 { 
+		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Map.Threat))
+		return 0
+	}
+	return s.Map.Threat[i][l]
+}
+
 func (s *State) SetBlock(l Location) {
 	s.Map.Grid[l] = BLOCK
 }
+

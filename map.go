@@ -9,6 +9,8 @@ import (
 	"fmt"
 )
 
+const NTHREAT = 5
+
 type Map struct {
 	Rows    int
 	Cols    int
@@ -41,6 +43,10 @@ func NewMap(rows, cols, players int) *Map {
 		Grid:    make([]Item, rows*cols),
 		Seen:    make([]int, rows*cols),
 		BDist:   BorderDistance(rows, cols),
+	}
+
+	for i := 0; i < NTHREAT; i++ {
+		m.Threat = append(m.Threat, make([]int8, rows*cols))
 	}
 
 	return m

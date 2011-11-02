@@ -19,8 +19,6 @@ type Mask struct {
 	UnionLoc []Location
 }
 
-var Masks map[int]*Mask
-
 func maskCircle(r2 int) []Point {
 	if r2 < 0 {
 		return nil
