@@ -6,7 +6,6 @@ import (
 	"os"
 	"math"
 	"rand"
-	"sort"
 	"log"
 )
 
@@ -114,91 +113,74 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 		// TODO: Here should update map for fixed ants.
 		f, _, _ := MapFill(s.Map, tset.Active())
 
-		// Make hills infinitely unattractive
-		/* This DOES NOT WORK - can make the hill a local minima.
-			for _, loc := range s.MyHillLocations() {
-			f.Depth[loc] = math.MaxUint16
-		}
-		*/
-
 		// Build list of locations sorted by depth
-		ll := make(map[int][]Location)
-		var dl []int
+		ccl := make([]Location, len(ants), len(ants))
 		for loc, _ := range ants {
-			depth := int(f.Depth[loc])
-			if _, ok := ll[depth]; !ok {
-				ll[depth] = make([]Location, 0)
-				dl = append(dl, int(depth))
-			}
-			ll[depth] = append(ll[depth], loc)
+			ccl = append(ccl, loc)
 		}
-		sort.Sort(IntSlice(dl))
+		for _, loc := range f.Closest(ccl) {
+			depth := f.Depth[loc]
+		STEP:
+			for _, d := range rand.Perm(4) {
+				// find a direction we can step in thats stepable.
+				np := s.Map.PointAdd(s.Map.ToPoint(loc), Steps[d])
+				nl := s.Map.ToLocation(np)
+				item := s.Item(nl)
 
-		for _, depth := range dl {
-			// loop over depths
-			for _, loc := range ll[depth] {
-				// for a given depth loop over ant locations
+				if f.Depth[nl] < uint16(depth) &&
+					(item == LAND || item == FOOD || item.IsEnemyHill()) {
+					// We have a valid next step, path in to dest and see if
+					// We should remove ant and possibly target.
 
-				// p := s.Map.ToPoint(loc)
-			STEP:
-				for _, d := range rand.Perm(4) {
-					// find a direction we can step in thats stepable.
-					np := s.Map.PointAdd(s.Map.ToPoint(loc), Steps[d])
-					nl := s.Map.ToLocation(np)
+					// Need to handle the special case where food spawns next to us
+					// in that case we don't move, mark the food as a block, and
+					// remove ourself and the food from the list
 
-					if f.Depth[nl] < uint16(depth) &&
-						(s.Map.Grid[nl] == LAND || s.Map.Grid[nl].IsEnemyHill() || s.Map.Grid[nl] == FOOD) {
-						// We have a valid next step, path in to dest and see if
-						// We should remove ant and possibly target.
-
-						// Need to handle the special case where food spawns next to us
-						// in that case we don't move, mark the food as a block, and
-						// remove ourself and the food from the list
-
-						if s.Map.Grid[nl] == FOOD {
-							// We are next to food, remove this ant from the 
-							// available list, mark this food as taken, and mark the 
-							// food as a block.
-							s.Map.Grid[nl] = BLOCK
-							moves[loc] = Direction(d)
-							if Debug > 4 {
-								log.Printf("Removing %v food adjacent", s.Map.ToPoint(loc))
-							}
-							ants[loc] = 0, false
-							tset[nl].count = 0
-						} else {
-							endloc, steps := f.PathIn(nl)
-							tgt, ok := tset[endloc]
-							if Debug > 4 {
-								log.Printf("Found target %v -> %v, end %v %d steps, tgt: %v", s.Map.ToPoint(loc), s.Map.ToPoint(nl), s.Map.ToPoint(endloc), steps, tgt)
-							}
-							if !ok {
-								if Debug > 3 {
-									log.Printf("pathin from %v(%d)->%v to %v(%d) no matching target.",
-										s.Map.ToPoint(loc), loc, s.Map.ToPoint(nl), s.Map.ToPoint(endloc), endloc)
-								}
-							} else if steps >= 0 && tgt.count > 0 {
-								moves[loc] = Direction(d)
-								tgt.count -= 1
-								s.Map.Grid[nl] = BLOCK
-								ants[loc] = 0, false
-							}
+					if item == FOOD {
+						// We are next to food, remove this ant from the
+						// available list, mark this food as taken, and mark the
+						// food as a block.
+						s.SetBlock(nl)
+						moves[loc] = Direction(5) // explicitly say we will not move
+						if Debug > 4 {
+							log.Printf("Removing %v food adjacent", s.Map.ToPoint(loc))
 						}
-						break STEP
+						ants[loc] = 0, false
+						tset[nl].count = 0
+					} else {
+						endloc, steps := f.PathIn(nl)
+						tgt, ok := tset[endloc]
+						if Debug > 4 {
+							log.Printf("Found target %v -> %v, end %v %d steps, tgt: %v",
+								s.Map.ToPoint(loc), s.Map.ToPoint(nl), s.Map.ToPoint(endloc), steps, tgt)
+						}
+						if !ok {
+							if Debug > 3 {
+								log.Printf("pathin from %v(%d)->%v to %v(%d) no matching target.",
+									s.Map.ToPoint(loc), loc, s.Map.ToPoint(nl), s.Map.ToPoint(endloc), endloc)
+							}
+						} else if steps >= 0 && tgt.count > 0 {
+							moves[loc] = Direction(d)
+							tgt.count -= 1
+							s.SetBlock(nl)
+							ants[loc] = 0, false
+						}
 					}
+					break STEP
 				}
 			}
 		}
-
+		// TODO If we have more ants than targets we have bored ants, uptick the # in on hills, add some exploring etc.
 	}
-	// TODO If we have more ants than targets we have bored ants, uptick the # in on hills, add some exploring etc.
 
 	//log.Printf("%d ants with nothing to do", len(ants))
 	bot.IdleAnts = append(bot.IdleAnts, len(ants))
 
 	for loc, d := range moves {
-		p := s.Map.ToPoint(loc)
-		fmt.Fprintf(os.Stdout, "o %d %d %s\n", p.r, p.c, DirectionChar[d])
+		if d < 5 {
+			p := s.Map.ToPoint(loc)
+			fmt.Fprintf(os.Stdout, "o %d %d %s\n", p.r, p.c, DirectionChar[d])
+		}
 	}
 
 	fmt.Fprintf(os.Stdout, "go\n")

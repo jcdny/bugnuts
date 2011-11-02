@@ -561,3 +561,6 @@ func (s *State) ComputeThreat(turn, player int, mask []Point, slice []int8) {
 	return
 }
 
+func (s *State) SetBlock(l Location) {
+	s.Map.Grid[l] = BLOCK
+}

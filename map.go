@@ -228,6 +228,15 @@ func (m *Map) ToPoints(lv []Location) []Point {
 	}
 
 	return pv
+
+}
+
+func (s *State) Item(l Location) Item {
+	_, food := s.Food[l]
+	if food {
+		return FOOD
+	}
+	return s.Map.Grid[l]
 }
 
 

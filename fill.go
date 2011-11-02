@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"strconv"
+	"sort"
 )
 
 type Fill struct {
@@ -238,4 +239,34 @@ func (tset *TargetSet) Active() map[Location]int {
 	}
 
 	return tp
+}
+
+// Build list of locations ordered by depth from closest to furthest
+// TODO see if perm on the per depth list helps
+func (f *Fill) Closest(slice []Location) []Location {
+	llist := make(map[int][]Location) // List of locations keyed by depth
+	dlist := make([]int, 0, 128)      // List of depths encountered
+
+	for _, loc := range slice {
+		depth := int(f.Depth[loc])
+		if _, ok := llist[depth]; !ok {
+			llist[depth] = make([]Location, 0)
+			dlist = append(dlist, depth)
+		}
+		llist[depth] = append(llist[depth], loc)
+	}
+
+	sort.Sort(IntSlice(dlist))
+
+	n := 0
+	for _, depth := range dlist {
+		copy(slice[n:n+len(llist[depth])], llist[depth])
+		n += len(llist[depth])
+	}
+
+	if n != len(slice) {
+		log.Panicf("Output length does not match input length (%d, %d)", n, len(slice))
+	}
+
+	return slice
 }
