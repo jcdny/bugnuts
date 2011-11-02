@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"os"
+	"math"
 	"rand"
 	"log"
 )
@@ -23,17 +24,18 @@ func NewBotV5(s *State) Bot {
 		Explore: make(map[Location]*Target, 10),
 	}
 
-	mb.MakeExplorers(s, 1.0)
+	mb.MakeExplorers(s, .8)
 	return mb
 }
 
 func (bot *BotV5) MakeExplorers(s *State, scale float64) {
 
 	// Set an initial group of targetpoints
-	stride := int(float64(s.Radius) * scale)
-	if stride <= 0 {
-		stride = 2 * s.Radius
+	if scale <= 0 {
+		scale = 1.0
 	}
+	stride := int(math.Sqrt(float64(s.ViewRadius2)) * scale)
+
 	for r := 5; r < s.Rows; r += stride {
 		for c := 5; c < s.Cols; c += stride {
 			loc := s.Map.ToLocation(Point{r: r, c: c})
@@ -112,20 +114,22 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 		f, _, _ := MapFill(s.Map, tset.Active())
 
 		// Build list of locations sorted by depth
-		ccl := make([]Location, len(ants), len(ants))
+		ccl := make([]Location, len(ants))
 		for loc, _ := range ants {
 			ccl = append(ccl, loc)
 		}
 		for _, loc := range f.Closest(ccl) {
 			depth := f.Depth[loc]
+			threat := s.Threat(s.Turn, loc)
 		STEP:
 			for _, d := range rand.Perm(4) {
 				// find a direction we can step in thats stepable.
 				np := s.Map.PointAdd(s.Map.ToPoint(loc), Steps[d])
 				nl := s.Map.ToLocation(np)
 				item := s.Item(nl)
+				nthreat := s.Threat(s.Turn, nl)
 
-				if f.Depth[nl] < uint16(depth) &&
+				if f.Depth[nl] < uint16(depth) && (nthreat == 0 || nthreat < threat) &&
 					(item == LAND || item == FOOD || item.IsEnemyHill()) {
 					// We have a valid next step, path in to dest and see if
 					// We should remove ant and possibly target.
@@ -158,6 +162,9 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 									s.Map.ToPoint(loc), loc, s.Map.ToPoint(nl), s.Map.ToPoint(endloc), endloc)
 							}
 						} else if steps >= 0 && tgt.count > 0 {
+							if s.Threat(s.Turn, nl) > 0 {
+								log.Printf("#%d: Move to %v threat %d\n", s.Turn, s.Map.ToPoint(nl), s.Threat(s.Turn, nl))
+							}
 							moves[loc] = Direction(d)
 							tgt.count -= 1
 							s.SetBlock(nl)

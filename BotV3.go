@@ -23,18 +23,17 @@ func NewBotV3(s *State) Bot {
 }
 
 func (bot *BotV3) DoTurn(s *State) os.Error {
-	sv := []Point{{-1, 0}, {1, 0}, {0, 1}, {0, -1}}
 	for loc, _ := range s.Ants[0] {
 		p := s.Map.ToPoint(loc)
 		best := math.MinInt32
 		var score [4]int
-		for d, op := range sv {
+		for d, op := range Steps {
 			tp := s.PointAdd(p, op)
 			if bot.validPoint(s, tp) {
 				if false && rand.Intn(8) == 0 {
 					score[d] = 500
 				} else {
-					score[d] = bot.Score(s, p, tp, s.ViewAdd[d])
+					score[d] = bot.Score(s, p, tp, s.viewMask.Add[d])
 				}
 				if score[d] > best {
 					best = score[d]
@@ -57,7 +56,7 @@ func (bot *BotV3) DoTurn(s *State) os.Error {
 			}
 			pp := rand.Perm(len(bestd))[0]
 			// Swap the current and target cells
-			tp := s.PointAdd(p, sv[bestd[pp]])
+			tp := s.PointAdd(p, Steps[bestd[pp]])
 			s.Map.Grid[s.ToLocation(tp)] = MY_ANT
 			s.Map.Grid[s.ToLocation(p)] = LAND
 			fmt.Fprintf(os.Stdout, "o %d %d %c\n", p.r, p.c, ([4]byte{'n', 's', 'e', 'w'})[bestd[pp]])
@@ -88,7 +87,7 @@ func (bot *BotV3) Score(s *State, p, tp Point, pv []Point) int {
 	}
 
 	// Score for nearby items
-	for _, op := range s.ViewPoints {
+	for _, op := range s.viewMask.P {
 		item := s.Map.Grid[s.ToLocation(s.PointAdd(tp, op))]
 		inc := 0
 		iname := ""
@@ -131,10 +130,9 @@ func (bot *BotV3) Score(s *State, p, tp Point, pv []Point) int {
 }
 
 func (bot *BotV3) validPoint(s *State, p Point) bool {
-	sv := []Point{{-1, 0}, {1, 0}, {0, 1}, {0, -1}}
 	tgt := s.Map.Grid[s.ToLocation(p)]
 	if tgt == FOOD || tgt == LAND || tgt.IsEnemyHill() {
-		for _, op := range sv {
+		for _, op := range Steps {
 			//make sure there is an exit
 			ep := s.PointAdd(p, op)
 			tgt := s.Map.Grid[s.ToLocation(ep)]

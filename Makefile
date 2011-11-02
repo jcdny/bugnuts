@@ -12,6 +12,7 @@ GOFILES=\
 	debugging.go\
 	queue.go\
 	fill.go\
+	mask.go\
 	util.go\
 	tables.go\
 	state.go\

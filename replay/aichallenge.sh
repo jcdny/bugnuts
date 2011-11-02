@@ -1,6 +1,6 @@
 #!/bin/bash
-GAME=25000
-END=39000
+GAME=44000
+END=49000
 HOST=aichallenge.org
 BASE=http://aichallenge.org/game/0/
 ROOT=~/src/ai/bot/replay
@@ -30,7 +30,7 @@ while [ $GAME -lt $END ]; do
         echo "INFO: getting $SOURCE"
         curl --create-dirs -o $DEST $SOURCE || echo Ouch
         ls -1l $DEST | grep gz
-        sleep `expr $RANDOM % 10 + 1`
+        sleep `expr $RANDOM % 8 + 4`
     fi
     GAME="`expr $GAME + 1`"
 done
