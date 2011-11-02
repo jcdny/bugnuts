@@ -128,8 +128,9 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 				nl := s.Map.ToLocation(np)
 				item := s.Item(nl)
 				nthreat := s.Threat(s.Turn, nl)
+				// TODO clean up risk aversion
 
-				if f.Depth[nl] < uint16(depth) && (nthreat == 0 || nthreat < threat) &&
+				if f.Depth[nl] < uint16(depth) && (s.Turn > 70 || nthreat == 0 || nthreat < threat) &&
 					(item == LAND || item == FOOD || item.IsEnemyHill()) {
 					// We have a valid next step, path in to dest and see if
 					// We should remove ant and possibly target.

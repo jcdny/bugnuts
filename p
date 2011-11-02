@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 ROOT=../tools
-ARCH="`uname -s`"
+ARCH="`arch`"
 
 export MAP="testdata/maps/maze_02p_02.map"
 
@@ -17,5 +17,5 @@ export MAP="testdata/maps/maze_02p_02.map"
     --map_file $MAP \
     "$@" \
     "./bot.sh" \
-    "./bin/$ARCH/bugnutsv4" 
+    "./bin/$ARCH/bugnutsv3" 
 #    "python $ROOT/sample_bots/python/HunterBot.py"     "python $ROOT/sample_bots/python/GreedyBot.py"
