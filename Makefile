@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=MyBot
+TARG=bot
 GOFILES=\
 	BotV0.go\
 	BotV3.go\
@@ -16,6 +16,7 @@ GOFILES=\
 	util.go\
 	tables.go\
 	state.go\
+	targets.go\
 	map.go\
 	MyBot.go\
 	main.go
@@ -32,4 +33,4 @@ gofmt:
 	gofmt -w $(GOFILES)
 
 test:
-	./MyBot < testdata/stream1.dat
+	./bot -V < testdata/stream1.dat

@@ -13,3 +13,5 @@ tmp/
 *.replaygz
 replay/data
 log/
+bot
+*.png

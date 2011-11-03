@@ -152,7 +152,9 @@ func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string 
 	return s
 }
 
-func MapFill(m *Map, origin map[Location]int) (*Fill, int, int) {
+// Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
+// use map value
+func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, int) {
 	Directions := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}} // w n e s
 
 	safe := 0
@@ -161,10 +163,14 @@ func MapFill(m *Map, origin map[Location]int) (*Fill, int, int) {
 
 	q := QNew(100)
 
-	for loc, pri := range origin {
+	for loc, opri := range origin {
 		// log.Printf("Q loc %v pri %d", f.ToPoint(loc), pri)
 		q.Q(f.ToPoint(loc))
-		f.Depth[loc] = uint16(pri)
+		if pri > 0 {
+			f.Depth[loc] = uint16(pri)
+		} else {
+			f.Depth[loc] = uint16(opri)
+		}
 	}
 
 	for !q.Empty() {
@@ -225,10 +231,11 @@ func (f *Fill) Closest(slice []Location) []Location {
 
 // Return N random points sampled from a fill with steps between low and hi inclusive.
 // it will return a count > 1 if the sample size is smaller than N
-func (f *Fill) Sample(n, low, hi int) ([]Location, []int) {
+func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
 	pool := make([]Location, 0, 200)
-	for i := 0; i < len(f.Depth); i++ {
-		if i >= low && i <= hi {
+	lo, hi := uint16(low), uint16(high)
+	for i, depth := range f.Depth {
+		if depth >= lo && depth <= hi {
 			pool = append(pool, Location(i))
 		}
 	}
@@ -238,15 +245,16 @@ func (f *Fill) Sample(n, low, hi int) ([]Location, []int) {
 
 	over := n / len(pool)
 	perm := rand.Perm(len(pool))[0 : n%len(pool)]
+	log.Printf("Looking for %d explore points %d-%d, have %d possible", n, low, hi, len(pool))
 
 	var count []int
 	if over > 0 {
-		count = make([]int, len(pool), len(pool))
+		count = make([]int, len(pool))
 		for i, _ := range count {
 			count[i] = over
 		}
 	} else {
-		count = make([]int, len(perm), len(perm))
+		count = make([]int, len(perm))
 	}
 
 	for i, _ := range perm {
@@ -256,8 +264,9 @@ func (f *Fill) Sample(n, low, hi int) ([]Location, []int) {
 	if over > 0 {
 		return pool, count
 	} else {
-		pout := make([]Location, len(perm), len(perm))
+		pout := make([]Location, len(perm))
 		for i, pi := range perm {
+			log.Printf("adding location %d to output pool", pool[pi])
 			pout[i] = pool[pi]
 		}
 		return pout, count
