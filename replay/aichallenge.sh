@@ -1,6 +1,6 @@
 #!/bin/bash
-GAME=44000
-END=49000
+GAME=49000
+END=52000
 HOST=aichallenge.org
 BASE=http://aichallenge.org/game/0/
 ROOT=~/src/ai/bot/replay

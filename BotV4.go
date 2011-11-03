@@ -1,5 +1,8 @@
 package main
 // The v4 Bot -- Marginally less Terrible!!!!
+//
+// Entirely changed from v3 - now uses food and hill locations
+// to set goals and does an iterated greedy BFS to path to goals.
 
 import (
 	"fmt"
@@ -38,7 +41,7 @@ func (bot *BotV4) DoTurn(s *State) os.Error {
 	// log.Printf("%v %v", targets, s.Map.ToPoints(targets))
 	// Add search points
 
-	f, _, _ := MapFill(s.Map, tmap)
+	f, _, _ := MapFill(s.Map, tmap, 0)
 
 	// Build list of locations sorted by depth and attempt to go downhill
 	ll := make(map[int][]Location)

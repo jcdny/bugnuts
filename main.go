@@ -11,8 +11,10 @@ import (
 var Debug int = 0
 var runBot string
 var mapFile string
+var Viz bool = false
 
 func init() {
+	flag.BoolVar(&Viz, "V", false, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
 	flag.IntVar(&Debug, "d", 0, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
 	flag.StringVar(&runBot, "b", "CUR", "Which bot to run")
 	flag.StringVar(&mapFile, "m", "", "Map file, if provided will be used to validate generated map, hill guessing etc.")

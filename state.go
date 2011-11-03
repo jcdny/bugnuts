@@ -50,8 +50,8 @@ type State struct {
 	PlayerSeed    int64 //random player seed
 	Turn          int   //current turn number
 
-	attackMask    *Mask
-	viewMask      *Mask
+	attackMask *Mask
+	viewMask   *Mask
 
 	Ants  []map[Location]int // Ant lists List by playerid value is turn seen
 	Hills map[Location]*Hill // Hill list
@@ -405,7 +405,7 @@ func (s *State) UpdateLand(loc Location) {
 		}
 	}
 }
- 
+
 func (s *State) UpdateSeen(loc Location) {
 	if s.Map.BDist[loc] > s.viewMask.R {
 		// In interior of map so use loc offsets
@@ -555,13 +555,12 @@ func (s *State) ComputeThreat(turn, player int, mask *Mask, slice []int8) {
 		log.Panicf("Illegal turns out = %d", turn)
 	}
 
-
-	if len(slice) != s.Rows * s.Cols {
+	if len(slice) != s.Rows*s.Cols {
 		log.Panic("ComputeThreat slice size mismatch")
 	}
 
 	for i, _ := range s.Ants {
-		if (i != player) {
+		if i != player {
 			for loc, _ := range s.Ants[i] {
 				p := s.Map.ToPoint(loc)
 				for _, op := range mv {
@@ -576,7 +575,7 @@ func (s *State) ComputeThreat(turn, player int, mask *Mask, slice []int8) {
 
 func (s *State) Threat(turn int, l Location) int8 {
 	i := len(s.Map.Threat) - turn + s.Turn - 1
-	if i < 0 { 
+	if i < 0 {
 		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Map.Threat))
 		return 0
 	}
@@ -586,4 +585,3 @@ func (s *State) Threat(turn int, l Location) int8 {
 func (s *State) SetBlock(l Location) {
 	s.Map.Grid[l] = BLOCK
 }
-

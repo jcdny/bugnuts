@@ -83,13 +83,11 @@ func ToOffsets(pv []Point, cols int) []Location {
 func ToOffsetPoints(loc []Location, cols int) (out []Point) {
 	out = make([]Point, len(loc))
 	for i, l := range loc {
-		out[i] = Point{r: int(l)/cols, c: int(l)%cols}
+		out[i] = Point{r: int(l) / cols, c: int(l) % cols}
 	}
 
 	return out
 }
-
-
 
 // Precompute circle points for lookup for a given r2 and number of map columns.
 func GenCircleTable(r2 int) []Point {
@@ -103,7 +101,7 @@ func GenCircleTable(r2 int) []Point {
 	// Make the origin the first element of the slice so you can easily skip it.
 	p := Point{r: 0, c: 0}
 	v = append(v, p)
-	
+
 	for r := -d; r <= d; r++ {
 		for c := -d; c <= d; c++ {
 			if c != 0 || r != 0 {

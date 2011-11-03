@@ -42,5 +42,3 @@ func TestMapLoad(t *testing.T) {
 
 	m.WriteDebugImage("_test", 0, func(c, r int) image.NRGBAColor { return m.At(r, c) })
 }
-
-
