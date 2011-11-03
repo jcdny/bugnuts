@@ -193,55 +193,6 @@ func MapFill(m *Map, origin map[Location]int) (*Fill, int, int) {
 	return f, 0, 0
 }
 
-type Target struct {
-	item  Item
-	loc   Location // Target Location
-	count int      // how many do we want at this location
-	pri   int      // target priority.
-
-	arrivals []int      // Inbound Arrival time
-	player   []int      // Inbound player
-	ant      []Location // Inbound Source
-}
-
-type TargetSet map[Location]*Target
-
-func (tset *TargetSet) Add(item Item, loc Location, count, pri int) {
-	t, ok := (*tset)[loc]
-	if !ok || t.pri < pri {
-		// We already have this point in the target set, replace if pri is higher
-		(*tset)[loc] = &Target{
-			item:  item,
-			loc:   loc,
-			count: count,
-			pri:   pri,
-		}
-	}
-
-}
-
-func (tset TargetSet) Pending() int {
-	n := 0
-	for _, t := range tset {
-		if t.count > 0 {
-			n++
-		}
-	}
-
-	return n
-}
-
-func (tset *TargetSet) Active() map[Location]int {
-	tp := make(map[Location]int, tset.Pending())
-	for _, t := range *tset {
-		if t.count > 0 {
-			tp[t.loc] = t.pri
-		}
-	}
-
-	return tp
-}
-
 // Build list of locations ordered by depth from closest to furthest
 // TODO see if perm on the per depth list helps
 func (f *Fill) Closest(slice []Location) []Location {
@@ -272,34 +223,33 @@ func (f *Fill) Closest(slice []Location) []Location {
 	return slice
 }
 
-
 // Return N random points sampled from a fill with steps between low and hi inclusive.
 // it will return a count > 1 if the sample size is smaller than N
 func (f *Fill) Sample(n, low, hi int) ([]Location, []int) {
-	pool := make([]Location,0,200)
+	pool := make([]Location, 0, 200)
 	for i := 0; i < len(f.Depth); i++ {
-		if i >= low && i <= hi { 
+		if i >= low && i <= hi {
 			pool = append(pool, Location(i))
 		}
 	}
 	if len(pool) == 0 {
 		return nil, nil
 	}
-	
-	over := n/len(pool)
-	perm := rand.Perm(len(pool))[0:n % len(pool)]
-	
+
+	over := n / len(pool)
+	perm := rand.Perm(len(pool))[0 : n%len(pool)]
+
 	var count []int
 	if over > 0 {
-		count = make([]int,len(pool), len(pool))
-		for i,_ := range count {
+		count = make([]int, len(pool), len(pool))
+		for i, _ := range count {
 			count[i] = over
 		}
 	} else {
-		count = make([]int, len(perm), len(perm)) 
+		count = make([]int, len(perm), len(perm))
 	}
 
-	for i, _ := range perm {	
+	for i, _ := range perm {
 		count[i]++
 	}
 
@@ -307,11 +257,11 @@ func (f *Fill) Sample(n, low, hi int) ([]Location, []int) {
 		return pool, count
 	} else {
 		pout := make([]Location, len(perm), len(perm))
-		for i, pi := range perm {	
+		for i, pi := range perm {
 			pout[i] = pool[pi]
 		}
 		return pout, count
 	}
-	
+
 	return nil, nil
 }

@@ -245,7 +245,6 @@ func (s *State) Item(l Location) Item {
 	return s.Map.Grid[l]
 }
 
-
 // Ruturn a uint8 array with distance to border in each cell
 func BorderDistance(rows, cols int) (out []uint8) {
 	if rows > 255 || cols > 255 {
@@ -261,4 +260,3 @@ func BorderDistance(rows, cols int) (out []uint8) {
 
 	return
 }
-

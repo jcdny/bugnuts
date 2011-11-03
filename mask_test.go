@@ -25,14 +25,14 @@ func TestMaskCircle(t *testing.T) {
 		t.Errorf("maskCircle(0) expected len=1 got %v", v)
 	}
 
-	 for i := 1000; i > 0; i-- {
+	for i := 1000; i > 0; i-- {
 		v = maskCircle(i)
 		// masks should have 4 way symmetry
 		if (len(v)-1)%4 != 0 {
 			t.Errorf("maskCircle(i) expected len to be 1+4*n got %d+4*%d", (len(v)-1)%4, len(v)/4)
 			break
 		}
-	 }
+	}
 }
 
 func TestMakeMask(t *testing.T) {

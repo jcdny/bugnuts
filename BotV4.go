@@ -1,5 +1,8 @@
 package main
 // The v4 Bot -- Marginally less Terrible!!!!
+//
+// Entirely changed from v3 - now uses food and hill locations
+// to set goals and does an iterated greedy BFS to path to goals.
 
 import (
 	"fmt"

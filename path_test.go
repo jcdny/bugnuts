@@ -18,7 +18,7 @@ func TestMapFill(t *testing.T) {
 	}
 
 	// log.Printf("%v", m) // TODO test String() func round trip.
-	l := make(map[Location]int,0)
+	l := make(map[Location]int, 0)
 	for _, hill := range m.HillLocations() {
 		l[hill] = 1
 	}
@@ -32,11 +32,10 @@ func BenchmarkSlowMapFill(b *testing.B) {
 
 	file := "testdata/maps/maze_04p_01.map"
 	m, _ := MapLoadFile(file)
-	l := make(map[Location]int,0)
+	l := make(map[Location]int, 0)
 	for _, hill := range m.HillLocations() {
 		l[hill] = 1
 	}
-
 
 	//f, _, _ := SlowMapFill(m, []Point{{r: 3, c: 3}})
 	//log.Printf("%v", f)

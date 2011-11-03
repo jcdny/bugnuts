@@ -1,3 +1,5 @@
+package main
+
 // An attempt to make flood fill faster by not using as much stack.
 // not enough brain to make it work right now.  Also turns out to be
 // premature opt. since the fill seems to take < 5ms 

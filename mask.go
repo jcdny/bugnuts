@@ -6,7 +6,7 @@ import (
 
 type Mask struct {
 	R      uint8 // Radius
-	Stride int // cols
+	Stride int   // cols
 
 	P   []Point
 	Loc []Location
@@ -109,4 +109,3 @@ func makeMask(r2, rows, cols int) *Mask {
 
 	return m
 }
-
