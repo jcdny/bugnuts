@@ -5,7 +5,8 @@ _*
 .\#*
 TAGS
 MyBot
-tmp
+*.tmp
+tmp/
 6.out
 *.err
 *.log
