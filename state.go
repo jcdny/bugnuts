@@ -585,3 +585,13 @@ func (s *State) Threat(turn int, l Location) int8 {
 func (s *State) SetBlock(l Location) {
 	s.Map.Grid[l] = BLOCK
 }
+
+func (s *State) MoveAnt(from, to Location) {
+	s.Map.Grid[from], s.Map.Grid[to] = LAND, BLOCK
+}
+
+func (s *State) ValidStep(loc Location) bool {
+	i := s.Map.Grid[loc]
+
+	return i != WATER && i != BLOCK && i != FOOD && i != MY_ANT
+}

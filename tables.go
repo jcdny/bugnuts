@@ -105,3 +105,6 @@ func (o Item) IsEnemyHill() bool {
 
 	return false
 }
+func (o Item) IsTerminal() bool {
+	return o == RALLY || o == DEFEND || o == EXPLORE || o.IsEnemyHill()
+}

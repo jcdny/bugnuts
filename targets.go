@@ -6,10 +6,11 @@ import (
 )
 
 type Target struct {
-	Item  Item
-	Loc   Location // Target Location
-	Count int      // how many do we want at this location
-	Pri   int      // target priority.
+	Item     Item
+	Loc      Location // Target Location
+	Count    int      // how many do we want at this location
+	Pri      int      // target priority.
+	Terminal bool     // Is it a terminating target 
 
 	arrivals []int      // Inbound Arrival time
 	player   []int      // Inbound player
@@ -26,10 +27,11 @@ func (tset *TargetSet) Add(item Item, loc Location, count, pri int) {
 	if !found || t.Pri < pri {
 		// We already have this point in the target set, replace if pri is higher
 		(*tset)[loc] = &Target{
-			Item:  item,
-			Loc:   loc,
-			Count: count,
-			Pri:   pri,
+			Item:     item,
+			Loc:      loc,
+			Count:    count,
+			Pri:      pri,
+			Terminal: item.IsTerminal(),
 		}
 	}
 

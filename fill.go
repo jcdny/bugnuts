@@ -9,9 +9,9 @@ import (
 
 type Fill struct {
 	// add offset and wrap flag for subfill work
-	Rows  int
-	Cols  int
-	Depth []uint16
+	Rows    int
+	Cols    int
+	Depth   []uint16
 	SeedLoc []Location
 }
 
@@ -63,14 +63,12 @@ func (f *Fill) PathIn(loc Location) (Location, int) {
 	for !done {
 		depth := f.Depth[loc]
 		p := f.ToPoint(loc)
-
 		done = true
 		for _, d := range Steps {
 			np := f.PointAdd(p, d)
 			nl := f.ToLocation(np)
 
 			if f.Depth[nl] < depth && f.Depth[nl] > 0 {
-
 				loc = nl
 				steps++
 				done = false
@@ -84,6 +82,40 @@ func (f *Fill) PathIn(loc Location) (Location, int) {
 	}
 
 	return loc, steps
+}
+
+func (f *Fill) MontePathIn(loc Location, N int, MinDepth uint16) (dist map[Location]int) {
+	steps := 0
+	origloc := loc
+	done := false
+	for n := 0; n < N; n++ {
+		loc = origloc
+		for !done {
+			depth := f.Depth[loc]
+			p := f.ToPoint(loc)
+			done = true
+			for _, d := range rand.Perm(4) {
+				np := f.PointAdd(p, Steps[d])
+				nl := f.ToLocation(np)
+
+				if f.Depth[nl] < depth && f.Depth[nl] > MinDepth {
+					loc = nl
+					steps++
+					done = false
+					break
+				}
+			}
+		}
+		if Debug > 4 {
+			log.Printf("step from %v to %v depth %d to %d, steps %d\n", f.ToPoint(origloc), f.ToPoint(loc), f.Depth[origloc], f.Depth[loc], steps)
+		}
+
+		dist[loc]++
+	}
+
+	log.Printf("Pathin map: %#v", dist)
+
+	return dist
 }
 
 func (f *Fill) String() string {
@@ -205,7 +237,7 @@ func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, int) {
 func (f *Fill) Closest(slice []Location) []Location {
 	llist := make(map[int][]Location) // List of locations keyed by depth
 	dlist := make([]int, 0, 128)      // List of depths encountered
-	
+
 	if len(slice) < 1 {
 		return slice
 	}
@@ -281,12 +313,11 @@ func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
 	return nil, nil
 }
 
-
 // Build list of locations ordered by depth from closest to furthest
 // TODO see if perm on the per depth list helps
 type Segment struct {
-	src Location
-	end Location
+	src   Location
+	end   Location
 	steps int
 }
 type SegSlice []Segment
