@@ -44,10 +44,12 @@ func main() {
 		bot = NewBotV3(&s)
 	case "v4":
 		bot = NewBotV4(&s)
-	case "CUR":
-		fallthrough // no flag given run latest defined bot...
 	case "v5":
 		bot = NewBotV5(&s)
+	case "CUR":
+		fallthrough // no flag given run latest defined bot...
+	case "v6":
+		bot = NewBotV6(&s)
 	default:
 		log.Printf("Unkown bot %s", runBot)
 		return

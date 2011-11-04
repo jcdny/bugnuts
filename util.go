@@ -48,6 +48,17 @@ func Min(x []int) int {
 	return xm
 }
 
+func MinInt8(x []int8) int8 {
+	xm := int8(math.MaxInt8)
+	for _, y := range x {
+		if y < xm {
+			xm = y
+		}
+	}
+
+	return int8(xm)
+}
+
 func MinV(v1 int, vn ...int) (m int) {
 	m = v1
 	for _, vi := range vn {

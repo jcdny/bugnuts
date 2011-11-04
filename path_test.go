@@ -23,7 +23,7 @@ func TestMapFill(t *testing.T) {
 		l[hill] = 1
 	}
 
-	fs, mQ, mD := MapFill(m, l)
+	fs, mQ, mD := MapFill(m, l, 1)
 	log.Printf("SlowFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, fs)
 
 }
@@ -42,6 +42,6 @@ func BenchmarkSlowMapFill(b *testing.B) {
 
 	// TODO find a hill for start
 	for i := 0; i < b.N; i++ {
-		MapFill(m, l)
+		MapFill(m, l, 1)
 	}
 }

@@ -12,6 +12,7 @@ type Fill struct {
 	Rows  int
 	Cols  int
 	Depth []uint16
+	SeedLoc []Location
 }
 
 func (m *Map) NewFill() *Fill {
@@ -204,6 +205,11 @@ func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, int) {
 func (f *Fill) Closest(slice []Location) []Location {
 	llist := make(map[int][]Location) // List of locations keyed by depth
 	dlist := make([]int, 0, 128)      // List of depths encountered
+	
+	if len(slice) < 1 {
+		return slice
+	}
+	log.Printf("Closest slice %v", slice)
 
 	for _, loc := range slice {
 		depth := int(f.Depth[loc])
@@ -273,4 +279,32 @@ func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
 	}
 
 	return nil, nil
+}
+
+
+// Build list of locations ordered by depth from closest to furthest
+// TODO see if perm on the per depth list helps
+type Segment struct {
+	src Location
+	end Location
+	steps int
+}
+type SegSlice []Segment
+
+func (p SegSlice) Len() int { return len(p) }
+// Metric is Manhattan distance from origin.
+func (p SegSlice) Less(i, j int) bool { return p[i].steps < p[j].steps }
+func (p SegSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+func (f *Fill) ClosestStep(seg []Segment) {
+	if len(seg) < 1 {
+		return
+	}
+
+	for i, _ := range seg {
+		end, nsteps := f.PathIn(seg[i].src)
+		seg[i].steps += nsteps
+		seg[i].end = end
+	}
+	sort.Sort(SegSlice(seg))
 }

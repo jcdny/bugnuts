@@ -166,7 +166,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 							s.SetBlock(nl)
 							ants[loc] = 0, false
 							if Viz {
-								fmt.Fprintf(os.Stdout, "v arrow %d %d %d %d\n", p.r, p.c, ep.r, ep.c)
+								fmt.Fprintf(os.Stdout, "v line %d %d %d %d\n", p.r, p.c, ep.r, ep.c)
 							}
 						}
 					}
