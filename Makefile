@@ -25,13 +25,12 @@ GOFILES=\
 
 include $(GOROOT)/src/Make.cmd
 
-dist:
-	zip tmp/dist.zip $(GOFILES)
-
-
-.PHONY: gofmt test
+.PHONY: gofmt test dist
 gofmt:
 	gofmt -w $(GOFILES)
+
+dist:
+	zip dist/dist.$(shell date +%Y%m%d-%H%M).zip $(GOFILES)
 
 test:
 	./bot -V < testdata/stream1.dat
