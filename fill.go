@@ -187,7 +187,7 @@ func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string 
 
 // Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
 // use map value
-func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, int) {
+func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	Directions := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}} // w n e s
 
 	safe := 0
@@ -206,6 +206,7 @@ func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, int) {
 		}
 	}
 
+	newDepth := uint16(0)
 	for !q.Empty() {
 		// just for sanity...
 		if safe++; safe > 100*len(f.Depth) {
@@ -215,7 +216,7 @@ func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, int) {
 		p := q.DQ()
 
 		Depth := f.Depth[m.ToLocation(p)]
-		newDepth := Depth + 1
+		newDepth = Depth + 1
 
 		for _, d := range Directions {
 			fillp := m.PointAdd(p, d)
@@ -229,7 +230,7 @@ func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, int) {
 		}
 	}
 
-	return f, 0, 0
+	return f, q.Cap(), newDepth
 }
 
 // Build list of locations ordered by depth from closest to furthest

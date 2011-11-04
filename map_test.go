@@ -30,7 +30,7 @@ func TestMapNew(t *testing.T) {
 
 func TestMapLoad(t *testing.T) {
 
-	file := "testdata/maps/big"
+	file := "testdata/big.map"
 	m, err := MapLoadFile(file)
 
 	if err != os.EOF {
@@ -40,5 +40,5 @@ func TestMapLoad(t *testing.T) {
 		t.Errorf("Invalid load of map m == nil")
 	}
 
-	m.WriteDebugImage("_test", 0, func(c, r int) image.NRGBAColor { return m.At(r, c) })
+	m.WriteDebugImage("_maptest", 0, func(c, r int) image.NRGBAColor { return m.At(r, c) })
 }

@@ -174,13 +174,16 @@ func MapLoad(in *bufio.Reader) (*Map, os.Error) {
 	return m, err
 }
 
-func (m *Map) HillLocations() []Location {
+// player -1 is all players
+func (m *Map) HillLocations(player int) []Location {
 	// find a hill for start
-	hills := []Location{}
+	hills := make([]Location, 0, 10)
 
 	for i, item := range m.Grid {
 		if item.IsHill() {
-			hills = append(hills, Location(i))
+			if player < 0 || item == MY_HILL+Item(player) {
+				hills = append(hills, Location(i))
+			}
 		}
 	}
 
@@ -222,6 +225,7 @@ func MapValidate(ref *Map, gen *Map) (int, string) {
 			}
 		}
 	}
+
 	return count, out
 }
 
