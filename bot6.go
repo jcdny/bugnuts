@@ -13,7 +13,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"rand"
 	"log"
 )
 
@@ -212,7 +211,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 					var nloc Location
 				WAYOUT:
 					for _, run := range [2]bool{false, true} {
-						for _, d = range rand.Perm(4) {
+						for _, d = range Permute4() {
 							moved = false
 							nloc = ants[loc].nloc[d]
 							if (tgt.Item == DEFEND || tgt.Item.IsHill() || ants[loc].safest[d]) &&

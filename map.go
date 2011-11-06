@@ -16,9 +16,10 @@ type Map struct {
 	Cols    int
 	Players int
 	// dynamic data
-	Grid   []Item   // Items seen
-	Seen   []int    // Turn on which cell was last visible.
-	Threat [][]int8 // how much threat is there on a given cell
+	Grid     []Item   // Items seen
+	Seen     []int    // Turn on which cell was last visible.
+	VisCount []int    // How many ants see this cell.
+	Threat   [][]int8 // how much threat is there on a given cell
 	// cache data
 	BorderDist []uint8       // border distance
 	LocStep    [][4]Location // adjecent tile map
@@ -43,6 +44,7 @@ func NewMap(rows, cols, players int) *Map {
 		Players:    players,
 		Grid:       make([]Item, rows*cols),
 		Seen:       make([]int, rows*cols),
+		VisCount:   make([]int, rows*cols),
 		BorderDist: BorderDistance(rows, cols),
 		LocStep:    LocationStep(rows, cols),
 	}

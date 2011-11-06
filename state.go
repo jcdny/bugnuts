@@ -199,11 +199,14 @@ func (s *State) ResetGrid() {
 		s.Map.Threat[0][i] = 0
 	}
 
+	// Set all seen map to land
 	for i, t := range s.Map.Seen {
+		s.Map.VisCount[i] = 0
 		if t == s.Turn && s.Map.Grid[i] > LAND {
 			s.Map.Grid[i] = LAND
 		}
 	}
+
 }
 
 func (s *State) ParseTurn() (line string, err os.Error) {
@@ -574,6 +577,7 @@ func (s *State) Threat(turn int, l Location) int8 {
 	}
 	return s.Map.Threat[i][l]
 }
+
 func (s *State) ThreatMap(turn int) []int8 {
 	i := len(s.Map.Threat) - turn + s.Turn - 1
 	if i < 0 {

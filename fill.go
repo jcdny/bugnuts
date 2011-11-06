@@ -9,10 +9,10 @@ import (
 
 type Fill struct {
 	// add offset and wrap flag for subfill work
-	Rows    int
-	Cols    int
-	Depth   []uint16
-	Seed    []Location
+	Rows  int
+	Cols  int
+	Depth []uint16
+	Seed  []Location
 }
 
 func (m *Map) NewFill() *Fill {
@@ -84,46 +84,19 @@ func (f *Fill) PathIn(loc Location) (Location, int) {
 	return loc, steps
 }
 
-var Perm4 = [...][4]int{
-    {0,1,2,3},
-    {0,1,3,2},
-    {0,2,1,3},
-    {0,2,3,1},
-    {0,3,1,2},
-    {0,3,2,1},
-    {1,0,2,3},
-    {1,0,3,2},
-    {1,2,0,3},
-    {1,2,3,0},
-    {1,3,0,2},
-    {1,3,2,0},
-    {2,0,1,3},
-    {2,0,3,1},
-    {2,1,0,3},
-    {2,1,3,0},
-    {2,3,0,1},
-    {2,3,1,0},
-    {3,0,1,2},
-    {3,0,2,1},
-    {3,1,0,2},
-    {3,1,2,0},
-    {3,2,0,1},
-    {3,2,1,0},
-}
-
 func (f *Fill) MontePathIn(m *Map, start []Location, N int, MinDepth uint16) (dist []int) {
-	dist = make([]int,len(f.Depth))
+	dist = make([]int, len(f.Depth))
 
 	for _, origloc := range start {
 		for n := 0; n < N; n++ {
 			loc := origloc
 			d := 0
-			
+
 			for d < 4 {
 				depth := f.Depth[loc]
 				nperm := rand.Intn(24)
 				for d = 0; d < 4; d++ {
-					nloc := m.LocStep[loc][Perm4[nperm][d]]	
+					nloc := m.LocStep[loc][Perm4[nperm][d]]
 					if f.Depth[nloc] < depth && f.Depth[nloc] > MinDepth {
 						loc = nloc
 						dist[loc]++
@@ -262,7 +235,7 @@ func MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint1
 	f := m.NewFill()
 	return f.MapFillSeed(m, origin, pri)
 }
-	
+
 func (f *Fill) Reset() {
 	for i := 0; i < len(f.Depth); i++ {
 		f.Depth[i] = 0
@@ -275,7 +248,7 @@ func (f *Fill) MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int,
 	if f.Rows != m.Rows || f.Cols != m.Cols {
 		log.Panicf("Map and fill mismatch")
 	}
-	
+
 	q := make([]Location, 0, 200+len(origin)*2)
 	safe := 0
 
@@ -315,16 +288,15 @@ func (f *Fill) MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int,
 	return f, cap(q), newDepth
 }
 
-
 // Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
 // use map value
 func (f *Fill) MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	if f.Rows != m.Rows || f.Cols != m.Cols {
 		log.Panicf("Map and fill mismatch")
 	}
-	
+
 	f.Seed = make([]Location, len(f.Depth))
-	
+
 	q := make([]Location, 0, 200+len(origin)*2)
 	safe := 0
 

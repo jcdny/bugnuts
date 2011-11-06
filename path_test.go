@@ -197,22 +197,23 @@ func TestMonteCarloPathing(t *testing.T) {
 		}
 
 		lend := make(map[Location]int)
-		for _, hill := range m.HillLocations(-1) {
+		for _, hill := range m.HillLocations(0) {
 			lend[hill] = 1
 		}
 
-		//lsrc := m.HillLocations(-1)
-		lsrc := make([]Location,0,len(m.Grid))
-
+		
 		f,_,_ := MapFillSeed(m, lend, 1)
 
+		/* lsrc := make([]Location,0,len(m.Grid))
 		for loc, item := range m.Grid {
 			if item != WATER {
 				lsrc = append(lsrc, Location(loc))
 			}
-		}
-		
-		d := 100000/len(lsrc)
+		}*/
+
+		lsrc := m.HillLocations(1)
+
+		d := 10000/len(lsrc)
 		pre := time.Nanoseconds()
 		paths := f.MontePathIn(m, lsrc, d, 1)
 		post := time.Nanoseconds()
@@ -235,23 +236,4 @@ func TestMonteCarloPathing(t *testing.T) {
 		out.Close()		
 	}
 }
-			
-func xTestP(t *testing.T) {
-	for i := 0; i < 4; i++ {
-		for j := 0; j < 4; j++ {
-			if j != i {
-				for k := 0; k < 4; k++ {
-					if k != i && k != j {
-						for l := 0; l < 4; l++ {
-							if l != i && l != j && l != k {
-								log.Printf("%d,%d,%d,%d",i,j,k,l)
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-}
-					
 	
