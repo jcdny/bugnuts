@@ -124,22 +124,6 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	tset := TargetSet{}
 
 	s.EnemyPathinTargets(&tset, bot.P.Priority[DEFEND])
-	// log.Printf("Enemy targets: %v", &tset)
-
-	// TODO handle different priorities/attack counts
-	eh := s.EnemyHillLocations()
-	idle := 0
-	if len(bot.IdleAnts) > s.Turn-1 && len(eh) > 0 {
-		//log.Printf("IDLE: %d : %d : %d : %v", s.Turn, len(bot.IdleAnts), len(eh), bot.IdleAnts)
-		idle = bot.IdleAnts[s.Turn-1] / len(eh)
-		if idle > 3 {
-			idle = 3
-		}
-	}
-
-	for _, loc := range eh {
-		tset.Add(HILL1, loc, 1+idle, bot.P.Priority[HILL1])
-	}
 
 	// Generate list of food and enemy hill points.
 	for _, loc := range s.FoodLocations() {
@@ -149,6 +133,13 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 		tset.Add(FOOD, loc, 1, bot.P.Priority[FOOD])
 	}
 	tset.Merge(bot.Explore)
+
+	// TODO handle different priorities/attack counts
+	eh := s.EnemyHillLocations()
+	for _, loc := range eh {
+		// ndefend := s.PathinCount(loc, 10)
+		tset.Add(HILL1, loc, 8, bot.P.Priority[HILL1])
+	}
 
 	// List of available ants, with local neighborhood
 	ants := make(map[Location]*AntStep, len(s.Ants[0]))
@@ -200,11 +191,16 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 
 		for _, seg := range segs {
 			loc := seg.src
-			// p := s.Map.ToPoint(loc)
+			p := s.Map.ToPoint(loc)
+			ep := s.Map.ToPoint(seg.end)
 
 			tgt, ok := tset[seg.end]
 			if !ok {
 				log.Printf("Move from %v(%d) to %v(%d) no target ant: %#v", s.Map.ToPoint(seg.src), seg.src, s.Map.ToPoint(seg.end), seg.end, ants[loc])
+				if Viz {
+					fmt.Fprintf(os.Stdout, "v line %d %d %d %d\n", p.r, p.c, ep.r, ep.c)
+					fmt.Fprintf(os.Stdout, "v tileBorder %d %d MM\n", p.r, p.c)
+				}
 			}
 
 			moved := false
@@ -219,7 +215,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 						for _, d = range rand.Perm(4) {
 							moved = false
 							nloc = ants[loc].nloc[d]
-							if (tgt.Item == DEFEND || ants[loc].safest[d]) &&
+							if (tgt.Item == DEFEND || tgt.Item.IsHill() || ants[loc].safest[d]) &&
 								(run || f.Depth[nloc] < f.Depth[loc]) &&
 								s.ValidStep(nloc) {
 								moved = true
@@ -235,6 +231,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			}
 
 			if moved {
+				fmt.Fprintf(os.Stdout, "v line %d %d %d %d\n", p.r, p.c, ep.r, ep.c)
 				tgt.Count--
 				ants[loc].steps = append(ants[loc].steps, seg.steps-ants[loc].steptot)
 				ants[loc].steptot = seg.steps
@@ -261,6 +258,9 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			fexp, _, _ := MapFill(s.Map, s.Ants[0], 1)
 			loc, N := fexp.Sample(len(ants), 18, 18)
 			for i, _ := range loc {
+				exp := s.Map.ToPoint(loc[i])
+				fmt.Fprintf(os.Stdout, "v star %d %d .5 1.5 5 true\n", exp.r, exp.c)
+
 				bot.Explore.Add(EXPLORE, loc[i], N[i], bot.P.Priority[EXPLORE])
 				tset.Add(EXPLORE, loc[i], N[i], bot.P.Priority[EXPLORE])
 			}
@@ -279,6 +279,20 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 		}
 	}
 
+	if Viz {
+		lthreat := int8(10)
+		for i, threat := range s.ThreatMap(s.Turn) {
+			if threat > 0 {
+				if lthreat != threat {
+					fmt.Fprintf(os.Stdout, "v setFillColor 255 0 0 %.1f\n", float64(threat)*.2)
+					lthreat = threat
+				}
+				p := s.Map.ToPoint(Location(i))
+				fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.r, p.c)
+			}
+		}
+		fmt.Fprintf(os.Stdout, "v setFillColor 0 0 0 1.0\n")
+	}
 	fmt.Fprintf(os.Stdout, "go\n")
 
 	// TODO tiebreak on global goals.

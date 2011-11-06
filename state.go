@@ -15,23 +15,19 @@ const (
 
 type Statistics struct {
 	Dead []map[Location]int // Death count per location by player
-	Died [MaxPlayers]int    // count of suicides by player
+	Died [MaxPlayers]int    // Chronicle of deaths foretold
 }
 
 type Hill struct {
-	Location  Location
-	Player    int      // The owner of the hill
-	Found     int      // Turn we no longer saw it
-	Seen      int      // Last turn we saw it
-	Killed    int      // First Turn we no longer saw it
-	Killer    int      // Who we think killed it, may be a guess
-	Nearest   int      // enemy nearest to hill
-	NLocation Location // Location of nearest enemy
-
-	guess    bool       // Are we guessing location
-	Ants     []Location // The ants we saw to define a bounding box
-	AntTurn  int        // The turn we saw them
-	maxerror int        // the maximum steps to bound the unkown location
+	Location Location //
+	Player   int      // The owner of the hill
+	// hill state info
+	Found    int  // Turn we first saw it
+	Seen     int  // Last turn we saw it
+	Killed   int  // First Turn we no longer saw it
+	Killer   int  // Who we think killed it, may be a guess
+	guess    bool // Are we guessing location
+	maxerror int  // the maximum steps to bound the unkown location
 }
 
 //State keeps track of everything we need to know about the state of the game
@@ -371,15 +367,13 @@ func (s *State) AddHill(loc Location, player int) {
 		hill.guess = false
 	} else {
 		s.Hills[loc] = &Hill{
-			Location:  loc,
-			Player:    player,
-			Found:     s.Turn,
-			Seen:      s.Turn,
-			Killed:    0,
-			Killer:    -1,
-			Nearest:   -1,
-			NLocation: -1,
-			guess:     false,
+			Location: loc,
+			Player:   player,
+			Found:    s.Turn,
+			Seen:     s.Turn,
+			Killed:   0,
+			Killer:   -1,
+			guess:    false,
 		}
 	}
 }
@@ -387,7 +381,7 @@ func (s *State) AddHill(loc Location, player int) {
 // Todo This could all be done in one step.  Also viewer count.
 // Obvious optimizations: watch Adjacent Seen cells and do incremental updating.
 func (s *State) UpdateLand(loc Location) {
-	if s.Map.BDist[loc] > s.viewMask.R {
+	if s.Map.BorderDist[loc] > s.viewMask.R {
 		// In interior of map so use loc offsets
 		for _, offset := range s.viewMask.Loc {
 			if s.Map.Grid[loc+offset] == UNKNOWN {
@@ -407,7 +401,7 @@ func (s *State) UpdateLand(loc Location) {
 }
 
 func (s *State) UpdateSeen(loc Location) {
-	if s.Map.BDist[loc] > s.viewMask.R {
+	if s.Map.BorderDist[loc] > s.viewMask.R {
 		// In interior of map so use loc offsets
 		for _, offset := range s.viewMask.Loc {
 			s.Map.Seen[loc+offset] = s.Turn
@@ -465,7 +459,6 @@ func (s *State) ProcessState() {
 				} else {
 					// We don't see the hill to mark as killed by whoever we think was closest
 					hill.Killed = s.Turn
-					hill.Killer = hill.Nearest
 				}
 			}
 		} else {
@@ -580,6 +573,14 @@ func (s *State) Threat(turn int, l Location) int8 {
 		return 0
 	}
 	return s.Map.Threat[i][l]
+}
+func (s *State) ThreatMap(turn int) []int8 {
+	i := len(s.Map.Threat) - turn + s.Turn - 1
+	if i < 0 {
+		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Map.Threat))
+		return nil
+	}
+	return s.Map.Threat[i]
 }
 
 func (s *State) SetBlock(l Location) {

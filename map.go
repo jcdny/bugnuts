@@ -15,12 +15,13 @@ type Map struct {
 	Rows    int
 	Cols    int
 	Players int
-
+	// dynamic data
 	Grid   []Item   // Items seen
 	Seen   []int    // Turn on which cell was last visible.
 	Threat [][]int8 // how much threat is there on a given cell
-
-	BDist []uint8 // cache of border distance
+	// cache data
+	BorderDist []uint8       // border distance
+	LocStep    [][4]Location // adjecent tile map
 }
 
 type Point struct {
@@ -37,12 +38,13 @@ func NewMap(rows, cols, players int) *Map {
 	}
 
 	m := &Map{
-		Rows:    rows,
-		Cols:    cols,
-		Players: players,
-		Grid:    make([]Item, rows*cols),
-		Seen:    make([]int, rows*cols),
-		BDist:   BorderDistance(rows, cols),
+		Rows:       rows,
+		Cols:       cols,
+		Players:    players,
+		Grid:       make([]Item, rows*cols),
+		Seen:       make([]int, rows*cols),
+		BorderDist: BorderDistance(rows, cols),
+		LocStep:    LocationStep(rows, cols),
 	}
 
 	for i := 0; i < NTHREAT; i++ {
@@ -180,10 +182,8 @@ func (m *Map) HillLocations(player int) []Location {
 	hills := make([]Location, 0, 10)
 
 	for i, item := range m.Grid {
-		if item.IsHill() {
-			if player < 0 || item == MY_HILL+Item(player) {
-				hills = append(hills, Location(i))
-			}
+		if item.IsHill() && (player < 0 || item == MY_HILL+Item(player)) {
+			hills = append(hills, Location(i))
 		}
 	}
 
@@ -259,6 +259,37 @@ func BorderDistance(rows, cols int) (out []uint8) {
 	for r := 0; r < rows; r++ {
 		for c := 0; c < cols; c++ {
 			out[r*cols+c] = uint8(MinV(r+1, c+1, Abs(r-rows), Abs(c-cols)))
+		}
+	}
+
+	return
+}
+
+func LocationStep(rows, cols int) (out [][4]Location) {
+	out = make([][4]Location, rows*cols)
+
+	for r := 0; r < rows; r++ {
+		for c := 0; c < cols; c++ {
+			loc := r*cols + c
+			for i, step := range Steps {
+				rstep := r + step.r
+				cstep := c + step.c
+				// Wrap if we need to
+				if rstep < 0 {
+					rstep += rows
+				}
+				if rstep >= rows {
+					rstep -= rows
+				}
+				if cstep < 0 {
+					cstep += cols
+				}
+				if cstep >= cols {
+					cstep -= cols
+				}
+				nloc := rstep*cols + cstep
+				out[loc][i] = Location(nloc)
+			}
 		}
 	}
 

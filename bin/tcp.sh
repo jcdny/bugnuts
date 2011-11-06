@@ -22,7 +22,7 @@ fi
 while [ 1 ] ; do 
     echo "INFO: $EXE started at `date` LOG $LOG"
     echo "python $ROOT/bin/tcpclient.py $BHOST 2081 $EXE $BOT donuts -1 > $LOG 2> $ERR"
-    python $ROOT/bin/tcpclient.py $BHOST 2081 $EXE $RBOT donuts -1 >> $LOG 2>> $ERR
+    python $ROOT/bin/tcpclient.py $BHOST 2081 $EXE $REMOTENAME donuts -1 >> $LOG 2>> $ERR
     echo "INFO: failed at `date`, sleeping 15min" >> $LOG
     echo "INFO: failed at `date`"
     sleep 900

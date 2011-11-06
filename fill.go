@@ -12,7 +12,7 @@ type Fill struct {
 	Rows    int
 	Cols    int
 	Depth   []uint16
-	SeedLoc []Location
+	Seed    []Location
 }
 
 func (m *Map) NewFill() *Fill {
@@ -84,36 +84,55 @@ func (f *Fill) PathIn(loc Location) (Location, int) {
 	return loc, steps
 }
 
-func (f *Fill) MontePathIn(loc Location, N int, MinDepth uint16) (dist map[Location]int) {
-	steps := 0
-	origloc := loc
-	done := false
-	for n := 0; n < N; n++ {
-		loc = origloc
-		for !done {
-			depth := f.Depth[loc]
-			p := f.ToPoint(loc)
-			done = true
-			for _, d := range rand.Perm(4) {
-				np := f.PointAdd(p, Steps[d])
-				nl := f.ToLocation(np)
+var Perm4 = [...][4]int{
+    {0,1,2,3},
+    {0,1,3,2},
+    {0,2,1,3},
+    {0,2,3,1},
+    {0,3,1,2},
+    {0,3,2,1},
+    {1,0,2,3},
+    {1,0,3,2},
+    {1,2,0,3},
+    {1,2,3,0},
+    {1,3,0,2},
+    {1,3,2,0},
+    {2,0,1,3},
+    {2,0,3,1},
+    {2,1,0,3},
+    {2,1,3,0},
+    {2,3,0,1},
+    {2,3,1,0},
+    {3,0,1,2},
+    {3,0,2,1},
+    {3,1,0,2},
+    {3,1,2,0},
+    {3,2,0,1},
+    {3,2,1,0},
+}
 
-				if f.Depth[nl] < depth && f.Depth[nl] > MinDepth {
-					loc = nl
-					steps++
-					done = false
-					break
+func (f *Fill) MontePathIn(m *Map, start []Location, N int, MinDepth uint16) (dist []int) {
+	dist = make([]int,len(f.Depth))
+
+	for _, origloc := range start {
+		for n := 0; n < N; n++ {
+			loc := origloc
+			d := 0
+			
+			for d < 4 {
+				depth := f.Depth[loc]
+				nperm := rand.Intn(24)
+				for d = 0; d < 4; d++ {
+					nloc := m.LocStep[loc][Perm4[nperm][d]]	
+					if f.Depth[nloc] < depth && f.Depth[nloc] > MinDepth {
+						loc = nloc
+						dist[loc]++
+						break
+					}
 				}
 			}
 		}
-		if Debug > 4 {
-			log.Printf("step from %v to %v depth %d to %d, steps %d\n", f.ToPoint(origloc), f.ToPoint(loc), f.Depth[origloc], f.Depth[loc], steps)
-		}
-
-		dist[loc]++
 	}
-
-	log.Printf("Pathin map: %#v", dist)
 
 	return dist
 }
@@ -187,7 +206,7 @@ func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string 
 
 // Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
 // use map value
-func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
+func MapFillSlow(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	Directions := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}} // w n e s
 
 	safe := 0
@@ -231,6 +250,121 @@ func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	}
 
 	return f, q.Cap(), newDepth
+}
+
+// Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
+// use map value
+func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
+	f := m.NewFill()
+	return f.MapFill(m, origin, pri)
+}
+func MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
+	f := m.NewFill()
+	return f.MapFillSeed(m, origin, pri)
+}
+	
+func (f *Fill) Reset() {
+	for i := 0; i < len(f.Depth); i++ {
+		f.Depth[i] = 0
+	}
+}
+
+// Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
+// use map value
+func (f *Fill) MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
+	if f.Rows != m.Rows || f.Cols != m.Cols {
+		log.Panicf("Map and fill mismatch")
+	}
+	
+	q := make([]Location, 0, 200+len(origin)*2)
+	safe := 0
+
+	for loc, opri := range origin {
+		// log.Printf("Q loc %v pri %d", f.ToPoint(loc), pri)
+		q = append(q, loc)
+		if pri > 0 {
+			f.Depth[loc] = pri
+		} else {
+			f.Depth[loc] = uint16(opri)
+		}
+	}
+
+	newDepth := uint16(0)
+	for len(q) > 0 {
+		// just for sanity...
+		if safe++; safe > 10*len(f.Depth) {
+			log.Panicf("Oh No Crazytime %d %d", len(f.Depth), safe)
+		}
+
+		loc := q[0]
+		q = q[1:len(q)]
+
+		Depth := f.Depth[loc]
+		newDepth = Depth + 1
+
+		for i := 0; i < 4; i++ {
+			floc := m.LocStep[loc][i]
+			if m.Grid[floc] != WATER && m.Grid[floc] != BLOCK &&
+				(f.Depth[floc] == 0 || f.Depth[floc] > newDepth) {
+				q = append(q, floc)
+				f.Depth[floc] = newDepth
+			}
+		}
+	}
+
+	return f, cap(q), newDepth
+}
+
+
+// Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
+// use map value
+func (f *Fill) MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
+	if f.Rows != m.Rows || f.Cols != m.Cols {
+		log.Panicf("Map and fill mismatch")
+	}
+	
+	f.Seed = make([]Location, len(f.Depth))
+	
+	q := make([]Location, 0, 200+len(origin)*2)
+	safe := 0
+
+	for loc, opri := range origin {
+		// log.Printf("Q loc %v pri %d", f.ToPoint(loc), pri)
+		q = append(q, loc)
+		f.Seed[loc] = loc
+		if pri > 0 {
+			f.Depth[loc] = pri
+		} else {
+			f.Depth[loc] = uint16(opri)
+		}
+	}
+
+	newDepth := uint16(0)
+	for len(q) > 0 {
+		// just for sanity...
+		if safe++; safe > 10*len(f.Depth) {
+			log.Panicf("Oh No Crazytime %d %d", len(f.Depth), safe)
+		}
+
+		loc := q[0]
+		q = q[1:len(q)]
+
+		Depth := f.Depth[loc]
+		Seed := f.Seed[loc]
+		newDepth = Depth + 1
+
+		for i := 0; i < 4; i++ {
+			floc := m.LocStep[loc][i]
+			if m.Grid[floc] != WATER && m.Grid[floc] != BLOCK &&
+				(f.Depth[floc] == 0 || f.Depth[floc] > newDepth) {
+				q = append(q, floc)
+				f.Depth[floc] = newDepth
+				f.Seed[loc] = Seed
+			}
+		}
+	}
+
+	return f, cap(q), newDepth
 }
 
 // Build list of locations ordered by depth from closest to furthest

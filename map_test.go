@@ -14,17 +14,17 @@ func TestMapNew(t *testing.T) {
 		t.Errorf("Map size error")
 	}
 
-	for i, d := range m.BDist {
-		if m.BDist[m.Size()-i-1] != d {
-			t.Errorf("Border Distance Error, Not Symmetric: %v", m.BDist)
+	for i, d := range m.BorderDist {
+		if m.BorderDist[m.Size()-i-1] != d {
+			t.Errorf("Border Distance Error, Not Symmetric: %v", m.BorderDist)
 			break
 		}
 	}
 
-	if m.BDist[0] != 1 ||
-		m.BDist[m.Size()-1] != 1 ||
-		m.BDist[c+2] != 2 {
-		t.Errorf("Border Distance Error bounds wrong: %v", m.BDist)
+	if m.BorderDist[0] != 1 ||
+		m.BorderDist[m.Size()-1] != 1 ||
+		m.BorderDist[c+2] != 2 {
+		t.Errorf("Border Distance Error bounds wrong: %v", m.BorderDist)
 	}
 }
 
