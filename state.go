@@ -297,6 +297,7 @@ func (s *State) ParseTurn() (line string, err os.Error) {
 			log.Printf("Unknown turn data \"%s\"", line)
 		}
 	}
+	
 
 	s.ProcessState() // Updater for all things visible
 
@@ -320,8 +321,9 @@ func (s *State) AddAnt(loc Location, player int) {
 	s.Ants[player][loc] = s.Turn
 
 	if player == 0 {
-		s.UpdateSeen(loc)
-		s.UpdateLand(loc)
+		s.UpdateSeen(player, loc)
+		s.UpdateVisCount(player, loc)
+		s.UpdateLand(player, loc)
 	}
 
 	// TODO move this all to the inference step, should not be here!
@@ -383,7 +385,7 @@ func (s *State) AddHill(loc Location, player int) {
 
 // Todo This could all be done in one step.  Also viewer count.
 // Obvious optimizations: watch Adjacent Seen cells and do incremental updating.
-func (s *State) UpdateLand(loc Location) {
+func (s *State) UpdateLand(player int, loc Location) {
 	if s.Map.BorderDist[loc] > s.viewMask.R {
 		// In interior of map so use loc offsets
 		for _, offset := range s.viewMask.Loc {
@@ -403,7 +405,7 @@ func (s *State) UpdateLand(loc Location) {
 	}
 }
 
-func (s *State) UpdateSeen(loc Location) {
+func (s *State) UpdateSeen(player int, loc Location) {
 	if s.Map.BorderDist[loc] > s.viewMask.R {
 		// In interior of map so use loc offsets
 		for _, offset := range s.viewMask.Loc {
@@ -413,6 +415,20 @@ func (s *State) UpdateSeen(loc Location) {
 		p := s.Map.ToPoint(loc)
 		for _, op := range s.viewMask.P {
 			s.Map.Seen[s.ToLocation(s.PointAdd(p, op))] = s.Turn
+		}
+	}
+}
+
+func (s *State) UpdateVisCount(player int, loc Location) {
+	if s.Map.BorderDist[loc] > s.viewMask.R {
+		// In interior of map so use loc offsets
+		for _, offset := range s.viewMask.Loc {
+			s.Map.VisCount[loc+offset]++
+		}
+	} else {
+		p := s.Map.ToPoint(loc)
+		for _, op := range s.viewMask.P {
+			s.Map.VisCount[s.ToLocation(s.PointAdd(p, op))]++
 		}
 	}
 }
@@ -487,6 +503,16 @@ func (s *State) ProcessState() {
 			// Also think about diffusing ants, assuming appearing ants match missing ones
 		}
 	}
+
+	s.Map.HBorder = s.StepHorizon(s.Map.HBorder)
+
+	// Generate the fill for all my hills.
+	lend := make(map[Location]int)
+        for _, hill := range s.MyHillLocations() {
+                lend[hill] = 1
+        }
+	log.Printf("Computing fill for %v", lend)
+	s.Map.FHill, _, _ = MapFillSeed(s.Map, lend, 1)
 
 	s.ComputeThreat(1, 0, s.attackMask, s.Map.Threat[len(s.Map.Threat)-1])
 
@@ -598,5 +624,40 @@ func (s *State) MoveAnt(from, to Location) {
 func (s *State) ValidStep(loc Location) bool {
 	i := s.Map.Grid[loc]
 
-	return i != WATER && i != BLOCK && i != FOOD && i != MY_ANT
+	return i != WATER && i != BLOCK && i != FOOD && i != MY_ANT && i != MY_HILLANT
+}
+
+func (s *State) StepHorizon(hlist []Location) []Location {
+	m := s.Map
+	hlist = hlist[0:0]
+
+	// Remove now visible cells; dont bother with water here.
+	for loc, Seen := range m.Seen {
+		if Seen >= s.Turn {
+			m.Horizon[loc] = true
+		}
+	}
+
+	// generate list of cells on border; exclude water cells here
+	for loc, h := range m.Horizon {
+		if !h && m.Grid[loc] != WATER {
+			for _, nloc := range m.LocStep[loc] {
+				if m.Horizon[nloc] && m.Grid[nloc] != WATER {
+					// if the point has an adjacent non horizon point which is not water 
+					// then add it to the border list.
+					hlist = append(hlist, Location(loc))
+					break
+				}
+			}
+		}
+	}
+
+	// step one from all cells on border
+	for _, loc := range hlist {
+		for d := 0; d < 4; d++ {
+			m.Horizon[m.LocStep[loc][d]] = false
+		}
+	}
+
+	return hlist
 }

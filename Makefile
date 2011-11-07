@@ -7,6 +7,7 @@ GOFILES=\
 	BotV4.go\
 	BotV5.go\
 	bot6.go\
+	viz.go\
 	direction.go\
 	pallettes.go\
 	parameters.go\

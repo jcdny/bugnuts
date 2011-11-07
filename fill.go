@@ -122,6 +122,20 @@ func (f *Fill) String() string {
 			s += string('a' + byte((d-1)%26))
 		}
 	}
+	
+	if f.Seed != nil {
+		s += "Seed:\n"
+		for i, d := range f.Seed {
+			if i%f.Cols == 0 {
+				s += "\n"
+			}
+			if d == 0 {
+				s += "."
+			} else {
+				s += string('a' + byte((d-1)%26))
+			}
+		}
+	}
 
 	return s
 }
@@ -231,6 +245,7 @@ func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	f := m.NewFill()
 	return f.MapFill(m, origin, pri)
 }
+
 func MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	f := m.NewFill()
 	return f.MapFillSeed(m, origin, pri)
@@ -331,7 +346,7 @@ func (f *Fill) MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, 
 				(f.Depth[floc] == 0 || f.Depth[floc] > newDepth) {
 				q = append(q, floc)
 				f.Depth[floc] = newDepth
-				f.Seed[loc] = Seed
+				f.Seed[floc] = Seed
 			}
 		}
 	}
@@ -390,7 +405,9 @@ func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
 
 	over := n / len(pool)
 	perm := rand.Perm(len(pool))[0 : n%len(pool)]
-	log.Printf("Looking for %d explore points %d-%d, have %d possible", n, low, hi, len(pool))
+	if Debug > 3 {
+		log.Printf("Sample: Looking for %d explore points %d-%d, have %d possible", n, low, hi, len(pool))
+	}
 
 	var count []int
 	if over > 0 {
@@ -411,7 +428,9 @@ func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
 	} else {
 		pout := make([]Location, len(perm))
 		for i, pi := range perm {
-			log.Printf("adding location %d to output pool", pool[pi])
+			if Debug > 3 {
+				log.Printf("Sample: adding location %d to output pool", pool[pi])
+			}
 			pout[i] = pool[pi]
 		}
 		return pout, count

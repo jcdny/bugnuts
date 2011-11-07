@@ -64,10 +64,12 @@ func TestMapFill(t *testing.T) {
 		l[hill] = 1
 	}
 
+	sfs, mQ, mD := MapFillSeed(m, l, 1)
+	log.Printf("SeedFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, sfs)
 	fs, mQ, mD := MapFill(m, l, 1)
-	log.Printf("SlowFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, fs)
+	log.Printf("Fill: mQ: %v mD: %v f::\n%v\n", mQ, mD, fs)
 	ff, mQ, mD := MapFillSlow(m, l, 1)
-	log.Printf("FastFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, ff)
+	log.Printf("SlowFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, ff)
 	
 	
 

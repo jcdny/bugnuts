@@ -165,7 +165,8 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 							tgt.Count -= 1
 							s.SetBlock(nl)
 							ants[loc] = 0, false
-							if Viz {
+
+							if Viz["path"] {
 								fmt.Fprintf(os.Stdout, "v line %d %d %d %d\n", p.r, p.c, ep.r, ep.c)
 							}
 						}

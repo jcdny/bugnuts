@@ -6,21 +6,61 @@ import (
 	"bufio"
 	"os"
 	"fmt"
+	"time"
+	"strings"
 )
 
 var Debug int = 0
 var runBot string
 var mapFile string
-var Viz bool = false
+var Viz = map[string]bool{
+	"path":    false,
+	"vcount":  false,
+	"horizon": false,
+	"threat":  false,
+	"error":   false,
+	"targets": false,
+}
 
 func init() {
-	flag.BoolVar(&Viz, "V", false, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
+	vizList := ""
+	vizHelp := "Visualize: all,useful,"
+	for flag, _ := range Viz {
+		vizHelp += flag
+	}
+	flag.StringVar(&vizList, "V", "", vizHelp)
+
 	flag.IntVar(&Debug, "d", 0, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
 	flag.StringVar(&runBot, "b", "CUR", "Which bot to run")
 	flag.StringVar(&mapFile, "m", "", "Map file, if provided will be used to validate generated map, hill guessing etc.")
 
 	flag.Parse()
+
+	if vizList != "" {
+		for _, word := range strings.Split(strings.ToLower(vizList), ",") {
+			switch word {
+			case "all":
+				for flag, _ := range Viz {
+					Viz[flag] = true
+				}
+			case "useful":
+				Viz["path"] = true
+				Viz["horizon"] = true
+				Viz["targets"] = true
+				Viz["error"] = true
+			default:
+				_, ok := Viz[word]
+				if !ok {
+					log.Printf("Visualization flag %s not known", word)
+				} else {
+					Viz[word] = true
+				}
+			}
+		}
+	}
 }
+
+var Times = make(map[string]int64, 30)
 
 func main() {
 	var s State
@@ -68,11 +108,19 @@ func main() {
 	// Send go to tell server we are ready to process turns
 	fmt.Fprintf(os.Stdout, "go\n")
 
+	stime := time.Nanoseconds()
+	ntime := stime
+	ptime := stime
 	for {
-		// RESET FOR NEXT PARSE
+
+		ptime, ntime = ntime, time.Nanoseconds()
+		log.Printf("%d TURN TOOK %.2fms", s.Turn,
+			float64(ntime-ptime)/1000000)
 
 		// READ TURN INFO FROM SERVER
+		Times["preparse"] = time.Nanoseconds()
 		turn, err := s.ParseTurn()
+		Times["postparse"] = time.Nanoseconds()
 
 		if refmap != nil {
 			count, out := MapValidate(refmap, s.Map)
@@ -89,11 +137,16 @@ func main() {
 			log.Printf("TURN %d Generating orders turn", s.Turn)
 		}
 		// Generate order list
+		Times["preturn"] = time.Nanoseconds()
 		bot.DoTurn(&s)
+		Times["postturn"] = time.Nanoseconds()
 
 		// additional thinking til near timeout
 
-		// emit orders
+		log.Printf("%d Parse %.2fms, Turn %.2fms", s.Turn,
+			float64(Times["postparse"]-Times["preparse"])/1000000,
+			float64(Times["postturn"]-Times["preturn"])/1000000)
+
 	}
 
 	// Read end of game data.
@@ -106,4 +159,8 @@ func main() {
 	if Debug > 0 {
 		log.Printf("Bot Result %v", bot)
 	}
+	ntime = time.Nanoseconds()
+	log.Printf("TOTAL TIME %.2fms for %d Turns",
+		float64(ntime-stime)/1000000, s.Turn)
+
 }

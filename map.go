@@ -15,11 +15,17 @@ type Map struct {
 	Rows    int
 	Cols    int
 	Players int
-	// dynamic data
-	Grid     []Item   // Items seen
-	Seen     []int    // Turn on which cell was last visible.
-	VisCount []int    // How many ants see this cell.
-	Threat   [][]int8 // how much threat is there on a given cell
+	Grid    []Item // Items seen
+	// dynamic data -- consider tracking per ant.
+	Seen     []int      // Turn on which cell was last visible.
+	VisCount []int      // How many ants see this cell.
+	Threat   [][]int8   // how much threat is there on a given cell
+	Horizon  []bool     // Inside the event horizon.  false means there could be an ant there we have not seen
+	HBorder  []Location // List of border points
+
+	FHill    *Fill
+	FAll     *Fill
+
 	// cache data
 	BorderDist []uint8       // border distance
 	LocStep    [][4]Location // adjecent tile map
@@ -45,6 +51,8 @@ func NewMap(rows, cols, players int) *Map {
 		Grid:       make([]Item, rows*cols),
 		Seen:       make([]int, rows*cols),
 		VisCount:   make([]int, rows*cols),
+		Horizon:    make([]bool, rows*cols),
+		HBorder:    make([]Location, 0, 1000),
 		BorderDist: BorderDistance(rows, cols),
 		LocStep:    LocationStep(rows, cols),
 	}
@@ -267,6 +275,7 @@ func BorderDistance(rows, cols int) (out []uint8) {
 	return
 }
 
+// Generate the cache of one step moves from current cell
 func LocationStep(rows, cols int) (out [][4]Location) {
 	out = make([][4]Location, rows*cols)
 
