@@ -132,7 +132,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 		}
 		tset.Add(FOOD, loc, 1, bot.P.Priority[FOOD])
 	}
-	//tset.Merge(bot.Explore)
+	tset.Merge(bot.Explore)
 
 	// TODO handle different priorities/attack counts
 	eh := s.EnemyHillLocations()
@@ -170,12 +170,23 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 
 	segs := make([]Segment, 0, len(ants))
 
+
+	for _, i := range rand.Perm(len(s.Map.HBorder)) {
+		loc := s.Map.HBorder[i]
+		depth := s.Map.FHill.Depth[loc]
+		if depth < 40 {
+			bot.Explore.Add(WAYPOINT, loc, 1, bot.P.Priority[WAYPOINT])
+			tset.Add(WAYPOINT, loc, 1, bot.P.Priority[WAYPOINT])
+		}
+	}
+
 	if Viz["targets"] {
 		s.VizTargets(&tset)
 	}
 
 	iter := 0
-	for iter = 0; iter < 15 && len(ants) > 0 && (tset.Pending() > 0 || iter == 0); iter++ {
+	bored := false
+	for iter = 0; iter < 50 && len(ants) > 0 && (tset.Pending() > 0 || iter == 0); iter++ {
 		if Debug > 4 {
 			log.Printf("Location iteration %d, ants: %d, tset.Pending %d", iter, len(ants), tset.Pending())
 		}
@@ -261,19 +272,11 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 				log.Printf("BotV6: %d ants with nothing to do", len(ants))
 			}
 
-			min := uint16(1999)
-			nants := len(ants) - 2
-			for _, i := range rand.Perm(len(s.Map.HBorder)) {
-				loc := s.Map.HBorder[i]
-				depth := s.Map.FHill.Depth[loc]
-				//seed :=  s.Map.FHill.Seed[loc]
-				//log.Printf("Border point %v: %d from hill at %v", loc, depth, seed)
+			// Generate a target list for unseen areas and exploration
+			nants := len(ants)
 
-				if depth < min && nants > 0 {
-					bot.Explore.Add(EXPLORE, loc, 1, bot.P.Priority[EXPLORE])
-					tset.Add(EXPLORE, loc, 1, bot.P.Priority[EXPLORE])
-					nants--
-				}
+			if bored {
+				tset.Add(RALLY, s.Map.ToLocation(Point{58, 58}), nants, bot.P.Priority[RALLY])
 			}
 
 			if false {

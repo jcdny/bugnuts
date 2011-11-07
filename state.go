@@ -466,6 +466,7 @@ func (s *State) ProcessState() {
 		s.Map.Grid[loc] = LAND
 	}
 
+	// Update hill data in map.
 	for loc, hill := range s.Hills {
 		if hill.Killed == 0 {
 			if s.Map.Seen[loc] > hill.Seen {
@@ -473,13 +474,18 @@ func (s *State) ProcessState() {
 					// We just guessed at a location anyway, just remove for now
 					s.Hills[loc] = &Hill{}, false
 
-					// update the guess
+					// TODO: update the guess
 				} else {
 					// We don't see the hill to mark as killed by whoever we think was closest
 					hill.Killed = s.Turn
 				}
 			}
 		} else {
+			if s.Map.Seen[loc] < s.Turn {
+				// If the hill is not visible then set Horizon false
+				// since it could be a source of ant.
+				s.Map.Horizon[loc] = false
+			}
 			s.Map.Grid[loc] = MY_HILL + Item(hill.Player)
 		}
 	}
@@ -489,17 +495,24 @@ func (s *State) ProcessState() {
 			if seen < s.Map.Seen[loc] || (player == 0 && seen < s.Turn) {
 				ants[loc] = 0, false
 			} else {
+				if seen < s.Turn && player != 0 {
+					s.Map.Horizon[loc] = false
+				}
 				if s.Map.Grid[loc].IsHill() {
 					s.Map.Grid[loc] = MY_HILLANT + Item(player)
 				} else {
 					s.Map.Grid[loc] = MY_ANT + Item(player)
 				}
 			}
+			// TODO Bug here since if an ant steps out of seen we don't assume it still exists 
+			// unless it was out move that remove it from vision
+
 			// TODO if the ant was visble last turn, not now and there is an ant
 			// we can see 1 step away from where it was assume the new ant is
-			// TODO think more about this.
+			// the same ant.
 
-			// Also think about diffusing ants, assuming appearing ants match missing ones
+			// TODO Think about this -- assuming appearing ants match missing ones, 
+			// tracking max ants in a region.
 		}
 	}
 

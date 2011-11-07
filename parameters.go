@@ -12,6 +12,6 @@ var ParameterSets = map[string]*Parameters{
 	},
 	"V6": &Parameters{
 		ExpireFood: 12,
-		Priority:   map[Item]int{DEFEND: 5, HILL1: 5, FOOD: 10, EXPLORE: 15},
+	Priority:   map[Item]int{DEFEND: 5, HILL1: 5, RALLY: 10, FOOD: 10, EXPLORE: 15},
 	},
 }

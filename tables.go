@@ -53,9 +53,10 @@ const (
 	HILLANT7
 	HILLANT8
 	HILLANT9
-	EXPLORE // An explore goal
-	DEFEND  // A defense spot
-	RALLY   // rally point for future attack
+	EXPLORE  // An explore goal - terminal
+	DEFEND   // A defense spot - terminal
+	RALLY    // rally point for future attack - terminal
+	WAYPOINT // a place to go on the way somewhere - terminal
 	BLOCK   // A moved ant or something else preventing stepping in
 	MAX_ITEM
 	INVALID_ITEM Item = 255
@@ -63,13 +64,15 @@ const (
 
 var itemToSym = [256]byte{' ', '%', '*', '.',
 	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
-	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '?',
+	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '?', // ? is guess hill
 	'!', 'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r',
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-	'X', '+', '@', '=',
+	'X', '+', '@', '=', '|',
 }
 
 var symToItem [256]Item
+
+var Terminal = map[Item]bool{EXPLORE: true, DEFEND: true, WAYPOINT: false, FOOD: false, RALLY: true,}
 
 func init() {
 	// Set up static symbol item mappings.
@@ -79,6 +82,7 @@ func init() {
 	for i := UNKNOWN; i < MAX_ITEM; i++ {
 		symToItem[itemToSym[i]] = i
 	}
+
 }
 
 // Map an Item code to a character
@@ -106,5 +110,6 @@ func (o Item) IsEnemyHill() bool {
 	return false
 }
 func (o Item) IsTerminal() bool {
-	return o == RALLY || o == DEFEND || o == EXPLORE || o.IsEnemyHill()
+	termp, ok := Terminal[o]
+	return  termp || (!ok && o.IsEnemyHill())
 }
