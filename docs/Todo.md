@@ -1,14 +1,10 @@
 ## Current Tasks
 
-* Path Generation
-* * handle multipathing ants
+* Exploration generation
 * Statistics
-* * land visible
-* * visited/visible count
 * * hotspots
 * * hill inference engine
 * * map inference
-* Goal generation
 * Combat tree
 * * Combat resolution computation
 * * Threat computation
@@ -19,7 +15,7 @@
 * Timing tracking
 * channel for turn read and off turn calcs
 
-* Profiling
+* Profiling (last so as not to be premature)
 
 ## Completed Tasks
 * Replay testing
@@ -30,3 +26,9 @@
 * * Code for storing Paths [undone]
 * * Path to Location
 * * permutable ranges on paths [undone]
+* Goal generation
+* Path Generation
+* * handle multipathing ants
+* Statistics
+* * land visible
+* * visited/visible count

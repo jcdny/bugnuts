@@ -26,8 +26,10 @@ fi
 DATE="`date +%Y%m%d-%H%M`"
 LOG="log/log.${HOST}.$DATE"
 ERR="log/err.${HOST}.$DATE"
+
 echo "INFO: getting $HOST games $GAME to $END log $LOG"
 exec > $LOG 2> $ERR
+echo "INFO: getting $HOST games $GAME to $END"
 
 cd $HOST
 
@@ -42,8 +44,12 @@ while [ $GAME -lt $END ]; do
     else
         echo "INFO: getting $SOURCE to `pwd`/$DEST"
         curl --create-dirs -o $DEST $SOURCE || echo Ouch
-        ls -1l $DEST
-        sleep `expr $RANDOM % 10 + 10`
+        if [ -s $DEST ]; then
+            chmod 444 $DEST
+            ls -1l $DEST
+        fi
+
+        sleep `expr $RANDOM % 13 + 3`
     fi
     GAME="`expr $GAME + 1`"
     echo $GAME > $LAST

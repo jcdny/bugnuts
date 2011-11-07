@@ -24,8 +24,10 @@ fi
 DATE="`date +%Y%m%d-%H%M`"
 LOG="log/log.${HOST}.$DATE"
 ERR="log/err.${HOST}.$DATE"
+
 echo "INFO: getting $HOST games $GAME to $END log $LOG"
 exec > $LOG 2> $ERR
+echo "INFO: getting $HOST games $GAME to $END"
 
 cd $HOST
 
@@ -39,7 +41,10 @@ while [ $GAME -lt $END ]; do
     else
         echo "INFO: getting $SOURCE"
         curl --create-dirs -o $D/replay.$GAME ${URLBASE}.$GAME || echo Ouch
-        ls -1l $DEST
+        if [ -s $DEST ]; then
+            chmod 444 $DEST
+            ls -1l $DEST
+        fi
         sleep `expr $RANDOM % 10 + 10`
     fi
     GAME="`expr $GAME + 1`"
