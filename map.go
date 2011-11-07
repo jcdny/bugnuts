@@ -23,8 +23,8 @@ type Map struct {
 	Horizon  []bool     // Inside the event horizon.  false means there could be an ant there we have not seen
 	HBorder  []Location // List of border points
 
-	FHill    *Fill
-	FAll     *Fill
+	FHill *Fill
+	FAll  *Fill
 
 	// cache data
 	BorderDist []uint8       // border distance

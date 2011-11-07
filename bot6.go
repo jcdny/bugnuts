@@ -147,7 +147,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	moves := make(map[Location]Direction, len(ants))
 	for loc, _ := range s.Ants[0] {
 		ants[loc] = s.AntStep(loc)
-		
+
 		// Handle the special case of adjacent food, pause a step unless
 		// someone already paused for this food.
 		if ants[loc].foodp && ants[loc].steptot == 0 {
@@ -169,7 +169,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	}
 
 	segs := make([]Segment, 0, len(ants))
-	
+
 	if Viz["targets"] {
 		s.VizTargets(&tset)
 	}
@@ -262,29 +262,28 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			}
 
 			min := uint16(1999)
-			nants := len(ants)-2
+			nants := len(ants) - 2
 			for _, i := range rand.Perm(len(s.Map.HBorder)) {
 				loc := s.Map.HBorder[i]
 				depth := s.Map.FHill.Depth[loc]
 				//seed :=  s.Map.FHill.Seed[loc]
 				//log.Printf("Border point %v: %d from hill at %v", loc, depth, seed)
-				
+
 				if depth < min && nants > 0 {
 					bot.Explore.Add(EXPLORE, loc, 1, bot.P.Priority[EXPLORE])
 					tset.Add(EXPLORE, loc, 1, bot.P.Priority[EXPLORE])
 					nants--
 				}
 			}
-				
 
 			if false {
 				fexp, _, _ := MapFill(s.Map, s.Ants[0], 1)
 				loc, N := fexp.Sample(len(ants), 18, 18)
-				
+
 				for i, _ := range loc {
 					exp := s.Map.ToPoint(loc[i])
 					fmt.Fprintf(os.Stdout, "v star %d %d .5 1.5 5 true\n", exp.r, exp.c)
-					
+
 					bot.Explore.Add(EXPLORE, loc[i], N[i], bot.P.Priority[EXPLORE])
 					tset.Add(EXPLORE, loc[i], N[i], bot.P.Priority[EXPLORE])
 				}
@@ -296,11 +295,11 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			}
 		}
 	}
-	
+
 	if Debug > 0 {
 		log.Printf("TURN %d %d iterations", s.Turn, iter)
 	}
-		
+
 	for loc, d := range moves {
 		if d < 5 {
 			p := s.Map.ToPoint(loc)

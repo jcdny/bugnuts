@@ -297,7 +297,6 @@ func (s *State) ParseTurn() (line string, err os.Error) {
 			log.Printf("Unknown turn data \"%s\"", line)
 		}
 	}
-	
 
 	s.ProcessState() // Updater for all things visible
 
@@ -508,9 +507,9 @@ func (s *State) ProcessState() {
 
 	// Generate the fill for all my hills.
 	lend := make(map[Location]int)
-        for _, hill := range s.MyHillLocations() {
-                lend[hill] = 1
-        }
+	for _, hill := range s.MyHillLocations() {
+		lend[hill] = 1
+	}
 	log.Printf("Computing fill for %v", lend)
 	s.Map.FHill, _, _ = MapFillSeed(s.Map, lend, 1)
 

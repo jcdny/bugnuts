@@ -122,7 +122,7 @@ func (f *Fill) String() string {
 			s += string('a' + byte((d-1)%26))
 		}
 	}
-	
+
 	if f.Seed != nil {
 		s += "Seed:\n"
 		for i, d := range f.Seed {

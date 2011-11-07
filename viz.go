@@ -11,21 +11,20 @@ func VizLine(m *Map, p1, p2 Point, arrow bool) {
 		ltype = "arrow"
 	}
 
-	if Abs(p1.r - p2.r) > m.Rows/2 { 
-		if p1.r < m.Rows/2 { 
+	if Abs(p1.r-p2.r) > m.Rows/2 {
+		if p1.r < m.Rows/2 {
 			p2.r -= m.Rows
 		} else {
 			p2.r += m.Rows
 		}
 	}
-	if Abs(p2.c - p1.c) > m.Cols/2 {
-		if p1.c < m.Cols/2 { 
+	if Abs(p2.c-p1.c) > m.Cols/2 {
+		if p1.c < m.Cols/2 {
 			p2.c -= m.Cols
 		} else {
 			p2.c += m.Cols
 		}
 	}
-	
 
 	fmt.Fprintf(os.Stdout, "v %s %d %d %d %d\n", ltype, p1.r, p1.c, p2.r, p2.c)
 }
@@ -72,7 +71,6 @@ func (s *State) Viz() {
 		fmt.Fprintf(os.Stdout, "v setFillColor 0 0 0 1.0\n")
 	}
 }
-
 
 func (s *State) VizTargets(tset *TargetSet) {
 	for loc, target := range *tset {
