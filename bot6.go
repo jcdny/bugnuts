@@ -170,12 +170,11 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 
 	segs := make([]Segment, 0, len(ants))
 
-
 	for _, i := range rand.Perm(len(s.Map.HBorder)) {
 		loc := s.Map.HBorder[i]
 		depth := s.Map.FHill.Depth[loc]
 		if depth < 40 {
-			bot.Explore.Add(WAYPOINT, loc, 1, bot.P.Priority[WAYPOINT])
+			// Just add these as transients.
 			tset.Add(WAYPOINT, loc, 1, bot.P.Priority[WAYPOINT])
 		}
 	}
@@ -186,15 +185,15 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 
 	iter := 0
 	bored := false
-	for iter = 0; iter < 50 && len(ants) > 0 && (tset.Pending() > 0 || iter == 0); iter++ {
+	for iter = 0; iter < 50 && len(ants) > 0 && tset.Pending() > 0; iter++ {
 		if Debug > 4 {
-			log.Printf("Location iteration %d, ants: %d, tset.Pending %d", iter, len(ants), tset.Pending())
+			log.Printf("TURN %d ITER %d PENDING %d", s.Turn, iter, tset.Pending())
+			// log.Printf("ACTIVE SET: %v", tset.Active())
 		}
 
 		// TODO: Here should update map for fixed ants.
-		// log.Printf("Tset.Active: %v", tset.Active())
 
-		f, _, _ := MapFill(s.Map, tset.Active(), 0)
+		f, _, _ := MapFillSeed(s.Map, tset.Active(), 0)
 
 		segs = segs[0:0]
 		for loc, _ := range ants {
@@ -208,10 +207,10 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			loc := seg.src
 			p := s.Map.ToPoint(loc)
 			ep := s.Map.ToPoint(seg.end)
-
 			tgt, ok := tset[seg.end]
 			if !ok {
 				log.Printf("Move from %v(%d) to %v(%d) no target ant: %#v", s.Map.ToPoint(seg.src), seg.src, s.Map.ToPoint(seg.end), seg.end, ants[loc])
+				log.Printf("Source item \"%v\", pending=%d", s.Map.Grid[seg.src], tset.Pending())
 				if Viz["error"] {
 					VizLine(s.Map, p, ep, false)
 					fmt.Fprintf(os.Stdout, "v tileBorder %d %d MM\n", p.r, p.c)

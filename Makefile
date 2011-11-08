@@ -33,5 +33,5 @@ gofmt:
 dist:
 	zip dist/dist.$(shell date +%Y%m%d-%H%M).zip $(GOFILES)
 
-test:
-	./bot -V < testdata/stream1.dat
+test: $(TARG)
+	./bot -V useful < log/0.bot0.input

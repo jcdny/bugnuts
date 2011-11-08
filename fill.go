@@ -342,7 +342,9 @@ func (f *Fill) MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, 
 
 		for i := 0; i < 4; i++ {
 			floc := m.LocStep[loc][i]
-			if m.Grid[floc] != WATER && m.Grid[floc] != BLOCK &&
+			// TODO: block is local.  should be traversible in some # of turns.
+			// TODO: maybe rename block to IMMOVABLE and MAKE BLOCK to use for impassable points.
+			if m.Grid[floc] != WATER && // m.Grid[floc] != BLOCK &&  
 				(f.Depth[floc] == 0 || f.Depth[floc] > newDepth) {
 				q = append(q, floc)
 				f.Depth[floc] = newDepth
@@ -399,6 +401,10 @@ func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
 			pool = append(pool, Location(i))
 		}
 	}
+	if n < 1 {
+		return pool, nil
+	}
+
 	if len(pool) == 0 {
 		return nil, nil
 	}
@@ -459,9 +465,11 @@ func (f *Fill) ClosestStep(seg []Segment) {
 	}
 
 	for i, _ := range seg {
-		end, nsteps := f.PathIn(seg[i].src)
-		seg[i].steps += nsteps
-		seg[i].end = end
+		// log.Printf("Seg lookup 1: %v", seg[i])
+		seg[i].end = f.Seed[seg[i].src]
+		// log.Printf("Seg lookup 2: %v (%v -> %v) f.Depth: src: %d end %d", seg[i], f.ToPoint(seg[i].src), f.ToPoint(seg[i].end), f.Depth[seg[i].src], f.Depth[seg[i].end])
+		seg[i].steps += Abs(int(f.Depth[seg[i].src]) - int(f.Depth[seg[i].end]))
+		// log.Printf("Got: %v", seg[i])
 	}
 	sort.Sort(SegSlice(seg))
 }

@@ -57,7 +57,7 @@ const (
 	DEFEND   // A defense spot - terminal
 	RALLY    // rally point for future attack - terminal
 	WAYPOINT // a place to go on the way somewhere - terminal
-	BLOCK   // A moved ant or something else preventing stepping in
+	BLOCK    // A moved ant or something else preventing stepping in
 	MAX_ITEM
 	INVALID_ITEM Item = 255
 )
@@ -72,7 +72,7 @@ var itemToSym = [256]byte{' ', '%', '*', '.',
 
 var symToItem [256]Item
 
-var Terminal = map[Item]bool{EXPLORE: true, DEFEND: true, WAYPOINT: false, FOOD: false, RALLY: true,}
+var Terminal = map[Item]bool{EXPLORE: true, DEFEND: true, WAYPOINT: false, FOOD: false, RALLY: true}
 
 func init() {
 	// Set up static symbol item mappings.
@@ -111,5 +111,9 @@ func (o Item) IsEnemyHill() bool {
 }
 func (o Item) IsTerminal() bool {
 	termp, ok := Terminal[o]
-	return  termp || (!ok && o.IsEnemyHill())
+	return termp || (!ok && o.IsEnemyHill())
+}
+
+func (o Item) String() string {
+	return string(o.ToSymbol())
 }

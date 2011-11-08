@@ -47,7 +47,6 @@ var maps = []string{
 	"random_walk_10p_02",
 }
 
-
 func TestMapFill(t *testing.T) {
 	file := "testdata/fill2.map" // fill.2 Point{r:4, c:5}
 	m, err := MapLoadFile(file)
@@ -70,8 +69,6 @@ func TestMapFill(t *testing.T) {
 	log.Printf("Fill: mQ: %v mD: %v f::\n%v\n", mQ, mD, fs)
 	ff, mQ, mD := MapFillSlow(m, l, 1)
 	log.Printf("SlowFill: mQ: %v mD: %v f::\n%v\n", mQ, mD, ff)
-	
-	
 
 }
 
@@ -83,7 +80,6 @@ func BenchmarkMapFillAlloc(b *testing.B) {
 	if m == nil || err != os.EOF {
 		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
 	}
-
 
 	l := make(map[Location]int, 40)
 
@@ -134,19 +130,17 @@ func BenchmarkMapFillSeed(b *testing.B) {
 	}
 }
 
-
-
 func TestMapFillDist(t *testing.T) {
 	out, _ := os.Create("tmp/dist.csv")
 	defer out.Close()
-	
+
 	for _, name := range maps {
 		filename := "testdata/maps/" + name + ".map"
 		m, err := MapLoadFile(filename)
 		if m == nil || err != os.EOF {
 			log.Panicf("Error: failed to read %s: %v", filename, err)
 		}
-		for _, player := range []int{-1,0} {
+		for _, player := range []int{-1, 0} {
 			l := make(map[Location]int)
 			for _, hill := range m.HillLocations(player) {
 				l[hill] = 1
@@ -161,7 +155,7 @@ func TestMapFillDist(t *testing.T) {
 			diff := 0
 			for i, f := range f.Depth {
 				if f != ff.Depth[i] || f != ffs.Depth[i] || ffs.Depth[i] != ff.Depth[i] {
-					diff++	
+					diff++
 				}
 			}
 			log.Printf("Fill: mQ:%3d mD: %3d %4.1f/%4.1f/%4.1f ms %d diffs player %d points %d %s", mQ, mD, float64(post-pre)/1000000, float64(postff-post)/1000000, float64(postffs-postff)/1000000, diff, player, len(l), name)
@@ -173,8 +167,8 @@ func TestMapFillDist(t *testing.T) {
 				mDe = mD
 			}
 
-			histe := make([]int,mDe+1)
-			hist := make([]int,mDe+1)
+			histe := make([]int, mDe+1)
+			hist := make([]int, mDe+1)
 			for i, d := range f.Depth {
 				hist[d]++
 				histe[fe.Depth[i]]++
@@ -187,7 +181,6 @@ func TestMapFillDist(t *testing.T) {
 		}
 	}
 }
-
 
 // Take a map and generate montecarlo ant densities...
 func TestMonteCarloPathing(t *testing.T) {
@@ -203,8 +196,7 @@ func TestMonteCarloPathing(t *testing.T) {
 			lend[hill] = 1
 		}
 
-		
-		f,_,_ := MapFillSeed(m, lend, 1)
+		f, _, _ := MapFillSeed(m, lend, 1)
 
 		/* lsrc := make([]Location,0,len(m.Grid))
 		for loc, item := range m.Grid {
@@ -215,7 +207,7 @@ func TestMonteCarloPathing(t *testing.T) {
 
 		lsrc := m.HillLocations(1)
 
-		d := 10000/len(lsrc)
+		d := 10000 / len(lsrc)
 		pre := time.Nanoseconds()
 		paths := f.MontePathIn(m, lsrc, d, 1)
 		post := time.Nanoseconds()
@@ -224,9 +216,9 @@ func TestMonteCarloPathing(t *testing.T) {
 		str := ""
 		// Write out in the annoying R image layout
 		for c := 0; c < m.Cols; c++ {
-			for r := m.Rows-1; r >= 0; r-- {
-				loc := Location(r * m.Cols + c)
-				if r != m.Rows - 1 {
+			for r := m.Rows - 1; r >= 0; r-- {
+				loc := Location(r*m.Cols + c)
+				if r != m.Rows-1 {
 					str += ","
 				}
 				str += strconv.Itoa(int(paths[loc]))
@@ -235,7 +227,6 @@ func TestMonteCarloPathing(t *testing.T) {
 		}
 		out, _ := os.Create("tmp/" + name + ".csv")
 		fmt.Fprint(out, str)
-		out.Close()		
+		out.Close()
 	}
 }
-	

@@ -518,16 +518,31 @@ func (s *State) ProcessState() {
 
 	s.Map.HBorder = s.StepHorizon(s.Map.HBorder)
 
+	s.UpdateHillMaps()
+
+	s.ComputeThreat(1, 0, s.attackMask, s.Map.Threat[len(s.Map.Threat)-1])
+
+}
+
+func (s *State) UpdateHillMaps() {
 	// Generate the fill for all my hills.
 	lend := make(map[Location]int)
 	for _, hill := range s.MyHillLocations() {
 		lend[hill] = 1
 	}
-	log.Printf("Computing fill for %v", lend)
+	// log.Printf("Computing fill for %v", lend)
 	s.Map.FHill, _, _ = MapFillSeed(s.Map, lend, 1)
 
-	s.ComputeThreat(1, 0, s.attackMask, s.Map.Threat[len(s.Map.Threat)-1])
+	outbound := make(map[Location]int)
+	samples, _ := s.Map.FHill.Sample(0, 50, 50)
+	for _, loc := range samples {
+		outbound[loc] = 1
+	}
+	if len(outbound) < 1 {
+		log.Panicf("UpdateHillMaps no outside border")
+	}
 
+	s.Map.FDownhill, _, _ = MapFillSeed(s.Map, outbound, 1)
 }
 
 func (s *State) FoodUpdate(age int) {

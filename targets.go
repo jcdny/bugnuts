@@ -24,6 +24,9 @@ func (tset *TargetSet) Add(item Item, loc Location, count, pri int) {
 		log.Printf("Adding target: item %v loc %v count %d pri %d", item, loc, count, pri)
 	}
 	t, found := (*tset)[loc]
+	if pri < 1 {
+		log.Panicf("Target pri must be > 1")
+	}
 	if !found || t.Pri < pri {
 		// We already have this point in the target set, replace if pri is higher
 		(*tset)[loc] = &Target{

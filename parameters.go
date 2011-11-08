@@ -3,6 +3,7 @@ package main
 type Parameters struct {
 	ExpireFood int // If we have not seen the food in this many turns then assume it's gone.
 	Priority   map[Item]int
+	Outbound   int // Radius inside which we step away from hill by default.
 }
 
 var ParameterSets = map[string]*Parameters{
@@ -12,6 +13,7 @@ var ParameterSets = map[string]*Parameters{
 	},
 	"V6": &Parameters{
 		ExpireFood: 12,
-	Priority:   map[Item]int{DEFEND: 5, HILL1: 5, RALLY: 10, FOOD: 10, EXPLORE: 15},
+		Priority:   map[Item]int{DEFEND: 5, HILL1: 5, RALLY: 10, FOOD: 10, EXPLORE: 15, WAYPOINT: 15},
+		Outbound:   50,
 	},
 }
