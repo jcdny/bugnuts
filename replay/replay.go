@@ -3,8 +3,6 @@ package replay
 import (
 	"json"
 	"os"
-	"strings"
-	"strconv"
 )
 
 // [57, 61, 246, 250, 2, "esss"]
@@ -108,58 +106,40 @@ func (a *AntHistory) UnmarshalJSON(b []byte) os.Error {
 }
 
 func (h *HillData) UnmarshalJSON(b []byte) os.Error {
-	var err os.Error
-	var h = make([]interface{}, 0, 5)
+	var ah = make([]interface{}, 0, 5)
 
 	err := json.Unmarshal(b, &ah)
 	if err != nil {
 		return err
-	} else if len(h) != 4 {
+	} else if len(ah) != 4 {
 		return os.NewError("Invalid HillData JSON:" + string(b))
 	}
 
-	a.Row = int(ah[0].(float64))
-	a.Col = int(ah[1].(float64))
-	a.Player = int(ah[2].(float64))
+	h.Row = int(ah[0].(float64))
+	h.Col = int(ah[1].(float64))
+	h.Player = int(ah[2].(float64))
 	h.Razed = int(ah[3].(float64))
 
 	return err
 }
 
 func (f *FoodHistory) UnmarshalJSON(b []byte) os.Error {
-	var err os.Error
-	var f = make([]interface{}, 0, 5)
+	var fa = make([]interface{}, 0, 5)
 
-	str := strings.TrimRight(strings.TrimLeft(string(b), "[ "), " ]")
-	item := strings.SplitN(str, ", ", 5)
-
-	if len(item) < 4 || len(item) > 5 {
+	err := json.Unmarshal(b, &fa)
+	if err != nil {
+		return err
+	} else if len(fa) < 4 || len(fa) > 5 {
 		return os.NewError("Invalid FoodHistory JSON: " + string(b))
 	}
 
-	f.Row, err = strconv.Atoi(item[0])
-	if err != nil {
-		return err
-	}
-	f.Col, err = strconv.Atoi(item[1])
-	if err != nil {
-		return err
-	}
-	f.Spawn, err = strconv.Atoi(item[2])
-	if err != nil {
-		return err
-	}
-	f.Gather, err = strconv.Atoi(item[3])
-	if err != nil {
-		return err
-	}
-	if len(item) == 5 {
-		// the player collecting can be omitted
+	f.Row = int(fa[0].(float64))
+	f.Col = int(fa[1].(float64))
+	f.Spawn = int(fa[1].(float64))
+	f.Gather = int(fa[1].(float64))
+	if len(fa) == 5 {
 		f.Player = new(int)
-		*f.Player, err = strconv.Atoi(item[4])
-		if err != nil {
-			return err
-		}
+		*f.Player = int(fa[1].(float64))
 	}
 
 	return err

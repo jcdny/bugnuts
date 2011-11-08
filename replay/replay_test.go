@@ -2,19 +2,18 @@ package replay
 
 import (
 	"testing"
-	"os"
 	"json"
+	"io/ioutil"
+	"log"
 )
 
 func TestReplayLoad(t *testing.T) {
 	m := &Match{}
 
-	buf := make([]byte, 1000000)
-
-	f, err := os.Open("testdata/replay.0.json")
-	defer f.Close()
-	n, err := f.Read(buf[:])
-	buf = buf[0:n]
+	buf, err := ioutil.ReadFile("testdata/replay.0.json")
+	if err != nil {
+		log.Panicf("Readfile error %v", err)
+	}
 
 	// Do the actual parse here
 	err = json.Unmarshal(buf, m)
@@ -23,4 +22,3 @@ func TestReplayLoad(t *testing.T) {
 		t.Errorf("Error on Unmarshal %v, format found was %s", err, m.ReplayFormat)
 	}
 }
-
