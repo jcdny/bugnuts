@@ -17,3 +17,7 @@ var ParameterSets = map[string]*Parameters{
 		Outbound:   50,
 	},
 }
+
+func init() {
+	ParameterSets["default"] = ParameterSets["V6"]
+}

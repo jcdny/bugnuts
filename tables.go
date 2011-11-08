@@ -58,6 +58,7 @@ const (
 	RALLY    // rally point for future attack - terminal
 	WAYPOINT // a place to go on the way somewhere - terminal
 	BLOCK    // A moved ant or something else preventing stepping in
+	OCCUPIED // An ant has moved here so it can't be moved into
 	MAX_ITEM
 	INVALID_ITEM Item = 255
 )
@@ -67,7 +68,7 @@ var itemToSym = [256]byte{' ', '%', '*', '.',
 	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '?', // ? is guess hill
 	'!', 'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r',
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-	'X', '+', '@', '=', '|',
+	'X', '+', '@', '=', '|', '&',
 }
 
 var symToItem [256]Item

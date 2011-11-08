@@ -1,13 +1,13 @@
 package main
 // The v6 Bot -- Now Officially not terrible
 //
-// Lesons from v5: 
+// Lesons from v5:
 // The "Explore" concept was a failure.
 //
 // Need to be smarter about target priority
 //
 // Need to track chicken bots vs aggressive bots.
-// 
+//
 // Need to guess hills
 
 import (
@@ -155,7 +155,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			for _, nloc := range ants[loc].nloc[0:4] {
 				if s.Item(nloc) == FOOD && tset[nloc].Count > 0 {
 					tset[nloc].Count = 0
-					s.SetBlock(nloc)
+					s.SetOccupied(nloc)
 					found = true
 				}
 			}

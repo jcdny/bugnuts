@@ -643,15 +643,18 @@ func (s *State) ThreatMap(turn int) []int8 {
 func (s *State) SetBlock(l Location) {
 	s.Map.Grid[l] = BLOCK
 }
+func (s *State) SetOccupied(l Location) {
+	s.Map.Grid[l] = OCCUPIED
+}
 
 func (s *State) MoveAnt(from, to Location) {
-	s.Map.Grid[from], s.Map.Grid[to] = LAND, BLOCK
+	s.Map.Grid[from], s.Map.Grid[to] = LAND, OCCUPIED
 }
 
 func (s *State) ValidStep(loc Location) bool {
 	i := s.Map.Grid[loc]
 
-	return i != WATER && i != BLOCK && i != FOOD && i != MY_ANT && i != MY_HILLANT
+	return i != WATER && i != BLOCK && i != OCCUPIED && i != FOOD && i != MY_ANT && i != MY_HILLANT
 }
 
 func (s *State) StepHorizon(hlist []Location) []Location {

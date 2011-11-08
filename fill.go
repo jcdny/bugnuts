@@ -342,9 +342,8 @@ func (f *Fill) MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, 
 
 		for i := 0; i < 4; i++ {
 			floc := m.LocStep[loc][i]
-			// TODO: block is local.  should be traversible in some # of turns.
-			// TODO: maybe rename block to IMMOVABLE and MAKE BLOCK to use for impassable points.
-			if m.Grid[floc] != WATER && // m.Grid[floc] != BLOCK &&  
+			// TODO: block is local.  Ugly but making it traversible in some # of turns might help 
+			if m.Grid[floc] != WATER && m.Grid[floc] != BLOCK &&
 				(f.Depth[floc] == 0 || f.Depth[floc] > newDepth) {
 				q = append(q, floc)
 				f.Depth[floc] = newDepth

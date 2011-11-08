@@ -136,7 +136,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 						// We are next to food, remove this ant from the
 						// available list, mark this food as taken, and mark the
 						// food as a block.
-						s.SetBlock(nl)
+						s.SetOccupied(nl)
 						moves[loc] = Direction(5) // explicitly say we will not move
 						if Debug > 4 {
 							log.Printf("Removing %v food adjacent", s.Map.ToPoint(loc))
@@ -163,7 +163,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 							}
 							moves[loc] = Direction(d)
 							tgt.Count -= 1
-							s.SetBlock(nl)
+							s.SetOccupied(nl)
 							ants[loc] = 0, false
 
 							if Viz["path"] {
