@@ -13,6 +13,8 @@ import (
 var Debug int = 0
 var runBot string
 var mapFile string
+var paramKey string
+
 var Viz = map[string]bool{
 	"path":    false,
 	"vcount":  false,
@@ -20,11 +22,12 @@ var Viz = map[string]bool{
 	"threat":  false,
 	"error":   false,
 	"targets": false,
+	"monte":   false,
 }
 
 func init() {
 	vizList := ""
-	vizHelp := "Visualize: all,useful,"
+	vizHelp := "Visualize: all,none,useful,"
 	for flag, _ := range Viz {
 		vizHelp += flag
 	}
@@ -33,6 +36,7 @@ func init() {
 	flag.IntVar(&Debug, "d", 0, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
 	flag.StringVar(&runBot, "b", "CUR", "Which bot to run")
 	flag.StringVar(&mapFile, "m", "", "Map file, if provided will be used to validate generated map, hill guessing etc.")
+	flag.StringVar(&paramKey, "p", "", "Parameter set, defaults to default.BOT")
 
 	flag.Parse()
 
@@ -43,11 +47,16 @@ func init() {
 				for flag, _ := range Viz {
 					Viz[flag] = true
 				}
+			case "none":
+				for flag, _ := range Viz {
+					Viz[flag] = false
+				}
 			case "useful":
 				Viz["path"] = true
 				Viz["horizon"] = true
 				Viz["targets"] = true
 				Viz["error"] = true
+				Viz["monte"] = true
 			default:
 				_, ok := Viz[word]
 				if !ok {

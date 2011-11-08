@@ -26,6 +26,11 @@ type BotV5 struct {
 	Explore *TargetSet
 
 	IdleAnts []int
+	Primap   []int
+}
+
+func (bot *BotV5) Priority(i Item) int {
+	return bot.Primap[i]
 }
 
 //NewBot creates a new instance of your bot
@@ -34,7 +39,8 @@ func NewBotV5(s *State) Bot {
 		P:        ParameterSets["V5"],
 		IdleAnts: make([]int, 0, s.Turns),
 	}
-	mb.Explore = MakeExplorers(s, .8, 1, mb.P.Priority[EXPLORE])
+
+	mb.Explore = MakeExplorers(s, .8, 1, mb.Priority(EXPLORE))
 	return mb
 }
 
@@ -61,9 +67,9 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 	// Generate list of food and enemy hill points.
 	for _, loc := range s.FoodLocations() {
 		if Debug > 4 {
-			log.Printf("adding target %v(%d) food pri %d", s.Map.ToPoint(loc), loc, bot.P.Priority[FOOD])
+			log.Printf("adding target %v(%d) food pri %d", s.Map.ToPoint(loc), loc, bot.Priority(FOOD))
 		}
-		tset.Add(FOOD, loc, 1, bot.P.Priority[FOOD])
+		tset.Add(FOOD, loc, 1, bot.Priority(FOOD))
 	}
 
 	// TODO handle different priorities for different enemies.
@@ -78,7 +84,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 	}
 
 	for _, loc := range eh {
-		tset.Add(HILL1, loc, 1+idle, bot.P.Priority[HILL1])
+		tset.Add(HILL1, loc, 1+idle, bot.Priority(HILL1))
 	}
 
 	if Debug > 4 {
@@ -187,8 +193,8 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 			fexp, _, _ := MapFill(s.Map, s.Ants[0], 1)
 			loc, N := fexp.Sample(len(ants), 14, 14)
 			for i, _ := range loc {
-				bot.Explore.Add(EXPLORE, loc[i], N[i], bot.P.Priority[EXPLORE])
-				tset.Add(EXPLORE, loc[i], N[i], bot.P.Priority[EXPLORE])
+				bot.Explore.Add(EXPLORE, loc[i], N[i], bot.Priority(EXPLORE))
+				tset.Add(EXPLORE, loc[i], N[i], bot.Priority(EXPLORE))
 			}
 		} else {
 			if len(bot.IdleAnts) < s.Turn {

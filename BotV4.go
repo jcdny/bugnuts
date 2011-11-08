@@ -25,6 +25,10 @@ func NewBotV4(s *State) Bot {
 	return mb
 }
 
+func (bot *BotV4) Priority(i Item) int {
+	return 1
+}
+
 func (bot *BotV4) DoTurn(s *State) os.Error {
 	sv := []Point{{-1, 0}, {1, 0}, {0, 1}, {0, -1}}
 

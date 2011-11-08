@@ -22,6 +22,10 @@ func NewBotV3(s *State) Bot {
 	return mb
 }
 
+func (bot *BotV3) Priority(i Item) int {
+	return 1
+}
+
 func (bot *BotV3) DoTurn(s *State) os.Error {
 	for loc, _ := range s.Ants[0] {
 		p := s.Map.ToPoint(loc)

@@ -20,6 +20,10 @@ func NewBotV0(s *State) Bot {
 	return mb
 }
 
+func (bot *BotV0) Priority(i Item) int {
+	return 1
+}
+
 func (bot *BotV0) DoTurn(s *State) os.Error {
 
 	return nil

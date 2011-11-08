@@ -18,10 +18,9 @@ import (
 )
 
 type BotV6 struct {
-	P *Parameters
-
-	Explore *TargetSet
-
+	P        *Parameters
+	Primap   []int // array mapping Item to priority
+	Explore  *TargetSet
 	IdleAnts []int
 }
 
@@ -37,14 +36,27 @@ type AntStep struct {
 	safest  [5]bool
 }
 
+func (bot *BotV6) Priority(i Item) int {
+	return bot.Primap[i]
+}
+
 //NewBot creates a new instance of your bot
 func NewBotV6(s *State) Bot {
+	if paramKey == "" {
+		paramKey = "V6"
+	}
+	if _, ok := ParameterSets[paramKey]; !ok {
+		log.Panicf("Unknown parameter key %s", paramKey)
+	}
+
 	mb := &BotV6{
-		P:        ParameterSets["V6"],
+		P:        ParameterSets[paramKey],
 		IdleAnts: make([]int, 0, s.Turns),
 	}
 
-	mb.Explore = MakeExplorers(s, .8, 1, mb.P.Priority[EXPLORE])
+	mb.Primap = mb.P.MakePriMap()
+
+	mb.Explore = MakeExplorers(s, .8, 1, mb.Priority(EXPLORE))
 	return mb
 }
 
@@ -89,7 +101,7 @@ func (s *State) AntStep(loc Location) *AntStep {
 	return as
 }
 
-func (s *State) EnemyPathinTargets(tset *TargetSet, priority int) {
+func (s *State) EnemyPathinTargets(tset *TargetSet, priority int, DefendDist int) {
 	hills := make(map[Location]int, 6)
 	for _, loc := range s.MyHillLocations() {
 		hills[loc] = 1
@@ -99,8 +111,9 @@ func (s *State) EnemyPathinTargets(tset *TargetSet, priority int) {
 
 	for i := 1; i < len(s.Ants); i++ {
 		for loc, _ := range s.Ants[i] {
+			// TODO: use seed rather than PathIn
 			_, steps := f.PathIn(Location(loc))
-			if steps < 15 {
+			if steps < DefendDist {
 				(*tset).Add(DEFEND, Location(loc), 2, priority)
 			}
 		}
@@ -115,22 +128,17 @@ func (tset *TargetSet) String() string {
 	return str
 }
 
-func (bot *BotV6) DoTurn(s *State) os.Error {
-	// TODO this still seems clunky.  need to figure out a better way
-	s.FoodUpdate(bot.P.ExpireFood)
+func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
+	tset := &TargetSet{}
 
-	bot.ExploreUpdate(s)
-
-	tset := TargetSet{}
-
-	s.EnemyPathinTargets(&tset, bot.P.Priority[DEFEND])
+	s.EnemyPathinTargets(tset, bot.Priority(DEFEND), bot.P.DefendDistance)
 
 	// Generate list of food and enemy hill points.
 	for _, loc := range s.FoodLocations() {
 		if Debug > 4 {
-			log.Printf("adding target %v(%d) food pri %d", s.Map.ToPoint(loc), loc, bot.P.Priority[FOOD])
+			log.Printf("adding target %v(%d) food pri %d", s.Map.ToPoint(loc), loc, bot.Priority(FOOD))
 		}
-		tset.Add(FOOD, loc, 1, bot.P.Priority[FOOD])
+		tset.Add(FOOD, loc, 1, bot.Priority(FOOD))
 	}
 	tset.Merge(bot.Explore)
 
@@ -138,13 +146,24 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	eh := s.EnemyHillLocations()
 	for _, loc := range eh {
 		// ndefend := s.PathinCount(loc, 10)
-		tset.Add(HILL1, loc, 8, bot.P.Priority[HILL1])
+		tset.Add(HILL1, loc, 8, bot.Priority(HILL1))
 	}
+
+	return tset
+}
+
+func (bot *BotV6) DoTurn(s *State) os.Error {
+	// TODO this still seems clunky.  need to figure out a better way
+	s.FoodUpdate(bot.P.ExpireFood)
+	bot.ExploreUpdate(s)
+
+	tset := bot.GenerateTargets(s)
 
 	// List of available ants, with local neighborhood
 	ants := make(map[Location]*AntStep, len(s.Ants[0]))
 	endants := make([]*AntStep, 0, len(s.Ants[0]))
 	moves := make(map[Location]Direction, len(ants))
+
 	for loc, _ := range s.Ants[0] {
 		ants[loc] = s.AntStep(loc)
 
@@ -153,12 +172,13 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 		if ants[loc].foodp && ants[loc].steptot == 0 {
 			found := false
 			for _, nloc := range ants[loc].nloc[0:4] {
-				if s.Item(nloc) == FOOD && tset[nloc].Count > 0 {
-					tset[nloc].Count = 0
+				if s.Item(nloc) == FOOD && (*tset)[nloc].Count > 0 {
+					(*tset)[nloc].Count = 0
 					s.SetOccupied(nloc)
 					found = true
 				}
 			}
+
 			if found {
 				ants[loc].steptot = 1
 				ants[loc].dest = append(ants[loc].dest, loc) // staying for now.
@@ -173,14 +193,14 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	for _, i := range rand.Perm(len(s.Map.HBorder)) {
 		loc := s.Map.HBorder[i]
 		depth := s.Map.FHill.Depth[loc]
-		if depth < 40 {
+		if int(depth) < bot.P.MinHorizon {
 			// Just add these as transients.
-			tset.Add(WAYPOINT, loc, 1, bot.P.Priority[WAYPOINT])
+			tset.Add(WAYPOINT, loc, 1, bot.Priority(WAYPOINT))
 		}
 	}
 
 	if Viz["targets"] {
-		s.VizTargets(&tset)
+		s.VizTargets(tset)
 	}
 
 	iter := 0
@@ -207,7 +227,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			loc := seg.src
 			p := s.Map.ToPoint(loc)
 			ep := s.Map.ToPoint(seg.end)
-			tgt, ok := tset[seg.end]
+			tgt, ok := (*tset)[seg.end]
 			if !ok {
 				log.Printf("Move from %v(%d) to %v(%d) no target ant: %#v", s.Map.ToPoint(seg.src), seg.src, s.Map.ToPoint(seg.end), seg.end, ants[loc])
 				log.Printf("Source item \"%v\", pending=%d", s.Map.Grid[seg.src], tset.Pending())
@@ -229,7 +249,8 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 						for _, d = range Permute4() {
 							moved = false
 							nloc = ants[loc].nloc[d]
-							if (tgt.Item == DEFEND || tgt.Item.IsHill() || ants[loc].safest[d]) &&
+							if (((tgt.Item == DEFEND || tgt.Item.IsHill()) &&
+								ants[loc].threat[d] < 2) || ants[loc].safest[d]) &&
 								(run || f.Depth[nloc] < f.Depth[loc]) &&
 								s.ValidStep(nloc) {
 								moved = true
@@ -245,7 +266,9 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			}
 
 			if moved {
-				VizLine(s.Map, p, ep, false)
+				if Viz["path"] {
+					VizLine(s.Map, p, ep, false)
+				}
 				tgt.Count--
 				ants[loc].steps = append(ants[loc].steps, seg.steps-ants[loc].steptot)
 				ants[loc].steptot = seg.steps
@@ -275,7 +298,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			nants := len(ants)
 
 			if bored {
-				tset.Add(RALLY, s.Map.ToLocation(Point{58, 58}), nants, bot.P.Priority[RALLY])
+				tset.Add(RALLY, s.Map.ToLocation(Point{58, 58}), nants, bot.Priority(RALLY))
 			}
 
 			if false {
@@ -286,8 +309,8 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 					exp := s.Map.ToPoint(loc[i])
 					fmt.Fprintf(os.Stdout, "v star %d %d .5 1.5 5 true\n", exp.r, exp.c)
 
-					bot.Explore.Add(EXPLORE, loc[i], N[i], bot.P.Priority[EXPLORE])
-					tset.Add(EXPLORE, loc[i], N[i], bot.P.Priority[EXPLORE])
+					bot.Explore.Add(EXPLORE, loc[i], N[i], bot.Priority(EXPLORE))
+					tset.Add(EXPLORE, loc[i], N[i], bot.Priority(EXPLORE))
 				}
 			}
 		} else {

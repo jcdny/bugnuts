@@ -345,7 +345,7 @@ func (s *State) AddAnt(loc Location, player int) {
 				log.Printf("Error? player %d on hill player %d hill at %v",
 					player, hill.Player, s.Map.ToPoint(loc))
 			}
-		} else if hill.Killed < 0 {
+		} else if hill.Killed <= 0 {
 			// we found a hill in the hash but its not marked killed
 			// Mark it killed by the ant we found standing on it.
 			// could be wrong ofc.
@@ -539,10 +539,10 @@ func (s *State) UpdateHillMaps() {
 		outbound[loc] = 1
 	}
 	if len(outbound) < 1 {
-		log.Panicf("UpdateHillMaps no outside border")
+		// log.Panicf("UpdateHillMaps no outside border")
+	} else {
+		s.Map.FDownhill, _, _ = MapFillSeed(s.Map, outbound, 1)
 	}
-
-	s.Map.FDownhill, _, _ = MapFillSeed(s.Map, outbound, 1)
 }
 
 func (s *State) FoodUpdate(age int) {
