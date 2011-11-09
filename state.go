@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 const (
@@ -527,7 +528,7 @@ func (s *State) ProcessState() {
 func (s *State) UpdateHillMaps() {
 	// Generate the fill for all my hills.
 	lend := make(map[Location]int)
-	for _, hill := range s.MyHillLocations() {
+	for _, hill := range s.HillLocations(0) {
 		lend[hill] = 1
 	}
 	// log.Printf("Computing fill for %v", lend)
@@ -538,8 +539,8 @@ func (s *State) UpdateHillMaps() {
 	for _, loc := range samples {
 		outbound[loc] = 1
 	}
-	if len(outbound) < 1 {
-		// log.Panicf("UpdateHillMaps no outside border")
+	if len(lend) > 0 && len(outbound) < 1 {
+		log.Panicf("UpdateHillMaps no outside border")
 	} else {
 		s.Map.FDownhill, _, _ = MapFillSeed(s.Map, outbound, 1)
 	}
@@ -573,21 +574,23 @@ func (s *State) FoodLocations() (l []Location) {
 	return l
 }
 
-func (s *State) EnemyHillLocations() (l []Location) {
+func (s *State) HillLocations(player int) (l []Location) {
 	for loc, hill := range s.Hills {
-		if hill.Player > 0 && hill.Killed == 0 {
+		if hill.Player == player && hill.Killed == 0 {
 			l = append(l, Location(loc))
 		}
 	}
+
 	return l
 }
 
-func (s *State) MyHillLocations() (l []Location) {
+func (s *State) EnemyHillLocations(player int) (l []Location) {
 	for loc, hill := range s.Hills {
-		if hill.Player == 0 && hill.Killed == 0 {
+		if hill.Player != player && hill.Killed == 0 {
 			l = append(l, Location(loc))
 		}
 	}
+
 	return l
 }
 
@@ -690,4 +693,44 @@ func (s *State) StepHorizon(hlist []Location) []Location {
 	}
 
 	return hlist
+}
+
+// Update expected locations and flows for 
+func (s *State) MonteCarloDensity() {
+	hills := make(map[Location]int, 6)
+	for _, loc := range s.HillLocations(0) {
+		hills[loc] = 1
+	}
+
+	if len(hills) > 0 {
+		ants := make([]Location, 0, 100)
+		f, _, _ := MapFillSeed(s.Map, hills, 0)
+
+		for i := 1; i < len(s.Ants); i++ {
+			for loc, _ := range s.Ants[i] {
+				steps := f.Depth[loc] - f.Depth[f.Seed[loc]]
+				if steps < 64 {
+					ants = append(ants, Location(loc))
+				}
+			}
+		}
+		if len(ants) > 0 {
+			// do up to 512 paths, but no more than 32 per ant
+			paths := 512 / len(ants)
+			if paths > 32 {
+				paths = 32
+			}
+			dist := f.MontePathIn(s.Map, ants, paths, 1)
+			maxdist := Max(dist)
+			for i, val := range dist {
+				if val > 0 {
+					vout := val * 64 / (maxdist + 1)
+					fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
+						heat64[vout].R, heat64[vout].G, heat64[vout].B, .5)
+					p := s.Map.ToPoint(Location(i))
+					fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.r, p.c)
+				}
+			}
+		}
+	}
 }

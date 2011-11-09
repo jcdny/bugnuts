@@ -103,7 +103,7 @@ func (s *State) AntStep(loc Location) *AntStep {
 
 func (s *State) EnemyPathinTargets(tset *TargetSet, priority int, DefendDist int) {
 	hills := make(map[Location]int, 6)
-	for _, loc := range s.MyHillLocations() {
+	for _, loc := range s.HillLocations(0) {
 		hills[loc] = 1
 	}
 
@@ -143,7 +143,7 @@ func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
 	tset.Merge(bot.Explore)
 
 	// TODO handle different priorities/attack counts
-	eh := s.EnemyHillLocations()
+	eh := s.EnemyHillLocations(0)
 	for _, loc := range eh {
 		// ndefend := s.PathinCount(loc, 10)
 		tset.Add(HILL1, loc, 8, bot.Priority(HILL1))
@@ -335,6 +335,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	s.Viz()
 
 	fmt.Fprintf(os.Stdout, "go\n")
+	// TODO Flush ??
 
 	return nil
 }

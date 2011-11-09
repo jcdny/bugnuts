@@ -73,7 +73,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 	}
 
 	// TODO handle different priorities for different enemies.
-	eh := s.EnemyHillLocations()
+	eh := s.EnemyHillLocations(0)
 	idle := 0
 	if len(bot.IdleAnts) > s.Turn-1 && len(eh) > 0 {
 		//log.Printf("IDLE: %d : %d : %d : %v", s.Turn, len(bot.IdleAnts), len(eh), bot.IdleAnts)

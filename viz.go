@@ -82,7 +82,7 @@ func (s *State) VizTargets(tset *TargetSet) {
 
 func (s *State) VizMcIn() {
 	hills := make(map[Location]int, 6)
-	for _, loc := range s.MyHillLocations() {
+	for _, loc := range s.HillLocations(0) {
 		hills[loc] = 1
 	}
 

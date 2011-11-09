@@ -34,7 +34,7 @@ func (bot *BotV4) DoTurn(s *State) os.Error {
 
 	// Generate list of food and enemy hill points.
 	targets := s.FoodLocations()
-	for _, loc := range s.EnemyHillLocations() {
+	for _, loc := range s.EnemyHillLocations(0) {
 		targets = append(targets, loc)
 	}
 
