@@ -9,7 +9,7 @@ import (
 	"strconv"
 )
 
-var maps = []string{
+var AllMaps = []string{
 	"maze_02p_01",
 	"maze_02p_02",
 	"maze_03p_01",
@@ -134,7 +134,7 @@ func TestMapFillDist(t *testing.T) {
 	out, _ := os.Create("tmp/dist.csv")
 	defer out.Close()
 
-	for _, name := range maps {
+	for _, name := range AllMaps {
 		filename := "testdata/maps/" + name + ".map"
 		m, err := MapLoadFile(filename)
 		if m == nil || err != os.EOF {
@@ -184,7 +184,7 @@ func TestMapFillDist(t *testing.T) {
 
 // Take a map and generate montecarlo ant densities...
 func TestMonteCarloPathing(t *testing.T) {
-	for _, name := range maps {
+	for _, name := range AllMaps {
 		filename := "testdata/maps/" + name + ".map"
 		m, err := MapLoadFile(filename)
 		if m == nil || err != os.EOF {
