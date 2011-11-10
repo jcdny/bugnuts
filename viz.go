@@ -30,7 +30,6 @@ func VizLine(m *Map, p1, p2 Point, arrow bool) {
 }
 
 func (s *State) Viz() {
-	s.VizMcIn()
 	if Viz["horizon"] {
 		for _, loc := range s.Map.HBorder {
 			p := s.Map.ToPoint(Location(loc))
@@ -71,6 +70,10 @@ func (s *State) Viz() {
 		}
 		fmt.Fprintf(os.Stdout, "v setFillColor 0 0 0 1.0\n")
 	}
+
+	if Viz["monte"] {
+		s.VizMCPaths()
+	}
 }
 
 func (s *State) VizTargets(tset *TargetSet) {
@@ -80,7 +83,23 @@ func (s *State) VizTargets(tset *TargetSet) {
 	}
 }
 
-func (s *State) VizMcIn() {
+func (s *State) VizMCPaths() {
+	if s.Map.MCPaths < 1 {
+		return
+	}
+
+	for i, val := range s.Map.MCDist {
+		if val > 0 {
+			vout := val * 64 / (s.Map.MCDistMax + 1)
+			fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
+				heat64[vout].R, heat64[vout].G, heat64[vout].B, .5)
+			p := s.Map.ToPoint(Location(i))
+			fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.r, p.c)
+		}
+	}
+}
+
+func (s *State) VizMCHillIn() {
 	hills := make(map[Location]int, 6)
 	for _, loc := range s.HillLocations(0) {
 		hills[loc] = 1

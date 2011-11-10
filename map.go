@@ -27,6 +27,11 @@ type Map struct {
 	FDownhill *Fill
 	FAll      *Fill
 
+	// MC distributions
+	MCDist    []int
+	MCDistMax int
+	MCPaths   int
+
 	// cache data
 	BorderDist []uint8       // border distance
 	LocStep    [][4]Location // adjecent tile map

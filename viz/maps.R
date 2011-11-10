@@ -36,9 +36,11 @@ maps <- c("maze_02p_01",
 
 
 
-pdf(file="heat.pdf")
 for (map in maps) {
-  x <- as.matrix(read.csv(paste(map, ".csv", sep=""), header=F))
+  png(file=paste(map, ".png", sep=""), width=1280, height=1024)
+
+  x <- as.matrix(read.csv(paste("data/mc_allpt_allhill/", map, ".csv", sep=""), header=F))
   filled.contour(log(x+1), color.palette=heat.colors, axes=F, plot.title=title(main=paste(map, " All points in to nearest hill")))
+  dev.off()
 }
-dev.off()
+
