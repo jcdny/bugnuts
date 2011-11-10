@@ -23,6 +23,10 @@ type Map struct {
 	Horizon  []bool     // Inside the event horizon.  false means there could be an ant there we have not seen
 	HBorder  []Location // List of border points
 
+	Land    []int // Count of land tiles visible from a given tile
+	Unknown []int // Count of Unknown
+	VisSum  []int // sum of count of visibles for overlap.
+
 	FHill     *Fill
 	FDownhill *Fill
 	FAll      *Fill
@@ -57,6 +61,9 @@ func NewMap(rows, cols, players int) *Map {
 		Grid:       make([]Item, rows*cols),
 		Seen:       make([]int, rows*cols),
 		VisCount:   make([]int, rows*cols),
+		Land:       make([]int, rows*cols),
+		Unknown:    make([]int, rows*cols),
+		VisSum:     make([]int, rows*cols),
 		Horizon:    make([]bool, rows*cols),
 		HBorder:    make([]Location, 0, 1000),
 		BorderDist: BorderDistance(rows, cols),
@@ -311,4 +318,31 @@ func LocationStep(rows, cols int) (out [][4]Location) {
 	}
 
 	return
+}
+
+func (m *Map) UpdateCounts(loc Location, mask *Mask) {
+	nunknown := 0
+	nland := 0
+	p := m.ToPoint(loc)
+	for _, op := range mask.P {
+		nloc := m.ToLocation(m.PointAdd(p, op))
+		if m.Grid[nloc] == UNKNOWN {
+			nunknown++
+		}
+		if m.Grid[nloc] != WATER {
+			nland++
+		}
+	}
+	m.Unknown[loc] = nunknown
+	m.Land[loc] = nland
+}
+
+func (m *Map) SumVisCount(loc Location, mask *Mask) {
+	nvis := 0
+	p := m.ToPoint(loc)
+	for _, op := range mask.P {
+		nloc := m.ToLocation(m.PointAdd(p, op))
+		nvis += m.VisCount[nloc]
+	}
+	m.VisSum[loc] = nvis
 }

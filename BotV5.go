@@ -130,7 +130,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 				// TODO Parameterize willingness to sacrifice
 				if f.Depth[nl] < uint16(depth) &&
 					((s.Turn > 70 && nthreat < 2) || nthreat == 0 || nthreat < threat) &&
-					(item == LAND || item == FOOD || item.IsEnemyHill()) {
+					(item == LAND || item == FOOD || item.IsEnemyHill(0)) {
 					// We have a valid next step, path in to dest and see if
 					// We should remove ant and possibly target.
 

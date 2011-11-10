@@ -71,7 +71,7 @@ func (bot *BotV4) DoTurn(s *State) os.Error {
 				// log.Printf("Turn %d %d %v to %v depth %d to %d", s.Turn, d, p, np, depth, f.Depth[nl])
 
 				if f.Depth[nl] < uint16(depth) &&
-					(s.Map.Grid[nl] == LAND || s.Map.Grid[nl].IsEnemyHill()) {
+					(s.Map.Grid[nl] == LAND || s.Map.Grid[nl].IsEnemyHill(0)) {
 					s.Map.Grid[nl] = MY_ANT
 					s.Map.Grid[loc] = LAND
 					fmt.Fprintf(os.Stdout, "o %d %d %c\n", p.r, p.c, ([4]byte{'n', 's', 'e', 'w'})[d])

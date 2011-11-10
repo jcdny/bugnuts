@@ -137,6 +137,11 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 	s.viewMask = makeMask(s.ViewRadius2, s.Rows, s.Cols)
 	s.attackMask = makeMask(s.AttackRadius2, s.Rows, s.Cols)
 
+	// From every point on the map we know nothing.
+	for i := range s.Map.Unknown {
+		s.Map.Unknown[i] = len(s.viewMask.P)
+	}
+
 	// Food and Ant things
 	s.Food = make(map[Location]int)
 	s.Ants = make([]map[Location]int, MaxPlayers)
@@ -207,7 +212,6 @@ func (s *State) ResetGrid() {
 			s.Map.Grid[i] = LAND
 		}
 	}
-
 }
 
 func (s *State) ParseTurn() (line string, err os.Error) {
@@ -321,9 +325,11 @@ func (s *State) AddAnt(loc Location, player int) {
 	s.Ants[player][loc] = s.Turn
 
 	if player == 0 {
+		if s.Map.Unknown[loc] > 0 {
+			s.UpdateLand(player, loc)
+		}
 		s.UpdateSeen(player, loc)
 		s.UpdateVisCount(player, loc)
-		s.UpdateLand(player, loc)
 	}
 
 	// TODO move this all to the inference step, should not be here!
@@ -386,11 +392,15 @@ func (s *State) AddHill(loc Location, player int) {
 // Todo This could all be done in one step.  Also viewer count.
 // Obvious optimizations: watch Adjacent Seen cells and do incremental updating.
 func (s *State) UpdateLand(player int, loc Location) {
+	nland := 0
 	if s.Map.BorderDist[loc] > s.viewMask.R {
 		// In interior of map so use loc offsets
 		for _, offset := range s.viewMask.Loc {
 			if s.Map.Grid[loc+offset] == UNKNOWN {
 				s.Map.Grid[loc+offset] = LAND
+			}
+			if s.Map.Grid[loc+offset] != WATER {
+				nland++
 			}
 		}
 	} else {
@@ -401,11 +411,17 @@ func (s *State) UpdateLand(player int, loc Location) {
 			if s.Map.Grid[l] == UNKNOWN {
 				s.Map.Grid[l] = LAND
 			}
+			if s.Map.Grid[l] != WATER {
+				nland++
+			}
 		}
 	}
+
+	s.Map.Land[loc] = nland
 }
 
 func (s *State) UpdateSeen(player int, loc Location) {
+	s.Map.Unknown[loc] = 0
 	if s.Map.BorderDist[loc] > s.viewMask.R {
 		// In interior of map so use loc offsets
 		for _, offset := range s.viewMask.Loc {
@@ -494,6 +510,7 @@ func (s *State) ProcessState() {
 	if s.Turn == 1 {
 		s.NHills = len(s.HillLocations(0))
 	}
+
 	for player, ants := range s.Ants {
 		for loc, seen := range ants {
 			if seen < s.Map.Seen[loc] || (player == 0 && seen < s.Turn) {
@@ -517,6 +534,17 @@ func (s *State) ProcessState() {
 
 			// TODO Think about this -- assuming appearing ants match missing ones, 
 			// tracking max ants in a region.
+		}
+	}
+
+	for loc, _ := range s.Ants[0] {
+		// Update the one step land count and unseen count for my ants
+		s.Map.SumVisCount(loc, s.viewMask)
+		for _, nloc := range s.Map.LocStep[loc] {
+			s.Map.SumVisCount(nloc, s.viewMask)
+			if s.Map.Unknown[nloc] > 0 {
+				s.Map.UpdateCounts(nloc, s.viewMask)
+			}
 		}
 	}
 
@@ -741,4 +769,8 @@ func (s *State) MonteCarloDensity() {
 			s.Map.MCPaths = 0
 		}
 	}
+}
+func (s *State) ToPoint(l Location) (p Point) {
+	p = Point{r: int(l) / s.Cols, c: int(l) % s.Cols}
+	return
 }

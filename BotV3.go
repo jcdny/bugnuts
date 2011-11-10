@@ -103,7 +103,7 @@ func (bot *BotV3) Score(s *State, p, tp Point, pv []Point) int {
 				iname = "my hill"
 				inc = -32 + 4*Min([]int{d, 8})
 			}
-			if item.IsEnemyHill() {
+			if item.IsEnemyHill(0) {
 				iname = "enemy hill"
 				inc = 1500 - 100*Min([]int{d, 10})
 			}
@@ -135,7 +135,7 @@ func (bot *BotV3) Score(s *State, p, tp Point, pv []Point) int {
 
 func (bot *BotV3) validPoint(s *State, p Point) bool {
 	tgt := s.Map.Grid[s.ToLocation(p)]
-	if tgt == FOOD || tgt == LAND || tgt.IsEnemyHill() {
+	if tgt == FOOD || tgt == LAND || tgt.IsEnemyHill(0) {
 		for _, op := range Steps {
 			//make sure there is an exit
 			ep := s.PointAdd(p, op)

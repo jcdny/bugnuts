@@ -103,16 +103,34 @@ func (o Item) IsHill() bool {
 
 	return false
 }
-func (o Item) IsEnemyHill() bool {
-	if (o > MY_HILL && o <= HILL_GUESS) || (o > MY_HILLANT && o <= HILLANT9) {
-		return true
+func (o Item) IsEnemyHill(player int) bool {
+	if o >= MY_HILL && o <= HILL_GUESS {
+		return player != int(o-MY_HILL)
+	}
+	if o > MY_HILLANT && o <= HILLANT9 {
+		return player != int(o-MY_HILLANT)
 	}
 
 	return false
 }
+
+func (o Item) IsEnemyAnt(player int) bool {
+	if o == LAND || o == WATER {
+		return false
+	}
+	if o >= MY_ANT && o <= PLAYER9 {
+		return player != int(o-MY_ANT)
+	}
+	if o > MY_HILLANT && o <= HILLANT9 {
+		return player != int(o-MY_HILLANT)
+	}
+
+	return false
+}
+
 func (o Item) IsTerminal() bool {
 	termp, ok := Terminal[o]
-	return termp || (!ok && o.IsEnemyHill())
+	return termp || (!ok && o.IsEnemyHill(0))
 }
 
 func (o Item) String() string {
