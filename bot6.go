@@ -15,6 +15,7 @@ import (
 	"os"
 	"log"
 	"rand"
+	"math"
 )
 
 type BotV6 struct {
@@ -24,19 +25,24 @@ type BotV6 struct {
 	IdleAnts []int
 }
 
+type Neighborhood struct {
+	//TODO add hill distance step
+	threat  int
+	safest  bool
+	vis     int
+	unknown int
+	land    int
+	goal    int
+}
+
 type AntStep struct {
-	source  Location
-	done    bool
-	steptot int
-	dest    []Location
-	steps   []int
-	threat  [5]int8
-	vis     [5]int
-	unknown [5]int
-	land    [5]int
+	source  Location   // our original location
+	move    Direction  // the next step
+	dest    []Location // track routing
+	steps   []int      // and distance
+	steptot int        // and sum total distance
+	N       [5]Neighborhood
 	foodp   bool
-	safest  [5]bool
-	move    Direction
 }
 
 func (bot *BotV6) Priority(i Item) int {
@@ -75,6 +81,13 @@ func (bot *BotV6) ExploreUpdate(s *State) {
 }
 
 // Stores the neighborhood of the ant.
+func (s *State) Neighborhood(loc Location, n *Neighborhood) {
+	n.threat = int(s.Threat(s.Turn, loc))
+	n.vis = s.Map.VisSum[loc]
+	n.unknown = s.Map.Unknown[loc]
+	n.land = s.Map.Land[loc]
+}
+
 func (s *State) AntStep(loc Location) *AntStep {
 	as := &AntStep{
 		source:  loc,
@@ -83,18 +96,25 @@ func (s *State) AntStep(loc Location) *AntStep {
 		steps:   make([]int, 0, 4),
 	}
 
-	for i, nloc := range s.Map.LocStep[loc] {
-		as.threat[i] = s.Threat(s.Turn, nloc)
+	nloc := loc
+	for i := 4; i >= 0; i-- {
+		s.Neighborhood(nloc, &as.N[i])
 		if s.Item(nloc) == FOOD {
 			as.foodp = true
 		}
+		// do last since we are tacking on loc at [4]
+		nloc = s.Map.LocStep[loc][i]
 	}
-	as.threat[4] = s.Threat(s.Turn, loc) // save the no move threat as well.
 
-	// Compute set of valid moves
-	minthreat := MinInt8(as.threat[:])
-	for i, _ := range DirectionOffset {
-		as.safest[i] = (as.threat[i] == minthreat)
+	// Compute the min threat moves.
+	minthreat := as.N[0].threat
+	for i := 1; i < 5; i++ {
+		if as.N[i].threat < minthreat {
+			minthreat = as.N[0].threat
+		}
+	}
+	for i := 1; i < 5; i++ {
+		as.N[i].safest = (as.N[i].threat == minthreat)
 	}
 
 	return as
@@ -223,8 +243,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 		s.VizTargets(tset)
 	}
 
-	iter := 0
-	maxiter := 50
+	var iter, maxiter int = 0, 50
 	for iter = 0; iter < maxiter && len(ants) > 0 && tset.Pending() > 0; iter++ {
 		if Debug > 4 {
 			log.Printf("TURN %d ITER %d TGT PENDING %d", s.Turn, iter, tset.Pending())
@@ -240,73 +259,44 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 		}
 
 		f.ClosestStep(segs)
-		// log.Printf("Segments: %v", segs)
-
 		for _, seg := range segs {
-			loc := seg.src
-
 			tgt, ok := (*tset)[seg.end]
 			if !ok {
 				log.Printf("Move from %v(%d) to %v(%d) no target ant: %#v",
-					s.ToPoint(seg.src), seg.src, s.ToPoint(seg.end), seg.end, ants[loc])
+					s.ToPoint(seg.src), seg.src, s.ToPoint(seg.end), seg.end, ants[seg.src])
 				log.Printf("Source item \"%v\", pending=%d", s.Map.Grid[seg.src], tset.Pending())
 				if Viz["error"] {
 					p := s.ToPoint(seg.src)
 					VizLine(s.Map, p, s.ToPoint(seg.end), false)
 					fmt.Fprintf(os.Stdout, "v tileBorder %d %d MM\n", p.r, p.c)
 				}
-			}
-
-			moved := false
-			if ok && tgt.Count > 0 {
-				moved = true
-				if ants[loc].steptot == 0 {
-					// Perm here so our bots are not biased to move in particular directions
-					d := 0
-					var nloc Location
-				WAYOUT:
-					for _, run := range [2]bool{false, true} {
-						for _, d = range Permute4() {
-							moved = false
-							nloc = s.Map.LocStep[loc][d]
-							// logic is:
-							// * valid move
-							// * safest move || if unsafe then take only if:
-							//   its a defense or hill move which is not suicidal
-							//   and we are close to our target.
-							// * its either downhill or we are running away...
-							if s.ValidStep(nloc) &&
-								(ants[loc].safest[d] ||
-									((tgt.Item == DEFEND || tgt.Item.IsHill()) &&
-										ants[loc].threat[d] < 2 && seg.steps < 8)) &&
-								(run || f.Depth[nloc] < f.Depth[loc]) {
-								moved = true
-								break WAYOUT
-							}
-						}
-					}
-					if moved {
-						ants[loc].move = Direction(d)
-						s.MoveAnt(loc, nloc)
+			} else if ok && tgt.Count > 0 {
+				ants[seg.src].N[5].goal = 0
+				good := false
+				for i := 0; i < 4; i++ {
+					nloc := s.Map.LocStep[seg.src][i]
+					// Don't mark target as taken unless its a valid step and risk = 0
+					goal := int(f.Depth[seg.src] - f.Depth[nloc])
+					ants[seg.src].N[i].goal = goal
+					if s.ValidStep(nloc) &&
+						((ants[seg.src].N[i].safest && goal > 0) ||
+							((tgt.Item == DEFEND || tgt.Item.IsHill()) &&
+								ants[seg.src].N[i].threat < 2 && seg.steps < 10)) {
+						good = true
 					}
 				}
-			}
 
-			if moved {
-				if Viz["path"] {
-					VizLine(s.Map, s.ToPoint(seg.src), s.ToPoint(seg.end), false)
-				}
-				tgt.Count--
-				ants[loc].steps = append(ants[loc].steps, seg.steps-ants[loc].steptot)
-				ants[loc].steptot = seg.steps
-				ants[loc].dest = append(ants[loc].dest, seg.end)
-
-				if tgt.Terminal {
-					endants = append(endants, ants[loc])
-					ants[loc] = &AntStep{}, false
-				} else {
-					ants[seg.end] = ants[loc]
-					ants[loc] = &AntStep{}, false
+				if good {
+					tgt.Count--
+					ants[seg.src].steps = append(ants[seg.src].steps, seg.steps-ants[seg.src].steptot)
+					ants[seg.src].steptot = seg.steps
+					ants[seg.src].dest = append(ants[seg.src].dest, seg.end)
+					if tgt.Terminal {
+						endants = append(endants, ants[seg.src])
+					} else {
+						ants[seg.end] = ants[seg.src]
+						ants[seg.src] = &AntStep{}, false
+					}
 				}
 			}
 		}
@@ -346,20 +336,16 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	dbest := make([]int, 0, 5)
 	for loc, ant := range ants {
 		best := math.MaxInt32
+		d := 0
+		nloc := loc
+		best = X[0]
 		for _, run := range [2]bool{false, true} {
-			for d := 0; d < 5; d++ {
-				if d < 4 {
-					nloc = s.Map.LocStep[loc][d]
-				} else {
-					nloc = loc
-				}
+			for d = 0; d < 4; d++ {
 				// Compute a metric for the best move given:
 				// * unknown cells
 				// * visibility overlap
 				// * land visible * turns unseen (proxy for food prob)
-				if s.ValidStep(nloc) && ants[loc].safest[d] {
-					nbest = ant.vis[d]*2 - ant.uknown[d]*3 - ant.land[d]
-				}
+				nloc = s.Map.LocStep[loc][d]
 			}
 		}
 
