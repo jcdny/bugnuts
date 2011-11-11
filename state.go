@@ -540,8 +540,10 @@ func (s *State) ProcessState() {
 	for loc, _ := range s.Ants[0] {
 		// Update the one step land count and unseen count for my ants
 		s.Map.SumVisCount(loc, s.viewMask)
+		s.Map.ComputePrFood(loc, s.Turn, s.viewMask)
 		for _, nloc := range s.Map.LocStep[loc] {
 			s.Map.SumVisCount(nloc, s.viewMask)
+			s.Map.ComputePrFood(nloc, s.Turn, s.viewMask)
 			if s.Map.Unknown[nloc] > 0 {
 				s.Map.UpdateCounts(nloc, s.viewMask)
 			}

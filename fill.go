@@ -464,11 +464,8 @@ func (f *Fill) ClosestStep(seg []Segment) {
 	}
 
 	for i, _ := range seg {
-		// log.Printf("Seg lookup 1: %v", seg[i])
 		seg[i].end = f.Seed[seg[i].src]
-		// log.Printf("Seg lookup 2: %v (%v -> %v) f.Depth: src: %d end %d", seg[i], f.ToPoint(seg[i].src), f.ToPoint(seg[i].end), f.Depth[seg[i].src], f.Depth[seg[i].end])
 		seg[i].steps += Abs(int(f.Depth[seg[i].src]) - int(f.Depth[seg[i].end]))
-		// log.Printf("Got: %v", seg[i])
 	}
 	sort.Sort(SegSlice(seg))
 }

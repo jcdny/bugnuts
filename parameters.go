@@ -25,8 +25,8 @@ var ParameterSets = map[string]*Parameters{
 		ExpireFood:     12,
 		PriorityMap:    &defaultPriMap,
 		Outbound:       80,
-		MinHorizon:     40,
-		DefendDistance: 18,
+		MinHorizon:     24,
+		DefendDistance: 16,
 	},
 }
 

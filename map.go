@@ -24,6 +24,7 @@ type Map struct {
 	HBorder  []Location // List of border points
 
 	Land    []int // Count of land tiles visible from a given tile
+	PrFood  []int // Count of Turn * Land adjusted for # that see it.
 	Unknown []int // Count of Unknown
 	VisSum  []int // sum of count of visibles for overlap.
 
@@ -62,6 +63,7 @@ func NewMap(rows, cols, players int) *Map {
 		Seen:       make([]int, rows*cols),
 		VisCount:   make([]int, rows*cols),
 		Land:       make([]int, rows*cols),
+		PrFood:     make([]int, rows*cols),
 		Unknown:    make([]int, rows*cols),
 		VisSum:     make([]int, rows*cols),
 		Horizon:    make([]bool, rows*cols),
@@ -345,4 +347,32 @@ func (m *Map) SumVisCount(loc Location, mask *Mask) {
 		nvis += m.VisCount[nloc]
 	}
 	m.VisSum[loc] = nvis
+}
+
+func (m *Map) ComputePrFood(loc Location, turn int, mask *Mask) {
+	prfood := 0
+	turn++
+	horizonwt := 0
+	p := m.ToPoint(loc)
+	for _, op := range mask.P {
+		nloc := m.ToLocation(m.PointAdd(p, op))
+
+		viewwt := MaxV(4-m.VisCount[nloc], 1)
+
+		if m.Horizon[nloc] {
+			horizonwt = 5
+		} else {
+			horizonwt = 4
+		}
+
+		foodp := 0
+		if m.Grid[nloc] != WATER {
+			// TODO Max turn magic here should maybe decline over time.
+			// also should test values
+			foodp = MinV(turn-m.Seen[nloc], 8)
+		}
+
+		prfood += foodp * viewwt * horizonwt
+	}
+	m.PrFood[loc] = prfood
 }

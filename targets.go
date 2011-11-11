@@ -56,6 +56,9 @@ func (tset *TargetSet) Remove(loc Location) {
 }
 
 func (tset TargetSet) Merge(src *TargetSet) {
+	if src == nil {
+		return
+	}
 	// Run through explore targets
 	for loc, tgt := range *src {
 		nt, found := tset[loc]

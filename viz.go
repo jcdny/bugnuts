@@ -92,7 +92,7 @@ func (s *State) VizMCPaths() {
 		if val > 0 {
 			vout := val * 64 / (s.Map.MCDistMax + 1)
 			fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
-				heat64[vout].R, heat64[vout].G, heat64[vout].B, .5)
+				heat64[vout].R, heat64[vout].G, heat64[vout].B, .25)
 			p := s.Map.ToPoint(Location(i))
 			fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.r, p.c)
 		}

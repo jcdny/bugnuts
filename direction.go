@@ -62,12 +62,12 @@ func (m *Map) PointsToPath(points []Point) *Path {
 
 // Draw from the arrays with rand.Intn(24) for a random permutation of directions.
 // or Perm5 via rand.Intn(120) (includes not moving).
-func Permute4() [4]int {
-	return Perm4[rand.Intn(24)]
+func Permute4() *[4]int {
+	return &Perm4[rand.Intn(24)]
 }
 
-func Permute5() [5]int {
-	return Perm5[rand.Intn(120)]
+func Permute5() *[5]int {
+	return &Perm5[rand.Intn(120)]
 }
 
 var Perm4 = [...][4]int{
