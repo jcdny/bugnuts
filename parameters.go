@@ -14,7 +14,7 @@ type Parameters struct {
 	DefendDistance int // How early to we consider an ant a threat to the hill
 }
 
-var defaultPriMap = map[string]int{"DEFEND": 5, "HILL": 5, "RALLY": 10, "FOOD": 10, "EXPLORE": 15, "WAYPOINT": 15}
+var defaultPriMap = map[string]int{"DEFEND": 10, "HILL": 10, "RALLY": 10, "FOOD": 10, "EXPLORE": 25, "WAYPOINT": 20}
 
 var ParameterSets = map[string]*Parameters{
 	"V5": &Parameters{
@@ -25,7 +25,7 @@ var ParameterSets = map[string]*Parameters{
 		ExpireFood:     12,
 		PriorityMap:    &defaultPriMap,
 		Outbound:       80,
-		MinHorizon:     24,
+		MinHorizon:     20,
 		DefendDistance: 16,
 	},
 }

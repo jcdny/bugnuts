@@ -349,30 +349,34 @@ func (m *Map) SumVisCount(loc Location, mask *Mask) {
 	m.VisSum[loc] = nvis
 }
 
-func (m *Map) ComputePrFood(loc Location, turn int, mask *Mask) {
+func (m *Map) ComputePrFood(loc, sloc Location, turn int, mask *Mask, f *Fill) int {
 	prfood := 0
 	turn++
 	horizonwt := 0
 	p := m.ToPoint(loc)
+
 	for _, op := range mask.P {
 		nloc := m.ToLocation(m.PointAdd(p, op))
+		if sloc == f.Seed[nloc] {
+			viewwt := MaxV(4-m.VisCount[nloc], 1)
 
-		viewwt := MaxV(4-m.VisCount[nloc], 1)
+			if m.Horizon[nloc] {
+				horizonwt = 5
+			} else {
+				horizonwt = 4
+			}
 
-		if m.Horizon[nloc] {
-			horizonwt = 5
-		} else {
-			horizonwt = 4
+			foodp := 0
+			if m.Grid[nloc] != WATER {
+				// TODO Max turn magic here should maybe decline over time.
+				// also should test values
+				foodp = MinV(turn-m.Seen[nloc], 12)
+			}
+
+			prfood += foodp * viewwt * horizonwt
 		}
-
-		foodp := 0
-		if m.Grid[nloc] != WATER {
-			// TODO Max turn magic here should maybe decline over time.
-			// also should test values
-			foodp = MinV(turn-m.Seen[nloc], 8)
-		}
-
-		prfood += foodp * viewwt * horizonwt
 	}
 	m.PrFood[loc] = prfood
+
+	return prfood
 }

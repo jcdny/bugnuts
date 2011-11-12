@@ -525,14 +525,14 @@ func (s *State) ProcessState() {
 					s.Map.Grid[loc] = MY_ANT + Item(player)
 				}
 			}
-			// TODO Bug here since if an ant steps out of seen we don't assume it still exists 
+			// TODO Bug here since if an ant steps out of seen we don't assume it still exists
 			// unless it was out move that remove it from vision
 
 			// TODO if the ant was visble last turn, not now and there is an ant
 			// we can see 1 step away from where it was assume the new ant is
 			// the same ant.
 
-			// TODO Think about this -- assuming appearing ants match missing ones, 
+			// TODO Think about this -- assuming appearing ants match missing ones,
 			// tracking max ants in a region.
 		}
 	}
@@ -540,10 +540,8 @@ func (s *State) ProcessState() {
 	for loc, _ := range s.Ants[0] {
 		// Update the one step land count and unseen count for my ants
 		s.Map.SumVisCount(loc, s.viewMask)
-		s.Map.ComputePrFood(loc, s.Turn, s.viewMask)
 		for _, nloc := range s.Map.LocStep[loc] {
 			s.Map.SumVisCount(nloc, s.viewMask)
-			s.Map.ComputePrFood(nloc, s.Turn, s.viewMask)
 			if s.Map.Unknown[nloc] > 0 {
 				s.Map.UpdateCounts(nloc, s.viewMask)
 			}
@@ -685,8 +683,15 @@ func (s *State) SetOccupied(l Location) {
 	s.Map.Grid[l] = OCCUPIED
 }
 
-func (s *State) MoveAnt(from, to Location) {
-	s.Map.Grid[from], s.Map.Grid[to] = LAND, OCCUPIED
+func (s *State) MoveAnt(from, to Location) bool {
+	if from == to {
+		return true
+	}
+	if s.ValidStep(to) {
+		s.Map.Grid[from], s.Map.Grid[to] = LAND, OCCUPIED
+		return true
+	}
+	return false
 }
 
 func (s *State) ValidStep(loc Location) bool {

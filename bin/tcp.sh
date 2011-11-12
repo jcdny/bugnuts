@@ -1,7 +1,7 @@
 #!/bin/bash
 ROOT=~/src/ai/bot
 
-BOT=bugnutsv6
+BOT=bugnutsv7.0
 REMOTENAME=bugnutsv5
 
 BHOST=ants.fluxid.pl
@@ -14,12 +14,12 @@ ERR=$ROOT/log/tcp/err.${BHOST}.$DATE
 
 EXE=$ROOT/bin/$ARCH/${BOT}
 
-if [ ! -x $EXE ]; then 
+if [ ! -x $EXE ]; then
     echo "No executable found at $EXE"
     exit 1
 fi
 
-while [ 1 ] ; do 
+while [ 1 ] ; do
     echo "INFO: $EXE started at `date` LOG $LOG"
     echo "python $ROOT/bin/tcpclient.py $BHOST 2081 $EXE $BOT donuts -1 > $LOG 2> $ERR"
     python $ROOT/bin/tcpclient.py $BHOST 2081 $EXE $REMOTENAME donuts -1 >> $LOG 2>> $ERR

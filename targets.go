@@ -3,6 +3,8 @@ package main
 import (
 	"log"
 	"math"
+	"fmt"
+	"os"
 )
 
 type Target struct {
@@ -18,6 +20,14 @@ type Target struct {
 }
 
 type TargetSet map[Location]*Target
+
+func (tset *TargetSet) String() string {
+	str := ""
+	for loc, target := range *tset {
+		str += fmt.Sprintf("%d: %#v\n", loc, target)
+	}
+	return str
+}
 
 func (tset *TargetSet) Add(item Item, loc Location, count, pri int) {
 	if Debug > 3 {
@@ -109,4 +119,44 @@ func MakeExplorers(s *State, scale float64, count, pri int) *TargetSet {
 	}
 
 	return &tset
+}
+
+func (s *State) AddBorderTargets(N int, tset *TargetSet, explore *TargetSet, pri int) {
+	// Generate a target list for unseen areas and exploration
+	// tset.Add(RALLY, s.Map.ToLocation(Point{58, 58}), len(ants), bot.Priority(RALLY))
+	fexp, _, _ := MapFill(s.Map, s.Ants[0], 1)
+	loc, n := fexp.Sample(N, 18, 18)
+	for i, _ := range loc {
+		if Debug == -2 {
+			log.Printf("Adding %d", i)
+			log.Printf("Adding %d %v %v", i, s.ToPoint(loc[i]), n[i])
+		}
+		exp := s.ToPoint(loc[i])
+		if Viz["targets"] {
+			fmt.Fprintf(os.Stdout, "v star %d %d .5 1.5 9 true\n", exp.r, exp.c)
+		}
+		if explore != nil {
+			(*explore).Add(EXPLORE, loc[i], 1, pri)
+		}
+		(*tset).Add(EXPLORE, loc[i], 1, pri)
+	}
+}
+
+func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist int) {
+	hills := make(map[Location]int, 6)
+	for _, loc := range s.HillLocations(0) {
+		hills[loc] = 1
+	}
+
+	f, _, _ := MapFill(s.Map, hills, 0)
+
+	for i := 1; i < len(s.Ants); i++ {
+		for loc, _ := range s.Ants[i] {
+			// TODO: use seed rather than PathIn
+			_, steps := f.PathIn(Location(loc))
+			if steps < DefendDist {
+				(*tset).Add(DEFEND, Location(loc), 2, priority)
+			}
+		}
+	}
 }

@@ -20,6 +20,7 @@ GOFILES=\
 	state.go\
 	targets.go\
 	map.go\
+	movement.go\
 	sym.go\
 	MyBot.go\
 	main.go
