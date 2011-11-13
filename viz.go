@@ -91,8 +91,13 @@ func (s *State) VizMCPaths() {
 	for i, val := range s.Map.MCDist {
 		if val > 0 {
 			vout := val * 64 / (s.Map.MCDistMax + 1)
-			fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
-				heat64[vout].R, heat64[vout].G, heat64[vout].B, .4)
+			if val == s.Map.MCDistMax {
+				fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
+					0, 0, 255, .75)
+			} else {
+				fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
+					heat64[vout].R, heat64[vout].G, heat64[vout].B, .4)
+			}
 			p := s.Map.ToPoint(Location(i))
 			fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.r, p.c)
 		}
@@ -123,13 +128,18 @@ func (s *State) VizMCHillIn() {
 			if paths > 32 {
 				paths = 32
 			}
-			dist := f.MontePathIn(s.Map, ants, paths, 1)
+			dist, _ := f.MontePathIn(s.Map, ants, paths, 1)
 			maxdist := Max(dist)
 			for i, val := range dist {
 				if val > 0 {
 					vout := val * 64 / (maxdist + 1)
-					fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
-						heat64[vout].R, heat64[vout].G, heat64[vout].B, .5)
+					if val == maxdist {
+						fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
+							0, 0, 255, .75)
+					} else {
+						fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
+							heat64[vout].R, heat64[vout].G, heat64[vout].B, .5)
+					}
 					p := s.Map.ToPoint(Location(i))
 					fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.r, p.c)
 				}

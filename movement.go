@@ -8,6 +8,33 @@ import (
 	"os"
 )
 
+type Neighborhood struct {
+	//TODO add hill distance step
+	valid  bool
+	threat int
+	goal   int
+	prfood int
+	//vis     int
+	//unknown int
+	//land    int
+	perm   int // permuter
+	d      Direction
+	safest bool
+}
+
+type AntStep struct {
+	source  Location   // our original location
+	move    Direction  // the next step
+	dest    []Location // track routing
+	steps   []int      // and distance
+	steptot int        // and sum total distance
+	N       []*Neighborhood
+	foodp   bool
+	goalp   bool
+	perm    int // to randomize ants when sorting
+	nfree   int
+}
+
 func (s *State) GenerateAnts(tset *TargetSet) (ants map[Location]*AntStep) {
 	ants = make(map[Location]*AntStep, len(s.Ants[0]))
 
@@ -49,6 +76,16 @@ func (s *State) GenerateAnts(tset *TargetSet) (ants map[Location]*AntStep) {
 		}
 	}
 	return ants
+}
+
+// Stores the neighborhood of the ant.
+func (s *State) Neighborhood(loc Location, nh *Neighborhood, d Direction) {
+	nh.threat = int(s.Threat(s.Turn, loc))
+	//nh.vis = s.Map.VisSum[loc]
+	//nh.unknown = s.Map.Unknown[loc]
+	//nh.land = s.Map.Land[loc]
+	nh.prfood = s.Map.PrFood[loc]
+	nh.d = d
 }
 
 func (s *State) AntStep(loc Location) *AntStep {

@@ -13,6 +13,7 @@ type Fill struct {
 	Cols  int
 	Depth []uint16
 	Seed  []Location
+	m     *Map
 }
 
 func (m *Map) NewFill() *Fill {
@@ -20,6 +21,7 @@ func (m *Map) NewFill() *Fill {
 		Depth: make([]uint16, m.Size(), m.Size()),
 		Rows:  m.Rows,
 		Cols:  m.Cols,
+		m:     m,
 	}
 
 	return f
@@ -57,21 +59,26 @@ func (f *Fill) Donut(p Point) Point {
 }
 
 func (f *Fill) PathIn(loc Location) (Location, int) {
-	steps := 0
+	return f.NPathIn(loc, 0)
+}
+
+// Step in N steps to minima, if steps=0 then go to minima and return steps taken
+func (f *Fill) NPathIn(loc Location, steps int) (Location, int) {
 	origloc := loc
 	done := false
 	for !done {
 		depth := f.Depth[loc]
-		p := f.ToPoint(loc)
 		done = true
-		for _, d := range Steps {
-			np := f.PointAdd(p, d)
-			nl := f.ToLocation(np)
-
+		for _, d := range Permute4() {
+			nl := f.m.LocStep[loc][d]
 			if f.Depth[nl] < depth && f.Depth[nl] > 0 {
 				loc = nl
-				steps++
-				done = false
+				steps--
+				if steps == 0 {
+					done = true
+				} else {
+					done = false
+				}
 				break
 			}
 		}
@@ -81,11 +88,12 @@ func (f *Fill) PathIn(loc Location) (Location, int) {
 		log.Printf("step from %v to %v depth %d to %d, steps %d\n", f.ToPoint(origloc), f.ToPoint(loc), f.Depth[origloc], f.Depth[loc], steps)
 	}
 
-	return loc, steps
+	return loc, -steps
 }
 
-func (f *Fill) MontePathIn(m *Map, start []Location, N int, MinDepth uint16) (dist []int) {
+func (f *Fill) MontePathIn(m *Map, start []Location, N int, MinDepth uint16) (dist []int, flow [][4]int) {
 	dist = make([]int, len(f.Depth))
+	flow = make([][4]int, len(f.Depth))
 
 	for _, origloc := range start {
 		for n := 0; n < N; n++ {
@@ -98,6 +106,7 @@ func (f *Fill) MontePathIn(m *Map, start []Location, N int, MinDepth uint16) (di
 				for d = 0; d < 4; d++ {
 					nloc := m.LocStep[loc][Perm4[nperm][d]]
 					if f.Depth[nloc] < depth && f.Depth[nloc] > MinDepth {
+						flow[loc][Perm4[nperm][d]]++
 						loc = nloc
 						dist[loc]++
 						break
@@ -106,8 +115,7 @@ func (f *Fill) MontePathIn(m *Map, start []Location, N int, MinDepth uint16) (di
 			}
 		}
 	}
-
-	return dist
+	return
 }
 
 func (f *Fill) String() string {
@@ -355,6 +363,18 @@ func (f *Fill) MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, 
 	return f, cap(q), newDepth
 }
 
+func (f *Fill) Distance(from, to Location) int {
+	return int(f.Depth[from]) - int(f.Depth[to])
+}
+
+func (f *Fill) DistanceStep(loc Location, d Direction) int {
+	if d == NoMovement {
+		return 0
+	}
+	//log.Printf("%v %d %v %d", f.m.ToPoint(loc), f.Depth[loc], f.m.ToPoint(f.m.LocStep[loc][d]), f.Depth[f.m.LocStep[loc][d]])
+	return int(f.Depth[loc]) - int(f.Depth[f.m.LocStep[loc][d]])
+}
+
 // Build list of locations ordered by depth from closest to furthest
 // TODO see if perm on the per depth list helps
 func (f *Fill) Closest(slice []Location) []Location {
@@ -458,14 +478,23 @@ func (p SegSlice) Len() int { return len(p) }
 func (p SegSlice) Less(i, j int) bool { return p[i].steps < p[j].steps }
 func (p SegSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-func (f *Fill) ClosestStep(seg []Segment) {
+// Return true if any segments were found.
+
+func (f *Fill) ClosestStep(seg []Segment) bool {
 	if len(seg) < 1 {
-		return
+		return false
 	}
 
+	any := false
 	for i, _ := range seg {
 		seg[i].end = f.Seed[seg[i].src]
 		seg[i].steps += Abs(int(f.Depth[seg[i].src]) - int(f.Depth[seg[i].end]))
+		if seg[i].end != 0 || f.Depth[seg[i].end] != 0 {
+			any = true
+		}
 	}
+
 	sort.Sort(SegSlice(seg))
+
+	return any
 }

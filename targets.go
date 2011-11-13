@@ -5,6 +5,7 @@ import (
 	"math"
 	"fmt"
 	"os"
+	"sort"
 )
 
 type Target struct {
@@ -121,24 +122,85 @@ func MakeExplorers(s *State, scale float64, count, pri int) *TargetSet {
 	return &tset
 }
 
-func (s *State) AddBorderTargets(N int, tset *TargetSet, explore *TargetSet, pri int) {
+func (s *State) AddBalanceTragets(N int, tset *TargetSet, explore *TargetSet, pri int) {
+	f, _, _ := MapFillSeed(s.Map, s.Ants[0], 1)
+	basins := make(map[Location]int, len(s.Ants[0])+10)
+	for i, loc := range f.Seed {
+		if f.Depth[i] > 0 {
+			basins[loc]++
+		}
+	}
+	sc := make([]DefScore, 0, len(basins))
+	for loc, score := range basins {
+		sc = append(sc, DefScore{loc: loc, score: score})
+	}
+	sort.Sort(DefScoreSlice(sc))
+	for i := 0; i < N/2; i++ {
+		(*tset).Add(EXPLORE, sc[i].loc, 2, pri)
+	}
+}
+
+func (s *State) AddBorderTargets(N int, tset *TargetSet, explore *TargetSet, pri int) int {
 	// Generate a target list for unseen areas and exploration
 	// tset.Add(RALLY, s.Map.ToLocation(Point{58, 58}), len(ants), bot.Priority(RALLY))
 	fexp, _, _ := MapFill(s.Map, s.Ants[0], 1)
-	loc, n := fexp.Sample(N, 18, 18)
+	loc, n := fexp.Sample(N, 14, 20)
+	added := 0
 	for i, _ := range loc {
-		if Debug == -2 {
-			log.Printf("Adding %d", i)
-			log.Printf("Adding %d %v %v", i, s.ToPoint(loc[i]), n[i])
+		if s.Map.Seen[loc[i]] < s.Turn-1 {
+			if Debug == -2 {
+				log.Printf("Adding %d", i)
+				log.Printf("Adding %d %v %v", i, s.ToPoint(loc[i]), n[i])
+			}
+			exp := s.ToPoint(loc[i])
+			if Viz["targets"] {
+				fmt.Fprintf(os.Stdout, "v star %d %d .5 1.5 9 true\n", exp.r, exp.c)
+			}
+			if explore != nil {
+				(*explore).Add(EXPLORE, loc[i], 1, pri)
+			}
+			(*tset).Add(EXPLORE, loc[i], 1, pri)
+			added++
 		}
-		exp := s.ToPoint(loc[i])
-		if Viz["targets"] {
-			fmt.Fprintf(os.Stdout, "v star %d %d .5 1.5 9 true\n", exp.r, exp.c)
+	}
+	return added
+}
+
+type DefScore struct {
+	loc   Location
+	score int
+}
+type DefScoreSlice []DefScore
+
+func (p DefScoreSlice) Len() int           { return len(p) }
+func (p DefScoreSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+func (p DefScoreSlice) Less(i, j int) bool { return p[i].score > p[j].score }
+
+func (s *State) AddMCBlock(tset *TargetSet, priority int, DefendDist int) {
+	if true || len(s.Map.MCDist) == 0 || s.NHills[0] > 2 || s.Turn < 30 {
+		return
+	}
+
+	hills := make(map[Location]int, 1)
+	for _, loc := range s.HillLocations(0) {
+		hills[loc] = 1
+
+		f, _, _ := MapFill(s.Map, hills, 0)
+
+		loclist, _ := f.Sample(0, 2, 8)
+		Def := make([]DefScore, len(loclist))
+		for i, loc := range loclist {
+			(*tset).Remove(loc)
+			//log.Printf("DIST: %d %d", loc, len(s.Map.MCDist))
+			Def[i] = DefScore{loc: loc, score: s.Map.MCDist[loc]}
 		}
-		if explore != nil {
-			(*explore).Add(EXPLORE, loc[i], 1, pri)
+		sort.Sort(DefScoreSlice(Def))
+		for i := 0; i < MinV(4, len(Def)); i++ {
+			if Def[i].score/s.Map.MCPaths > 2 {
+				(*tset).Add(DEFEND, Def[i].loc, 1, priority)
+			}
 		}
-		(*tset).Add(EXPLORE, loc[i], 1, pri)
+		hills[loc] = 0, false
 	}
 }
 
@@ -155,8 +217,41 @@ func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist 
 			// TODO: use seed rather than PathIn
 			_, steps := f.PathIn(Location(loc))
 			if steps < DefendDist {
-				(*tset).Add(DEFEND, Location(loc), 2, priority)
+				tloc, _ := f.NPathIn(loc, MaxV(steps/2, 3))
+				if Debug == -4 {
+					log.Printf("Enemy Pathin: defense: %v @ %v", s.ToPoint(loc), s.ToPoint(tloc))
+				}
+				(*tset).Add(DEFEND, tloc, 1, priority)
+				if len(s.Map.MCDist) > 0 {
+					maxf := s.Map.MCFlow[tloc][0]
+					d := 0
+					for i := 1; i < 4; i++ {
+						if s.Map.MCFlow[tloc][i] > maxf {
+							d = i
+						}
+					}
+					dirs := [2][2]Direction{{1, 3}, {0, 2}}
+					for _, da := range dirs[d%2] {
+						nl := s.Map.LocStep[tloc][da]
+						if s.Map.Grid[nl] != WATER {
+							(*tset).Add(DEFEND, nl, 1, priority)
+						}
+						if Debug == -4 {
+							log.Printf("Maxflow %v: %s, adding dirs %v %v", s.Map.MCFlow[tloc], Direction(d), dirs[d%2], s.ToPoint(nl))
+						}
+					}
+				}
 			}
+		}
+	}
+}
+
+func (tset *TargetSet) UpdateSeen(s *State, count int) {
+	for loc, _ := range *tset {
+		if s.Map.Seen[loc] == s.Turn {
+			(*tset).Remove(loc)
+		} else {
+			(*tset)[loc].Count = count
 		}
 	}
 }

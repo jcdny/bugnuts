@@ -34,6 +34,7 @@ type Map struct {
 
 	// MC distributions
 	MCDist    []int
+	MCFlow    [][4]int
 	MCDistMax int
 	MCPaths   int
 
@@ -357,13 +358,15 @@ func (m *Map) ComputePrFood(loc, sloc Location, turn int, mask *Mask, f *Fill) i
 
 	for _, op := range mask.P {
 		nloc := m.ToLocation(m.PointAdd(p, op))
-		if sloc == f.Seed[nloc] {
+		if sloc == f.Seed[nloc] &&
+			f.Distance(sloc, nloc) < 15 {
 			viewwt := MaxV(4-m.VisCount[nloc], 1)
 
+			// food we compete for is more of a priority
 			if m.Horizon[nloc] {
-				horizonwt = 5
-			} else {
 				horizonwt = 4
+			} else {
+				horizonwt = 5
 			}
 
 			foodp := 0

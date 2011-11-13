@@ -49,10 +49,11 @@ type State struct {
 	attackMask *Mask
 	viewMask   *Mask
 
-	Ants   []map[Location]int // Ant lists List by playerid value is turn seen
-	Hills  map[Location]*Hill // Hill list
-	NHills int                // Number of hills per player from Turn 1
-	Food   map[Location]int   // Food Seen
+	Ants         []map[Location]int // Ant lists List by playerid value is turn seen
+	Food         map[Location]int   // Food Seen
+	InitialHills int                // Number of hills per player from Turn 1
+	NHills       [MaxPlayers]int    // Count of live hills per player
+	Hills        map[Location]*Hill // Hill list
 
 	Stats *Statistics
 
@@ -483,32 +484,37 @@ func (s *State) ProcessState() {
 		s.Map.Grid[loc] = LAND
 	}
 
-	// Update hill data in map.
-	for loc, hill := range s.Hills {
-		if hill.Killed == 0 {
-			if s.Map.Seen[loc] > hill.Seen {
-				if hill.guess {
-					// We just guessed at a location anyway, just remove for now
-					s.Hills[loc] = &Hill{}, false
+	if s.Turn == 1 {
+		s.InitialHills = len(s.HillLocations(0))
+	}
 
-					// TODO: update the guess
-				} else {
-					// We don't see the hill to mark as killed by whoever we think was closest
-					hill.Killed = s.Turn
-				}
+	for loc, hill := range s.Hills {
+		if hill.Killed == 0 && s.Map.Seen[loc] > hill.Seen {
+			if hill.guess {
+				// We just guessed at a location anyway, just remove it
+				s.Hills[loc] = &Hill{}, false
+			} else {
+				hill.Killed = s.Turn
 			}
-		} else {
+		}
+
+		if hill.Killed == 0 {
 			if s.Map.Seen[loc] < s.Turn {
 				// If the hill is not visible then set Horizon false
 				// since it could be a source of ant.
 				s.Map.Horizon[loc] = false
 			}
-			s.Map.Grid[loc] = MY_HILL + Item(hill.Player)
 		}
 	}
 
-	if s.Turn == 1 {
-		s.NHills = len(s.HillLocations(0))
+	// Update hill data in map.
+	for i, _ := range s.NHills {
+		s.NHills[i] = s.InitialHills
+	}
+	for _, hill := range s.Hills {
+		if hill.Killed > 0 {
+			s.NHills[hill.Player]--
+		}
 	}
 
 	for player, ants := range s.Ants {
@@ -560,22 +566,35 @@ func (s *State) ProcessState() {
 
 func (s *State) UpdateHillMaps() {
 	// Generate the fill for all my hills.
+	if s.NHills[0] == 0 {
+		return
+	}
+
 	lend := make(map[Location]int)
 	for _, hill := range s.HillLocations(0) {
 		lend[hill] = 1
 	}
-	// log.Printf("Computing fill for %v", lend)
+
 	s.Map.FHill, _, _ = MapFillSeed(s.Map, lend, 1)
 
 	outbound := make(map[Location]int)
-	samples, _ := s.Map.FHill.Sample(0, 60/s.NHills, 60/s.NHills)
+	R := MaxV(MinV(s.Rows, s.Cols)/s.NHills[0]/2, 8)
+	samples, _ := s.Map.FHill.Sample(0, R, R)
+
 	for _, loc := range samples {
 		outbound[loc] = 1
 	}
-	if len(lend) > 0 && len(outbound) < 1 {
+
+	if len(outbound) < 1 {
 		log.Panicf("UpdateHillMaps no outside border")
 	} else {
 		s.Map.FDownhill, _, _ = MapFillSeed(s.Map, outbound, 1)
+		for i, d := range s.Map.FHill.Depth {
+			if int(d) > R {
+				s.Map.FDownhill.Depth[i] = 0
+				s.Map.FDownhill.Seed[i] = 0
+			}
+		}
 	}
 }
 
@@ -699,6 +718,11 @@ func (s *State) ValidStep(loc Location) bool {
 
 	return i != WATER && i != BLOCK && i != OCCUPIED && i != FOOD && i != MY_ANT && i != MY_HILLANT
 }
+func (s *State) Stepable(loc Location) bool {
+	i := s.Map.Grid[loc]
+
+	return i != WATER && i != BLOCK && i != FOOD && i != BLOCK
+}
 
 func (s *State) StepHorizon(hlist []Location) []Location {
 	m := s.Map
@@ -738,12 +762,14 @@ func (s *State) StepHorizon(hlist []Location) []Location {
 // Update expected locations and flows for enemy ants
 func (s *State) MonteCarloDensity() {
 	tgt := make(map[Location]int, 32)
-	for _, loc := range s.EnemyHillLocations(-1) {
+	for _, loc := range s.HillLocations(0) {
 		tgt[loc] = 1
 	}
 
-	for _, loc := range s.FoodLocations() {
-		tgt[loc] = 20
+	if false {
+		for _, loc := range s.FoodLocations() {
+			tgt[loc] = 20
+		}
 	}
 	if len(tgt) > 0 {
 		ants := make([]Location, 0, 200)
@@ -763,15 +789,13 @@ func (s *State) MonteCarloDensity() {
 		}
 
 		if len(ants) > 0 {
-			// do up to 512 paths, but no more than 32 per ant
-			paths := 1024 / len(ants)
-			if paths > 32 {
-				paths = 32
+			paths := 64
+			for paths*len(ants) > 2048 {
+				paths = paths >> 1
 			}
-			s.Map.MCDist = f.MontePathIn(s.Map, ants, paths, 1)
+			s.Map.MCDist, s.Map.MCFlow = f.MontePathIn(s.Map, ants, paths, 1)
 			s.Map.MCDistMax = Max(s.Map.MCDist)
 			s.Map.MCPaths = paths
-
 		} else {
 			s.Map.MCPaths = 0
 		}

@@ -26,6 +26,8 @@ var Viz = map[string]bool{
 }
 
 func init() {
+	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Lshortfile)
+
 	vizList := ""
 	vizHelp := "Visualize: all,none,useful,"
 	for flag, _ := range Viz {
@@ -123,8 +125,10 @@ func main() {
 	for {
 
 		ptime, ntime = ntime, time.Nanoseconds()
-		log.Printf("%d TURN TOOK %.2fms", s.Turn,
-			float64(ntime-ptime)/1000000)
+		if Debug > 0 {
+			log.Printf("%d TURN TOOK %.2fms", s.Turn,
+				float64(ntime-ptime)/1000000)
+		}
 
 		// READ TURN INFO FROM SERVER
 		Times["preparse"] = time.Nanoseconds()
@@ -151,10 +155,11 @@ func main() {
 		Times["postturn"] = time.Nanoseconds()
 
 		// additional thinking til near timeout
-
-		log.Printf("%d Parse %.2fms, Turn %.2fms", s.Turn,
-			float64(Times["postparse"]-Times["preparse"])/1000000,
-			float64(Times["postturn"]-Times["preturn"])/1000000)
+		if Debug > 0 {
+			log.Printf("%d Parse %.2fms, Turn %.2fms", s.Turn,
+				float64(Times["postparse"]-Times["preparse"])/1000000,
+				float64(Times["postturn"]-Times["preturn"])/1000000)
+		}
 
 	}
 

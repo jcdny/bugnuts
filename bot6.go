@@ -23,33 +23,6 @@ type BotV6 struct {
 	IdleAnts []int
 }
 
-type Neighborhood struct {
-	//TODO add hill distance step
-	valid  bool
-	threat int
-	goal   int
-	prfood int
-	//vis     int
-	//unknown int
-	//land    int
-	perm   int // permuter
-	d      Direction
-	safest bool
-}
-
-type AntStep struct {
-	source  Location   // our original location
-	move    Direction  // the next step
-	dest    []Location // track routing
-	steps   []int      // and distance
-	steptot int        // and sum total distance
-	N       []*Neighborhood
-	foodp   bool
-	goalp   bool
-	perm    int // to randomize ants when sorting
-	nfree   int
-}
-
 func (bot *BotV6) Priority(i Item) int {
 	return bot.Primap[i]
 }
@@ -70,7 +43,7 @@ func NewBotV6(s *State) Bot {
 
 	mb.Primap = mb.P.MakePriMap()
 
-	if false {
+	if true {
 		mb.Explore = MakeExplorers(s, .8, 1, mb.Priority(EXPLORE))
 	} else {
 		ts := make(TargetSet, 0)
@@ -79,34 +52,14 @@ func NewBotV6(s *State) Bot {
 	return mb
 }
 
-func (bot *BotV6) ExploreUpdate(s *State) {
-	// Any explore point which is visible should be nuked
-	if bot.Explore == nil {
-		return
-	}
-	for loc, _ := range *bot.Explore {
-		if s.Map.Seen[loc] == s.Turn {
-			bot.Explore.Remove(loc)
-		} else {
-			(*bot.Explore)[loc].Count = 1
-		}
-	}
-}
-
-// Stores the neighborhood of the ant.
-func (s *State) Neighborhood(loc Location, nh *Neighborhood, d Direction) {
-	nh.threat = int(s.Threat(s.Turn, loc))
-	//nh.vis = s.Map.VisSum[loc]
-	//nh.unknown = s.Map.Unknown[loc]
-	//nh.land = s.Map.Land[loc]
-	nh.prfood = s.Map.PrFood[loc]
-	nh.d = d
-}
-
 func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
 	tset := &TargetSet{}
 
-	s.AddEnemyPathinTargets(tset, bot.Priority(DEFEND), bot.P.DefendDistance)
+	// TODO figure out how to handle multihill defense.
+	if s.NHills[0] < 3 {
+		s.AddEnemyPathinTargets(tset, bot.Priority(DEFEND), bot.P.DefendDistance)
+		s.AddMCBlock(tset, bot.Priority(DEFEND), bot.P.DefendDistance)
+	}
 
 	// Generate list of food and enemy hill points.
 	// Food locations should be set after ant list is done since we
@@ -119,17 +72,24 @@ func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
 
 	// TODO handle different priorities/attack counts
 	// TODO compute defender count
+	// TODO scale as function of my #s vs defnder.
+	// TODO impute food counts for hill taking.
 	eh := s.EnemyHillLocations(0)
 	for _, loc := range eh {
-		// ndefend := s.PathinCount(loc, 10)
-		tset.Add(HILL1, loc, 16, bot.Priority(HILL1))
+		ndefend := 2 // s.PathinCount(loc, 10)
+		if s.Turn > 1000 {
+			ndefend = 200
+		}
+		tset.Add(HILL1, loc, ndefend+2, bot.Priority(HILL1))
 	}
 
-	for _, loc := range s.Map.HBorder {
-		depth := s.Map.FHill.Depth[loc]
-		if depth > 2 && depth < uint16(bot.P.MinHorizon) {
-			// Just add these as transients.
-			tset.Add(WAYPOINT, loc, 1, bot.Priority(WAYPOINT))
+	if s.NHills[0] < 3 {
+		for _, loc := range s.Map.HBorder {
+			depth := s.Map.FHill.Depth[loc]
+			if depth > 2 && depth < uint16(bot.P.MinHorizon) {
+				// Just add these as transients.
+				tset.Add(WAYPOINT, loc, 1, bot.Priority(WAYPOINT))
+			}
 		}
 	}
 
@@ -139,12 +99,12 @@ func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
 func (bot *BotV6) DoTurn(s *State) os.Error {
 	// TODO this still seems clunky.  need to figure where this belongs.
 	s.FoodUpdate(bot.P.ExpireFood)
-	bot.ExploreUpdate(s)
+	bot.Explore.UpdateSeen(s, 1)
 
 	tset := bot.GenerateTargets(s)
 	ants := s.GenerateAnts(tset)
-	endants := make([]*AntStep, 0, len(ants))
 
+	endants := make([]*AntStep, 0, len(ants))
 	segs := make([]Segment, 0, len(ants))
 
 	if Viz["targets"] {
@@ -155,9 +115,8 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	for iter = 0; iter < maxiter && len(ants) > 0 && tset.Pending() > 0; iter++ {
 		// TODO: Here should update map for fixed ants.
 		f, _, _ := MapFillSeed(s.Map, tset.Active(), 0)
-		if Debug == -3 ||
-			(s.Turn > 554 && s.Turn < 560) {
-			log.Printf("TURN %d ITER %d TGT PENDING %d", s.Turn, iter, tset.Pending())
+		if Debug == -3 {
+			log.Printf("TURN %d ITER %d TGT PENDING %d ANTS %d, ENDANTS %d", s.Turn, iter, tset.Pending(), len(ants), len(endants))
 			log.Printf("ACTIVE SET: %v", tset.Active())
 		}
 
@@ -165,18 +124,10 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 		for loc, _ := range ants {
 			segs = append(segs, Segment{src: loc, steps: ants[loc].steptot})
 		}
-		f.ClosestStep(segs)
 
-		// corner case: we added a guess or explore point which subsequently turned out to
-		// be in a wall but the point has not become visible yet.
-		any := false
-		for _, seg := range segs {
-			if seg.end != 0 {
-				any = true
-				break
-			}
-		}
-		if !any {
+		if !f.ClosestStep(segs) {
+			// corner case: we added a guess or explore point which subsequently turned out to
+			// be in a wall but the point has not become visible yet.
 			segs = segs[0:0]
 			for loc, tgt := range *tset {
 				if tgt.Count > 0 {
@@ -213,21 +164,21 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 						nloc := s.Map.LocStep[seg.src][i]
 						// Don't mark target as taken unless its a valid step and risk = 0
 						// TODO not sure this is how I should be doing this.
-						goal := (int(f.Depth[seg.src]) - int(f.Depth[nloc])) * 10
+						goal := f.Distance(seg.src, nloc) * 10
 
 						// Prefer steps which are downhill from the hill if we are close.
 						if dh > 0 && dh < 40 {
-							goal += int(s.Map.FDownhill.Depth[nloc]) -
-								int(s.Map.FDownhill.Depth[seg.src])
+							goal += s.Map.FDownhill.Distance(seg.src, nloc)
 						}
 
 						ant.N[i].goal = goal
 						// Check for a valid move towards the goal
-						if s.Turn > 554 && s.Turn < 560 {
-							log.Printf("%d: %v : %v goal:%d dh:%d \"%s\" %d: %#v",
-								s.Turn, s.ToPoint(nloc), s.ValidStep(nloc), goal, dh, tgt.Item, seg.steps, ant.N[i])
+						if Debug == -6 {
+							log.Printf("%d: %v->%v : %v goal:%d dh:%d \"%s\" %d: %#v",
+								s.Turn, s.ToPoint(ant.source), s.ToPoint(nloc), s.Stepable(nloc),
+								goal, dh, tgt.Item, seg.steps, ant.N[i])
 						}
-						if s.ValidStep(nloc) && goal > 0 {
+						if s.Stepable(nloc) && goal > 0 {
 							// and it needs to be a step we can take
 							if ant.N[i].safest {
 								good = true
@@ -261,25 +212,46 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			}
 		}
 
-		// We have more ants than targets we have bored ants, keep track of their #s
-		if tset.Pending() < 1 && len(bot.IdleAnts) < s.Turn {
+		if len(bot.IdleAnts) < s.Turn+1 && (tset.Pending() < 1 || iter+1 == maxiter) {
+			bot.IdleAnts = bot.IdleAnts[0 : s.Turn+1]
+			// See if we have more ants than targets
 			idle := 0
 			for _, ant := range ants {
-				if !ant.goalp {
+				if !ant.goalp && ant.steptot < 20 {
 					idle++
 				}
 			}
-			bot.IdleAnts = bot.IdleAnts[0 : s.Turn+1]
 			bot.IdleAnts[s.Turn] = idle
-			if Debug > 3 {
+
+			if Debug > 0 {
 				log.Printf("TURN %d IDLE %d", s.Turn, len(ants))
 			}
+
 			// we have N idle ants put the to work
+			// Do this by marking ants with large basins as targets.
+			if idle > 0 {
+				maxiter = 2 * maxiter
+				eh := s.EnemyHillLocations(0)
+				nadded := 0
+				if idle > 2*len(eh) {
+					nadded = s.AddBorderTargets(idle-2*len(eh), tset, bot.Explore, 1)
+				}
+				for _, loc := range eh {
+					(*tset)[loc].Count += (idle - nadded) / len(eh)
+				}
+			}
 		}
 	}
+
 	if Debug > 0 {
-		log.Printf("TURN %d ITER %d", s.Turn, iter)
+		log.Printf("TURN %d ITER %d ANTS %d END %d", s.Turn, iter, len(ants), len(endants))
+		if iter == maxiter {
+			for loc, _ := range tset.Active() {
+				log.Printf("Active: %v %v", s.ToPoint(loc), (*tset)[loc])
+			}
+		}
 	}
+
 	for _, ant := range ants {
 		endants = append(endants, ant)
 	}
@@ -289,35 +261,40 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	tp := make(map[Location]int, len(endants))
 	for _, ant := range endants {
 		if ant.goalp {
-			tp[ant.source] = 3 // TODO more magic
+			tp[ant.source] = 5 // TODO more magic
 		} else {
 			tp[ant.source] = 1
 		}
 	}
-	fa, _, _ := MapFillSeed(s.Map, tp, 0)
-	for _, ant := range endants {
-		ant.N[4].prfood = s.Map.ComputePrFood(ant.source, ant.source, s.Turn, s.viewMask, fa)
-		for d := 0; d < 4; d++ {
-			ant.N[d].prfood = s.Map.ComputePrFood(s.Map.LocStep[ant.source][d], ant.source, s.Turn, s.viewMask, fa)
-		}
-		if !ant.goalp {
-			dh := int(s.Map.FHill.Depth[ant.source])
-			if dh > 0 && dh < 20 {
+
+	// Walk away from Hills - only if hill # < 3
+	// Bloodbath maps best defense is fast gathering.
+	if s.NHills[0] < 3 {
+		fa, _, _ := MapFillSeed(s.Map, tp, 0)
+		for _, ant := range endants {
+			ant.N[4].prfood = s.Map.ComputePrFood(ant.source, ant.source, s.Turn, s.viewMask, fa)
+			for d := 0; d < 4; d++ {
+				ant.N[d].prfood = s.Map.ComputePrFood(s.Map.LocStep[ant.source][d], ant.source, s.Turn, s.viewMask, fa)
+			}
+			if !ant.goalp && s.Map.FDownhill.Depth[ant.source] > 1 {
+				dh := int(s.Map.FHill.Depth[ant.source])
 				ant.goalp = true
 				ant.N[4].goal = 0
 				// TODO May need to set a dest as well
 				ant.steps = append(ant.steps, dh)
-				for d := 0; d < 4; d++ {
-					ant.N[d].goal = int(s.Map.FDownhill.Depth[ant.source]) - int(s.Map.FDownhill.Depth[s.Map.LocStep[ant.source][d]])
+				for d := Direction(0); d < 4; d++ {
+					ant.N[d].goal = s.Map.FDownhill.DistanceStep(ant.source, d)
+					//log.Printf("DOWNHILL: %v %s %#v", s.ToPoint(ant.source), d, ant.N[d])
 				}
 			}
-		}
 
+		}
 	}
 
 	s.GenerateMoves(endants)
 	s.EmitMoves(endants)
 	s.Viz()
 	fmt.Fprintf(os.Stdout, "go\n") // TODO Flush ??
+
 	return nil
 }
