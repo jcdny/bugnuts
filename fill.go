@@ -84,7 +84,7 @@ func (f *Fill) NPathIn(loc Location, steps int) (Location, int) {
 		}
 	}
 
-	if Debug > 4 {
+	if Debug[DBG_PathIn] && WS.Watched(loc, -1, 0) {
 		log.Printf("step from %v to %v depth %d to %d, steps %d\n", f.ToPoint(origloc), f.ToPoint(loc), f.Depth[origloc], f.Depth[loc], steps)
 	}
 
@@ -430,7 +430,7 @@ func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
 
 	over := n / len(pool)
 	perm := rand.Perm(len(pool))[0 : n%len(pool)]
-	if Debug > 3 {
+	if Debug[DBG_Sample] {
 		log.Printf("Sample: Looking for %d explore points %d-%d, have %d possible", n, low, hi, len(pool))
 	}
 
@@ -453,7 +453,7 @@ func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
 	} else {
 		pout := make([]Location, len(perm))
 		for i, pi := range perm {
-			if Debug > 3 {
+			if Debug[DBG_Sample] {
 				log.Printf("Sample: adding location %d to output pool", pool[pi])
 			}
 			pout[i] = pool[pi]

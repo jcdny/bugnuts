@@ -66,7 +66,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 
 	// Generate list of food and enemy hill points.
 	for _, loc := range s.FoodLocations() {
-		if Debug > 4 {
+		if Debug[DBG_Targets] {
 			log.Printf("adding target %v(%d) food pri %d", s.Map.ToPoint(loc), loc, bot.Priority(FOOD))
 		}
 		tset.Add(FOOD, loc, 1, bot.Priority(FOOD))
@@ -87,7 +87,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 		tset.Add(HILL1, loc, 1+idle, bot.Priority(HILL1))
 	}
 
-	if Debug > 4 {
+	if Debug[DBG_Targets] {
 		log.Printf("Target set %v", tset)
 	}
 
@@ -102,7 +102,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 	moves := make(map[Location]Direction, len(ants))
 
 	for iter := 0; iter < 15 && len(ants) > 0 && tset.Pending() > 0; iter++ {
-		if Debug > 4 {
+		if Debug[DBG_Iterations] {
 			log.Printf("Location iteration %d, ants: %d, tset.Pending %d", iter, len(ants), tset.Pending())
 		}
 
@@ -144,7 +144,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 						// food as a block.
 						s.SetOccupied(nl)
 						moves[loc] = Direction(5) // explicitly say we will not move
-						if Debug > 4 {
+						if Debug[DBG_Targets] {
 							log.Printf("Removing %v food adjacent", s.Map.ToPoint(loc))
 						}
 						ants[loc] = 0, false
@@ -154,18 +154,20 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 						ep := s.Map.ToPoint(endloc)
 
 						tgt, ok := tset[endloc]
-						if Debug > 4 {
+						if Debug[DBG_Targets] {
 							log.Printf("Found target %v -> %v, end %v %d steps, tgt: %v",
 								p, np, ep, steps, tgt)
 						}
 						if !ok {
-							if Debug > 3 {
+							if Debug[DBG_Targets] {
 								log.Printf("pathin from %v(%d)->%v to %v(%d) no matching target.",
 									p, loc, np, ep, endloc)
 							}
 						} else if steps >= 0 && tgt.Count > 0 {
-							if s.Threat(s.Turn, nl) > 0 {
-								log.Printf("#%d: %v -> %v threat %d -> %d\n", s.Turn, p, np, threat, nthreat)
+							if Debug[DBG_Threat] {
+								if s.Threat(s.Turn, nl) > 0 {
+									log.Printf("#%d: %v -> %v threat %d -> %d\n", s.Turn, p, np, threat, nthreat)
+								}
 							}
 							moves[loc] = Direction(d)
 							tgt.Count -= 1

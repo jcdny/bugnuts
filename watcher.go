@@ -5,6 +5,7 @@ import (
 	"strings"
 	"strconv"
 	"math"
+	"log"
 )
 
 type Watch struct {
@@ -34,6 +35,17 @@ func NewWatches(rows, cols, turns int) *Watches {
 	return &ws
 }
 
+func (ws *Watches) Load(wlist []string) {
+	for _, s := range wlist {
+		w, err := ws.Parse(s)
+		if err != nil {
+			log.Printf("Problem loading watches: %v", err)
+		} else {
+			ws.Add(w)
+		}
+	}
+}
+
 func (ws *Watches) Watched(l Location, turn int, player int) bool {
 	if len(ws.W) == 0 {
 		return false
@@ -43,7 +55,7 @@ func (ws *Watches) Watched(l Location, turn int, player int) bool {
 	}
 
 	// Fast check for turns for all locations
-	if ws.turns[turn] {
+	if turn >= 0 && ws.turns[turn] {
 		return true
 	}
 	// and locations for all turns
@@ -51,32 +63,34 @@ func (ws *Watches) Watched(l Location, turn int, player int) bool {
 		return true
 	}
 
-	r, c := int(l)/ws.Cols, int(l)%ws.Cols
-	for _, w := range ws.wturns[turn] {
-		// only check for locations in a region since
-		// above we checked for locations with no turn
-		// restriction
-		d := c - w.C
-		if d < 0 {
-			d = -d
+	if turn >= 0 {
+		r, c := int(l)/ws.Cols, int(l)%ws.Cols
+		for _, w := range ws.wturns[turn] {
+			// only check for locations in a region since
+			// above we checked for locations with no turn
+			// restriction
+			d := c - w.C
+			if d < 0 {
+				d = -d
+			}
+			if d > (ws.Cols+1)/2 {
+				d = ws.Cols - d
+			}
+			if d > w.N {
+				continue
+			}
+			d = r - w.R
+			if d < 0 {
+				d = -d
+			}
+			if d > (ws.Rows+1)/2 {
+				d = ws.Rows - d
+			}
+			if d > w.N {
+				continue
+			}
+			return true
 		}
-		if d > (ws.Cols+1)/2 {
-			d = ws.Cols - d
-		}
-		if d > w.N {
-			continue
-		}
-		d = r - w.R
-		if d < 0 {
-			d = -d
-		}
-		if d > (ws.Rows+1)/2 {
-			d = ws.Rows - d
-		}
-		if d > w.N {
-			continue
-		}
-		return true
 	}
 
 	return false

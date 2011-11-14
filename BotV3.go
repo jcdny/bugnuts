@@ -47,7 +47,7 @@ func (bot *BotV3) DoTurn(s *State) os.Error {
 			}
 		}
 
-		if Debug > 2 {
+		if Debug[DBG_Movement] {
 			log.Printf("TURN %d point %v score %v best %v", s.Turn, p, score, best)
 		}
 
@@ -86,7 +86,7 @@ func (bot *BotV3) Score(s *State, p, tp Point, pv []Point) int {
 	}
 	score = score * 17 / len(pv)
 
-	if Debug > 3 {
+	if Debug[DBG_Movement] {
 		log.Printf("p %v tp %v explore score %d", p, tp, score)
 	}
 
@@ -121,12 +121,12 @@ func (bot *BotV3) Score(s *State, p, tp Point, pv []Point) int {
 			}
 		}
 		score += inc
-		if Debug > 3 && iname != "" {
+		if Debug[DBG_Movement] && iname != "" {
 			log.Printf("tp %v (at %v) %s worth %d",
 				tp, op, iname, inc)
 		}
 	}
-	if Debug > 3 {
+	if Debug[DBG_Movement] {
 		log.Printf("p %v tp %v total score %d",
 			p, tp, score)
 	}

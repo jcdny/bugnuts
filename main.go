@@ -10,10 +10,11 @@ import (
 	"strings"
 )
 
-var Debug int = 0
 var runBot string
 var mapFile string
 var paramKey string
+var watchPoints string
+var debugLevel int
 
 var Viz = map[string]bool{
 	"path":    false,
@@ -25,6 +26,8 @@ var Viz = map[string]bool{
 	"monte":   false,
 }
 
+var WS *Watches
+
 func init() {
 	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Lshortfile)
 
@@ -35,10 +38,11 @@ func init() {
 	}
 	flag.StringVar(&vizList, "V", "", vizHelp)
 
-	flag.IntVar(&Debug, "d", 0, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
+	flag.IntVar(&debugLevel, "d", 0, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
 	flag.StringVar(&runBot, "b", "CUR", "Which bot to run")
 	flag.StringVar(&mapFile, "m", "", "Map file, if provided will be used to validate generated map, hill guessing etc.")
 	flag.StringVar(&paramKey, "p", "", "Parameter set, defaults to default.BOT")
+	flag.StringVar(&watchPoints, "w", "", "Watch points \"T1:T2@R,C,N[;T1:T2...]\", \":\" will watch all")
 
 	flag.Parse()
 
@@ -80,10 +84,15 @@ func main() {
 	in := bufio.NewReader(os.Stdin)
 
 	err := s.Start(in)
+	WS = NewWatches(s.Rows, s.Cols, s.Turns)
+	if len(watchPoints) > 0 {
+		wlist := strings.Split(watchPoints, ";")
+		WS.Load(wlist)
+	}
 
 	if err != nil {
 		log.Panicf("Start(in) failed (%s)", err)
-	} else if Debug > 1 {
+	} else if Debug[DBG_Start] {
 		log.Printf("State:\n%v\n", &s)
 	}
 
@@ -125,7 +134,7 @@ func main() {
 	for {
 
 		ptime, ntime = ntime, time.Nanoseconds()
-		if Debug > 0 {
+		if Debug[DBG_TurnTime] || Debug[DBG_AllTime] {
 			log.Printf("%d TURN TOOK %.2fms", s.Turn,
 				float64(ntime-ptime)/1000000)
 		}
@@ -146,7 +155,7 @@ func main() {
 			break
 		}
 
-		if Debug > 1 {
+		if Debug[DBG_Turns] {
 			log.Printf("TURN %d Generating orders turn", s.Turn)
 		}
 		// Generate order list
@@ -155,7 +164,7 @@ func main() {
 		Times["postturn"] = time.Nanoseconds()
 
 		// additional thinking til near timeout
-		if Debug > 0 {
+		if Debug[DBG_AllTime] {
 			log.Printf("%d Parse %.2fms, Turn %.2fms", s.Turn,
 				float64(Times["postparse"]-Times["preparse"])/1000000,
 				float64(Times["postturn"]-Times["preturn"])/1000000)
@@ -170,7 +179,7 @@ func main() {
 	//s.DumpSeen()
 	//s.DumpMap()
 
-	if Debug > 0 {
+	if Debug[DBG_Results] {
 		log.Printf("Bot Result %v", bot)
 	}
 	ntime = time.Nanoseconds()

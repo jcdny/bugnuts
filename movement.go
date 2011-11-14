@@ -157,7 +157,7 @@ func (s *State) GenerateMoves(antsIn []*AntStep) {
 
 	// loop until we move all the ants.
 	for {
-		if Debug == -1 {
+		if Debug[DBG_Movement] {
 			log.Printf("ants: %d: %v", len(ants), ants)
 			for i, ant := range ants {
 				log.Printf("ants #%d: %v", i, ant)
@@ -197,7 +197,7 @@ func (s *State) GenerateMoves(antsIn []*AntStep) {
 func (s *State) Step(ant *AntStep) bool {
 	if ant.move < 0 {
 		sort.Sort(ENSlice(ant.N))
-		if Debug > 3 {
+		if Debug[DBG_Movement] {
 			for i, N := range ant.N {
 				log.Printf("STEP %d %#v", i, N)
 			}

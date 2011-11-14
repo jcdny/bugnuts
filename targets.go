@@ -31,7 +31,7 @@ func (tset *TargetSet) String() string {
 }
 
 func (tset *TargetSet) Add(item Item, loc Location, count, pri int) {
-	if Debug > 3 {
+	if Debug[DBG_Targets] {
 		log.Printf("Adding target: item %v loc %v count %d pri %d", item, loc, count, pri)
 	}
 	t, found := (*tset)[loc]
@@ -53,7 +53,7 @@ func (tset *TargetSet) Add(item Item, loc Location, count, pri int) {
 
 func (tset *TargetSet) Remove(loc Location) {
 	t, ok := (*tset)[loc]
-	if Debug > 3 {
+	if Debug[DBG_Targets] {
 		if ok {
 			log.Printf("Removing target: item %v loc %v count %d pri %d", t.Item, t.Loc, t.Count, t.Pri)
 		} else {
@@ -148,7 +148,7 @@ func (s *State) AddBorderTargets(N int, tset *TargetSet, explore *TargetSet, pri
 	added := 0
 	for i, _ := range loc {
 		if s.Map.Seen[loc[i]] < s.Turn-1 {
-			if Debug == -2 {
+			if Debug[DBG_BorderTargets] {
 				log.Printf("Adding %d", i)
 				log.Printf("Adding %d %v %v", i, s.ToPoint(loc[i]), n[i])
 			}
@@ -218,7 +218,7 @@ func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist 
 			_, steps := f.PathIn(Location(loc))
 			if steps < DefendDist {
 				tloc, _ := f.NPathIn(loc, MaxV(steps/2, 3))
-				if Debug == -4 {
+				if Debug[DBG_PathInDefense] {
 					log.Printf("Enemy Pathin: defense: %v @ %v", s.ToPoint(loc), s.ToPoint(tloc))
 				}
 				(*tset).Add(DEFEND, tloc, 1, priority)
@@ -236,7 +236,7 @@ func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist 
 						if s.Map.Grid[nl] != WATER {
 							(*tset).Add(DEFEND, nl, 1, priority)
 						}
-						if Debug == -4 {
+						if Debug[DBG_PathInDefense] {
 							log.Printf("Maxflow %v: %s, adding dirs %v %v", s.Map.MCFlow[tloc], Direction(d), dirs[d%2], s.ToPoint(nl))
 						}
 					}

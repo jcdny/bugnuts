@@ -115,7 +115,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	for iter = 0; iter < maxiter && len(ants) > 0 && tset.Pending() > 0; iter++ {
 		// TODO: Here should update map for fixed ants.
 		f, _, _ := MapFillSeed(s.Map, tset.Active(), 0)
-		if Debug == -3 {
+		if Debug[DBG_Iterations] {
 			log.Printf("TURN %d ITER %d TGT PENDING %d ANTS %d, ENDANTS %d", s.Turn, iter, tset.Pending(), len(ants), len(endants))
 			log.Printf("ACTIVE SET: %v", tset.Active())
 		}
@@ -142,7 +142,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			ant := ants[seg.src]
 			tgt, ok := (*tset)[seg.end]
 			if !ok && seg.end != 0 {
-				if Debug > 0 {
+				if Debug[DBG_MoveErrors] {
 					log.Printf("Move from %v(%d) to %v(%d) no target ant: %#v",
 						s.ToPoint(seg.src), seg.src, s.ToPoint(seg.end), seg.end, ant)
 					log.Printf("Source item \"%v\", pending=%d", s.Map.Grid[seg.src], tset.Pending())
@@ -173,8 +173,8 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 
 						ant.N[i].goal = goal
 						// Check for a valid move towards the goal
-						if Debug == -6 {
-							log.Printf("%d: %v->%v : %v goal:%d dh:%d \"%s\" %d: %#v",
+						if WS.Watched(ant.source, s.Turn, 0) {
+							log.Printf("TURN %d: %v->%v : %v goal:%d DHill:%d \"%s\" %d: %#v",
 								s.Turn, s.ToPoint(ant.source), s.ToPoint(nloc), s.Stepable(nloc),
 								goal, dh, tgt.Item, seg.steps, ant.N[i])
 						}
@@ -223,7 +223,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			}
 			bot.IdleAnts[s.Turn] = idle
 
-			if Debug > 0 {
+			if Debug[DBG_Iterations] {
 				log.Printf("TURN %d IDLE %d", s.Turn, len(ants))
 			}
 
@@ -243,7 +243,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 		}
 	}
 
-	if Debug > 0 {
+	if Debug[DBG_Iterations] {
 		log.Printf("TURN %d ITER %d ANTS %d END %d", s.Turn, iter, len(ants), len(endants))
 		if iter == maxiter {
 			for loc, _ := range tset.Active() {
