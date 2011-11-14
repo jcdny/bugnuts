@@ -2,23 +2,19 @@ package main
 
 import (
 	"os"
-	"log"
 	"strings"
 	"strconv"
+	"math"
 )
 
 type Watch struct {
-	start int
-	end   int
-	locs  []Location
-}
-
-type Watch struct {
-	Start int
-	End   int
-	R     int
-	C     int
-	N     int
+	S      string
+	Start  int
+	End    int
+	R      int
+	C      int
+	N      int
+	Player int
 }
 
 type Watches struct {
@@ -33,33 +29,60 @@ type Watches struct {
 	wturns [][]*Watch // turn/region restricted watches slice of turns
 }
 
-func (ws *Watches) Watched(l Location, t Turn, p player) bool {
-	if ws.dirty {
-		ws.Update()
+func NewWatches(rows, cols, turns int) *Watches {
+	ws := Watches{Rows: rows, Cols: cols, Turns: turns}
+	return &ws
+}
+
+func (ws *Watches) Watched(l Location, turn int, player int) bool {
+	if len(ws.W) == 0 {
+		return false
 	}
+	if ws.dirty {
+		ws.update()
+	}
+
 	// Fast check for turns for all locations
-	if ws.turns[t] {
+	if ws.turns[turn] {
 		return true
 	}
 	// and locations for all turns
-
 	if ws.locs[l] {
 		return true
 	}
 
-	for _, w := range ws.wturns[t] {
-		// only check for locations in a region since 
-		// above we checked for locations with no turn restriction
-		if (w.C+ws.cols-c)%ws.cols <= w.N ||
-			(w.R+ws.rows-r)%ws.rows <= w.N {
-			return true
+	r, c := int(l)/ws.Cols, int(l)%ws.Cols
+	for _, w := range ws.wturns[turn] {
+		// only check for locations in a region since
+		// above we checked for locations with no turn
+		// restriction
+		d := c - w.C
+		if d < 0 {
+			d = -d
 		}
+		if d > (ws.Cols+1)/2 {
+			d = ws.Cols - d
+		}
+		if d > w.N {
+			continue
+		}
+		d = r - w.R
+		if d < 0 {
+			d = -d
+		}
+		if d > (ws.Rows+1)/2 {
+			d = ws.Rows - d
+		}
+		if d > w.N {
+			continue
+		}
+		return true
 	}
 
 	return false
 }
 
-func (ws *Watches) Update() {
+func (ws *Watches) update() {
 	if !ws.dirty {
 		return
 	}
@@ -71,17 +94,32 @@ func (ws *Watches) Update() {
 
 	for _, w := range ws.W {
 		if w.N < 0 {
-			for i := w.Start; i <= w.End; i++ {
-				turns[i] = true
+			// Turn watches for all points
+			for i := w.Start; i <= MinV(w.End, ws.Turns); i++ {
+				ws.turns[i] = true
 			}
 		} else if w.Start == 0 && w.End > ws.Turns {
+			// Location watches for all turns
 			for r := w.R - w.N; r <= w.R+w.N; r++ {
-				for c := w.C - w.N; r <= w.C+w.N; c++ {
-					locs[r*ws.Cols+c] = true
+				var ro int
+				if r < 0 || r >= ws.Rows {
+					ro = ((r + ws.Rows) % ws.Rows) * ws.Cols
+				} else {
+					ro = r * ws.Cols
+				}
+				for c := w.C - w.N; c <= w.C+w.N; c++ {
+					var co int
+					if c < 0 || c >= ws.Cols {
+						co = (c + ws.Cols) % ws.Cols
+					} else {
+						co = c
+					}
+					ws.locs[ro+co] = true
 				}
 			}
 		} else {
-			for i := w.Start; i <= w.End; i++ {
+			// turn and location restricted watches.
+			for i := w.Start; i <= MinV(ws.Turns, w.End); i++ {
 				ws.wturns[i] = append(ws.wturns[i], w)
 			}
 		}
@@ -95,57 +133,79 @@ func (ws *Watches) Add(w *Watch) {
 	ws.dirty = true
 }
 
-func Parse(s string) *Watch {
-	w := Watch{s: s, N: -1}
-
-	err := os.EOF
+func (ws *Watches) Parse(s string) (w *Watch, err os.Error) {
+	w = &Watch{S: s, N: -1, Player: -1}
 
 	s = strings.Replace(s, " ", "", -1)
 	tok := strings.Split(s, "@")
-	if len(tok) == 0 {
-		return nil
+	if len(tok) == 0 || len(s) == 0 {
+		return nil, os.NewError("Empty watch string")
 	}
 
 	turns := strings.Split(tok[0], ":")
 	if len(turns) == 1 {
 		if len(turns[0]) == 0 {
-			w.start = 0
-			w.end = math.MaxInt32
+			w.Start = 0
+			w.End = math.MaxInt32
 		} else {
-			w.start, err = strconv.Atoi(turns[0])
-			w.end = w.start
+			w.Start, err = strconv.Atoi(turns[0])
+			if err != nil {
+				return nil, err
+			}
+			w.End = w.Start
 		}
 	}
 	if len(turns) > 1 {
 		if len(turns[0]) == 0 {
-			w.start = 0
+			w.Start = 0
 		} else {
-			w.start, err = strconv.Atoi(turns[0])
+			w.Start, err = strconv.Atoi(turns[0])
+			if err != nil {
+				return nil, err
+			}
 		}
 		if len(turns[1]) == 0 {
-			w.end = math.MaxInt32
+			w.End = math.MaxInt32
 		} else {
-			w.start, err = strconv.Atoi(turns[1])
+			w.End, err = strconv.Atoi(turns[1])
+			if err != nil {
+				return nil, err
+			}
 		}
 	}
 	if len(turns) > 2 {
-		w.player, err = strconv.Atoi(turns[2])
+		w.Player, err = strconv.Atoi(turns[2])
+		if err != nil {
+			return nil, err
+		}
 	}
 	if len(turns) > 3 {
-		log.Printf("Invalid watch string %s", s)
+		return nil, os.NewError("Too many turn/player parameters \"" + s + "\"")
 	}
 
 	if len(tok) > 1 {
 		locs := strings.Split(tok[1], ",")
 		if len(locs) < 2 {
-			log.Printf("Invalid watch string %s", s)
+			return nil, os.NewError("Too few location parameters \"" + s + "\"")
 		}
-		ws.R, err = strconv.Atoi(locs[0])
-		ws.C, err = strconv.Atoi(locs[1])
+		w.R, err = strconv.Atoi(locs[0])
+		w.C, err = strconv.Atoi(locs[1])
 		if len(locs) > 2 {
-			ws.N, err = strconv.Atoi(locs[2])
+			w.N, err = strconv.Atoi(locs[2])
+			if err != nil {
+				return nil, err
+			}
+		} else {
+			w.N = 0
+		}
+		if len(locs) > 3 {
+			return nil, os.NewError("Too many location parameters \"" + s + "\"")
 		}
 	}
 
-	return &w
+	if w.End < w.Start {
+		w.End, w.Start = w.Start, w.End
+	}
+
+	return w, nil
 }

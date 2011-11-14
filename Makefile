@@ -22,6 +22,7 @@ GOFILES=\
 	map.go\
 	movement.go\
 	sym.go\
+	watcher.go\
 	MyBot.go\
 	main.go
 

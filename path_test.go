@@ -209,7 +209,7 @@ func TestMonteCarloPathing(t *testing.T) {
 
 		d := 10000 / len(lsrc)
 		pre := time.Nanoseconds()
-		paths := f.MontePathIn(m, lsrc, d, 1)
+		paths, _ := f.MontePathIn(m, lsrc, d, 1)
 		post := time.Nanoseconds()
 		log.Printf("Montecarlo %d paths in %.2f ms", d*len(lsrc), float64(post-pre)/1000000)
 
