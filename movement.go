@@ -10,10 +10,11 @@ import (
 
 type Neighborhood struct {
 	//TODO add hill distance step
-	valid  bool
-	threat int
-	goal   int
-	prfood int
+	valid   bool
+	threat  int
+	pthreat int
+	goal    int
+	prfood  int
 	//vis     int
 	//unknown int
 	//land    int
@@ -35,11 +36,11 @@ type AntStep struct {
 	nfree   int
 }
 
-func (s *State) GenerateAnts(tset *TargetSet) (ants map[Location]*AntStep) {
+func (s *State) GenerateAnts(tset *TargetSet, risk int) (ants map[Location]*AntStep) {
 	ants = make(map[Location]*AntStep, len(s.Ants[0]))
 
 	for loc, _ := range s.Ants[0] {
-		ants[loc] = s.AntStep(loc)
+		ants[loc] = s.AntStep(loc, risk)
 
 		fixed := false
 
@@ -81,6 +82,7 @@ func (s *State) GenerateAnts(tset *TargetSet) (ants map[Location]*AntStep) {
 // Stores the neighborhood of the ant.
 func (s *State) Neighborhood(loc Location, nh *Neighborhood, d Direction) {
 	nh.threat = int(s.Threat(s.Turn, loc))
+	nh.pthreat = int(s.PThreat(s.Turn, loc))
 	//nh.vis = s.Map.VisSum[loc]
 	//nh.unknown = s.Map.Unknown[loc]
 	//nh.land = s.Map.Land[loc]
@@ -88,7 +90,7 @@ func (s *State) Neighborhood(loc Location, nh *Neighborhood, d Direction) {
 	nh.d = d
 }
 
-func (s *State) AntStep(loc Location) *AntStep {
+func (s *State) AntStep(loc Location, risk int) *AntStep {
 	as := &AntStep{
 		source:  loc,
 		steptot: 0,
@@ -124,10 +126,20 @@ func (s *State) AntStep(loc Location) *AntStep {
 	as.N[4].valid = true
 
 	// Compute the min threat moves.
-	minthreat := as.N[4].threat
+	if risk > 0 {
+		for i := 0; i < 5; i++ {
+			as.N[i].threat -= 4
+			if as.N[i].threat <= 0 {
+				as.N[i].threat = 0
+				as.N[i].pthreat = 0
+			}
+		}
+	}
+	minthreat := as.N[4].threat*100 + as.N[4].pthreat
 	for i := 0; i < 4; i++ {
-		if as.N[i].threat < minthreat {
-			minthreat = as.N[i].threat
+		nt := as.N[i].threat*100 + as.N[i].pthreat
+		if nt < minthreat {
+			minthreat = nt
 		}
 	}
 	for i := 0; i < 5; i++ {
@@ -241,6 +253,9 @@ func (p ENSlice) Less(i, j int) bool {
 	}
 	if p[i].threat != p[j].threat {
 		return p[i].threat < p[j].threat
+	}
+	if p[i].pthreat != p[j].pthreat {
+		return p[i].pthreat < p[j].pthreat
 	}
 	if p[i].goal != p[j].goal {
 		return p[i].goal > p[j].goal

@@ -17,10 +17,11 @@ import (
 )
 
 type BotV6 struct {
-	P        *Parameters
-	Primap   []int // array mapping Item to priority
-	Explore  *TargetSet
-	IdleAnts []int
+	P          *Parameters
+	Primap     []int // array mapping Item to priority
+	Explore    *TargetSet
+	IdleAnts   []int
+	StaticAnts []int
 }
 
 func (bot *BotV6) Priority(i Item) int {
@@ -37,8 +38,9 @@ func NewBotV6(s *State) Bot {
 	}
 
 	mb := &BotV6{
-		P:        ParameterSets[paramKey],
-		IdleAnts: make([]int, 0, s.Turns+2),
+		P:          ParameterSets[paramKey],
+		IdleAnts:   make([]int, 0, s.Turns+2),
+		StaticAnts: make([]int, s.Turns+2),
 	}
 
 	mb.Primap = mb.P.MakePriMap()
@@ -102,7 +104,13 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	bot.Explore.UpdateSeen(s, 1)
 
 	tset := bot.GenerateTargets(s)
-	ants := s.GenerateAnts(tset)
+
+	riskOff := 0
+	if len(s.Ants[0])/3 < bot.StaticAnts[s.Turn-1] {
+		riskOff = 1
+	}
+
+	ants := s.GenerateAnts(tset, riskOff)
 
 	endants := make([]*AntStep, 0, len(ants))
 	segs := make([]Segment, 0, len(ants))
@@ -111,8 +119,13 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 		s.VizTargets(tset)
 	}
 
-	var iter, maxiter int = 0, 50
-	for iter = 0; iter < maxiter && len(ants) > 0 && tset.Pending() > 0; iter++ {
+	iter := -1
+	maxiter := 50
+	nMove := 1
+	for len(ants) > 0 && tset.Pending() > 0 && nMove != 0 {
+		iter++
+		nMove = 0
+
 		// TODO: Here should update map for fixed ants.
 		f, _, _ := MapFillSeed(s.Map, tset.Active(), 0)
 		if Debug[DBG_Iterations] {
@@ -130,6 +143,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			segs = segs[0:0]
 			for loc, tgt := range *tset {
 				if tgt.Count > 0 {
+					nMove++ // try another iteration
 					tgt.Count = 0
 					bot.Explore.Remove(loc)
 				}
@@ -196,6 +210,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 						VizLine(s.Map, s.ToPoint(seg.src), s.ToPoint(seg.end), false)
 					}
 					tgt.Count--
+					nMove++
 					ant.goalp = true
 					ant.steps = append(ant.steps, seg.steps-ant.steptot)
 					ant.dest = append(ant.dest, seg.end)
@@ -210,8 +225,8 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 				}
 			}
 		}
-
-		if len(bot.IdleAnts) < s.Turn+1 && (tset.Pending() < 1 || iter+1 == maxiter) {
+		if len(bot.IdleAnts) < s.Turn+1 && (tset.Pending() < 1 || nMove == 0) {
+			nMove++ // to loop again
 			bot.IdleAnts = bot.IdleAnts[0 : s.Turn+1]
 			// See if we have more ants than targets
 			idle := 0
@@ -229,7 +244,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			// we have N idle ants put the to work
 			// Do this by marking ants with large basins as targets.
 			if idle > 0 {
-				maxiter = 2 * maxiter
+				maxiter = maxiter + 50
 				eh := s.EnemyHillLocations(0)
 				nadded := 0
 				if idle > 2*len(eh) {
@@ -291,6 +306,11 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	}
 
 	s.GenerateMoves(endants)
+	for _, ant := range endants {
+		if ant.move > 3 || ant.move < 0 {
+			bot.StaticAnts[s.Turn]++
+		}
+	}
 	s.EmitMoves(endants)
 	s.Viz()
 	fmt.Fprintf(os.Stdout, "go\n") // TODO Flush ??

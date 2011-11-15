@@ -20,6 +20,7 @@ type Map struct {
 	Seen     []int      // Turn on which cell was last visible.
 	VisCount []int      // How many ants see this cell.
 	Threat   [][]int8   // how much threat is there on a given cell
+	PThreat  [][]uint16 // Prob of n threat
 	Horizon  []bool     // Inside the event horizon.  false means there could be an ant there we have not seen
 	HBorder  []Location // List of border points
 
@@ -75,6 +76,7 @@ func NewMap(rows, cols, players int) *Map {
 
 	for i := 0; i < NTHREAT; i++ {
 		m.Threat = append(m.Threat, make([]int8, rows*cols))
+		m.PThreat = append(m.PThreat, make([]uint16, rows*cols))
 	}
 
 	return m

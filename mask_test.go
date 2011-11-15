@@ -70,3 +70,14 @@ func TestMaskChange(t *testing.T) {
 	}
 
 }
+
+func TestMoveMask(t *testing.T) {
+	mm := makeMoveMask(5, 100)
+	log.Printf("%v", mm[1])
+	if len(mm) != 16 {
+		t.Errorf("MoveMask size wrong")
+	}
+	for i := 0; i < 16; i++ {
+		log.Printf("%v", mm[i])
+	}
+}

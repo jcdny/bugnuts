@@ -201,9 +201,11 @@ func (s *State) ResetGrid() {
 	n := len(s.Map.Threat)
 	if n > 1 {
 		s.Map.Threat = append(s.Map.Threat[1:n], s.Map.Threat[0])
+		s.Map.PThreat = append(s.Map.PThreat[1:n], s.Map.PThreat[0])
 	}
 	for i := range s.Map.Threat[0] {
 		s.Map.Threat[0][i] = 0
+		s.Map.PThreat[0][i] = 0
 	}
 
 	// Set all seen map to land
@@ -560,8 +562,7 @@ func (s *State) ProcessState() {
 
 	s.MonteCarloDensity()
 
-	s.ComputeThreat(1, 0, s.attackMask, s.Map.Threat[len(s.Map.Threat)-1])
-
+	s.ComputeThreat(1, 0, s.attackMask.MM, s.Map.Threat[len(s.Map.Threat)-1], s.Map.PThreat[len(s.Map.PThreat)-1])
 }
 
 func (s *State) UpdateHillMaps() {
@@ -648,27 +649,26 @@ func (s *State) EnemyHillLocations(player int) (l []Location) {
 
 // Compute the threat for N turns out (currently only n = 0 or 1)
 // if player > -1 then sum players not including player
-func (s *State) ComputeThreat(turn, player int, mask *Mask, slice []int8) {
-	var mv []Point
-	switch turn {
-	case 1:
-		mv = mask.Union
-	case 0:
-		mv = mask.P
-	default:
+func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8, pthreat []uint16) {
+	if turn > 1 || turn < 0 {
 		log.Panicf("Illegal turns out = %d", turn)
 	}
 
-	if len(slice) != s.Rows*s.Cols {
+	if len(threat) != s.Rows*s.Cols || len(threat) != len(pthreat) {
 		log.Panic("ComputeThreat slice size mismatch")
 	}
 
+	m := mask[0]
 	for i, _ := range s.Ants {
 		if i != player {
 			for loc, _ := range s.Ants[i] {
 				p := s.Map.ToPoint(loc)
-				for _, op := range mv {
-					slice[s.ToLocation(s.PointAdd(p, op))]++
+				if turn > 0 {
+					m = mask[s.FreedomKey(loc)]
+				}
+				for i, op := range m.Point {
+					threat[s.ToLocation(s.PointAdd(p, op))]++
+					pthreat[s.ToLocation(s.PointAdd(p, op))] += m.MaxPr[i]
 				}
 			}
 		}
@@ -684,6 +684,15 @@ func (s *State) Threat(turn int, l Location) int8 {
 		return 0
 	}
 	return s.Map.Threat[i][l]
+}
+
+func (s *State) PThreat(turn int, l Location) uint16 {
+	i := len(s.Map.PThreat) - turn + s.Turn - 1
+	if i < 0 {
+		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Map.Threat))
+		return 0
+	}
+	return s.Map.PThreat[i][l]
 }
 
 func (s *State) ThreatMap(turn int) []int8 {
