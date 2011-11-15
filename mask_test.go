@@ -4,6 +4,7 @@ import (
 	"testing"
 	"sort"
 	"json"
+	"log"
 )
 
 func TestMaskCircle(t *testing.T) {
@@ -41,4 +42,31 @@ func TestMakeMask(t *testing.T) {
 	if err != nil {
 		t.Errorf("Err %v\nMask: %s", err, o)
 	}
+}
+
+func TestMaskChange(t *testing.T) {
+	for _, r2 := range []int{0, 1, 5, 55, 100} {
+		v := maskCircle(r2)
+		add, remove, union := maskChange(r2, v)
+		if r2 == 5 {
+			log.Printf("%d v %d len=%d\n add: %v\nremove: %v\nunion: %v\n", r2, len(v), len(union), add, remove, union)
+		}
+
+		if len(add) != 4 || len(remove) != 4 {
+			t.Errorf("maskChange sizes are wrong add: %v remove: %v union: %v", add, remove, union)
+			break
+		}
+
+		for i, _ := range add {
+			if len(add[i]) != len(remove[i]) {
+				t.Errorf("maskChange sizes are wrong add: %v remove: %v", add, remove)
+				break
+			}
+			if i > 1 && len(add[i-1]) != len(add[i]) {
+				t.Errorf("maskChange sizes are wrong add: %v remove: %v", add, remove)
+				break
+			}
+		}
+	}
+
 }

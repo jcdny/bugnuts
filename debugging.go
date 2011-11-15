@@ -25,17 +25,13 @@ const (
 	maxDBG
 )
 
-var Debug []bool
-var debugLevels [][]int
-
-func init() {
-	Debug = make([]bool, maxDBG)
-	debugLevels = [][]int{
-		0: []int{0},
-		1: []int{DBG_TurnTime},
-		2: []int{DBG_AllTime, DBG_Iterations},
-		3: []int{DBG_Stepping},
-	}
+var Debug = make([]bool, maxDBG)
+// DebugLevels are cumulative, but a 0 resets all to false and a -Level unsets.
+var debugLevels = [][]int{
+	0: []int{0},
+	1: []int{DBG_TurnTime},
+	2: []int{DBG_AllTime, DBG_Iterations},
+	3: []int{DBG_Stepping},
 }
 
 func SetDebugLevel(dlev int) {
@@ -46,7 +42,7 @@ func SetDebugLevel(dlev int) {
 		for _, dbg := range debugLevels[d] {
 			if dbg == 0 {
 				for i, _ := range Debug {
-					Debug[i] = true
+					Debug[i] = false
 				}
 			} else if dbg > 0 {
 				Debug[dbg] = true

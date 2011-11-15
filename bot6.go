@@ -117,7 +117,6 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 		f, _, _ := MapFillSeed(s.Map, tset.Active(), 0)
 		if Debug[DBG_Iterations] {
 			log.Printf("TURN %d ITER %d TGT PENDING %d ANTS %d, ENDANTS %d", s.Turn, iter, tset.Pending(), len(ants), len(endants))
-			log.Printf("ACTIVE SET: %v", tset.Active())
 		}
 
 		segs = segs[0:0]

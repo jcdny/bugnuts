@@ -7,6 +7,7 @@ import (
 	"os"
 	"fmt"
 	"time"
+	"runtime"
 	"strings"
 )
 
@@ -36,15 +37,18 @@ func init() {
 	for flag, _ := range Viz {
 		vizHelp += flag
 	}
+
 	flag.StringVar(&vizList, "V", "", vizHelp)
 
 	flag.IntVar(&debugLevel, "d", 0, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
 	flag.StringVar(&runBot, "b", "CUR", "Which bot to run")
-	flag.StringVar(&mapFile, "m", "", "Map file, if provided will be used to validate generated map, hill guessing etc.")
+	flag.StringVar(&mapFile, "m", "", "Map file, used to validate generated map, hill guessing etc.")
 	flag.StringVar(&paramKey, "p", "", "Parameter set, defaults to default.BOT")
 	flag.StringVar(&watchPoints, "w", "", "Watch points \"T1:T2@R,C,N[;T1:T2...]\", \":\" will watch all")
 
 	flag.Parse()
+
+	SetDebugLevel(debugLevel)
 
 	if vizList != "" {
 		for _, word := range strings.Split(strings.ToLower(vizList), ",") {
@@ -131,12 +135,20 @@ func main() {
 	stime := time.Nanoseconds()
 	ntime := stime
 	ptime := stime
+	ngctime := runtime.MemStats.PauseTotalNs
+	ngc := runtime.MemStats.NumGC
+	pgc := ngc
+	pgctime := ngctime
 	for {
 
 		ptime, ntime = ntime, time.Nanoseconds()
+		pgctime, ngctime = ngctime, runtime.MemStats.PauseTotalNs
+		pgc, ngc = ngc, runtime.MemStats.NumGC
+		runtime.GC()
 		if Debug[DBG_TurnTime] || Debug[DBG_AllTime] {
-			log.Printf("%d TURN TOOK %.2fms", s.Turn,
-				float64(ntime-ptime)/1000000)
+			log.Printf("TURN %d TOOK %.2fms gc %.3fms Ngc %d", s.Turn,
+				float64(ntime-ptime)/1000000,
+				float64(ngctime-pgctime)/1000000, ngc-pgc)
 		}
 
 		// READ TURN INFO FROM SERVER
@@ -179,11 +191,12 @@ func main() {
 	//s.DumpSeen()
 	//s.DumpMap()
 
+	if Debug[DBG_TurnTime] {
+		ntime = time.Nanoseconds()
+		log.Printf("TOTAL TIME %.2fms/turn for %d Turns",
+			float64(ntime-stime)/1000000/float64(s.Turn), s.Turn)
+	}
 	if Debug[DBG_Results] {
 		log.Printf("Bot Result %v", bot)
 	}
-	ntime = time.Nanoseconds()
-	log.Printf("TOTAL TIME %.2fms for %d Turns",
-		float64(ntime-stime)/1000000, s.Turn)
-
 }
