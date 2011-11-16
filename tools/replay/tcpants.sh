@@ -1,10 +1,9 @@
 #!/bin/bash
-HOST=aichallenge.org
-URLBASE=http://aichallenge.org/game/0/
+export HOST=tcpants.com
+URLBASE=http://tcpants.com/replay
 ROOT=~/src/ai/bot/
-SUFFIX=".replaygz"
-PREFIX=""
 LAST=$ROOT/data/LAST.$HOST
+END="`curl -s http://$HOST | egrep "href='/replay" | head -n1 | sed -e 's#^.*/replay\.\([0-9]*\)[^0-9].*#\1#'`"
 
 if [ ! -d $ROOT/data ]; then
     echo "Fatal $ROOT/data does not exist"
@@ -16,12 +15,13 @@ cd $ROOT/data
 mkdir -p $HOST || exit 1
 
 GAME="`cat $LAST || echo 1`"
-END="`curl -s http://aichallenge.org/games.php | egrep visualizer.php | head -n1 | sed 's/.*game=\([0-9]*\)[^0-9].*/\1/'`"
 
 if [ "$END" = "" -o "$GAME" = "" ]; then
     echo "FATAL: game range unkown end: $END start: $GAME"
     exit 1
 fi
+echo Get $GAME $END
+
 
 DATE="`date +%Y%m%d-%H%M`"
 LOG="log/log.${HOST}.$DATE"
@@ -35,21 +35,19 @@ cd $HOST
 
 while [ $GAME -lt $END ]; do
     D="`expr $GAME / 1000`"
-    mkdir -p $D
-    FILENAME="$PREFIX$GAME$SUFFIX"
-    DEST="$D/$FILENAME"
-    SOURCE=${URLBASE}$DEST
-    if [ -f $DEST ]; then
+        mkdir -p $D
+    DEST="$D/replay.$GAME"
+    SOURCE=${URLBASE}.$GAME
+    if [ -f $D/replay.$GAME ]; then
         echo "INFO: found game $DEST"
     else
-        echo "INFO: getting $SOURCE to `pwd`/$DEST"
-        curl --create-dirs -o $DEST $SOURCE || echo Ouch
+        echo "INFO: getting $SOURCE"
+        curl --create-dirs -o $D/replay.$GAME ${URLBASE}.$GAME || echo Ouch
         if [ -s $DEST ]; then
             chmod 444 $DEST
             ls -1l $DEST
         fi
-
-        sleep `expr $RANDOM % 13 + 3`
+        sleep `expr $RANDOM % 10 + 10`
     fi
     GAME="`expr $GAME + 1`"
     echo $GAME > $LAST

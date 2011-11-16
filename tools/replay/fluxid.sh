@@ -1,7 +1,7 @@
 #!/bin/bash
 HOST=ants.fluxid.pl
 URLBASE=http://ants.fluxid.pl/replay
-ROOT=~/src/ai/bot/replay
+ROOT=~/src/ai/bot/
 LAST=$ROOT/data/LAST.$HOST
 END="`curl -s http://ants.fluxid.pl | egrep "href='/replay" | head -n1 | sed -e 's#^.*/replay\.\([0-9]*\)[^0-9].*#\1#'`"
 
