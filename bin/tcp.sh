@@ -41,7 +41,7 @@ while [ ! -e $ROOT/$BHOST/STOP ] ; do
     if [ $D -eq 0 ]; then
         if [ $GAME -gt 0 ]; then
             DATE="`date +%Y%m%d-%H%M`-$GAME"
-            gzip *&
+            gzip * &
             cd ..
             mkdir $DATE
             cd $DATE || exit 1
