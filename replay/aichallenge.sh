@@ -16,7 +16,7 @@ cd $ROOT/data
 mkdir -p $HOST || exit 1
 
 GAME="`cat $LAST || echo 1`"
-END=$1
+END="`curl -s http://aichallenge.org/games.php | egrep visualizer.php x.tmp | head -n1 | sed 's/.*game=\([0-9]*\)[^0-9].*/\1/'`"
 
 if [ "$END" = "" -o "$GAME" = "" ]; then
     echo "FATAL: game range unkown end: $END start: $GAME"

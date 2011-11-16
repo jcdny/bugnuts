@@ -3,6 +3,7 @@ HOST=ants.fluxid.pl
 URLBASE=http://ants.fluxid.pl/replay
 ROOT=~/src/ai/bot/replay
 LAST=$ROOT/data/LAST.$HOST
+END="`curl -s http://ants.fluxid.pl | egrep "href='/replay" | head -n1 | sed -e 's#^.*/replay\.\([0-9]*\)[^0-9].*#\1#'`"
 
 if [ ! -d $ROOT/data ]; then
     echo "Fatal $ROOT/data does not exist"
@@ -14,7 +15,6 @@ cd $ROOT/data
 mkdir -p $HOST || exit 1
 
 GAME="`cat $LAST || echo 1`"
-END=$1
 
 if [ "$END" = "" -o "$GAME" = "" ]; then
     echo "FATAL: game range unkown end: $END start: $GAME"
