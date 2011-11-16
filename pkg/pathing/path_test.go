@@ -10,44 +10,6 @@ import (
 	. "bugnuts/maps"
 )
 
-var AllMaps = []string{
-	"maze_02p_01",
-	"maze_02p_02",
-	"maze_03p_01",
-	"maze_04p_01",
-	"maze_04p_02",
-	"maze_05p_01",
-	"maze_06p_01",
-	"maze_07p_01",
-	"maze_08p_01",
-	"mmaze_02p_01",
-	"mmaze_02p_02",
-	"mmaze_03p_01",
-	"mmaze_04p_01",
-	"mmaze_04p_02",
-	"mmaze_05p_01",
-	"mmaze_07p_01",
-	"mmaze_08p_01",
-	"random_walk_02p_01",
-	"random_walk_02p_02",
-	"random_walk_03p_01",
-	"random_walk_03p_02",
-	"random_walk_04p_01",
-	"random_walk_04p_02",
-	"random_walk_05p_01",
-	"random_walk_05p_02",
-	"random_walk_06p_01",
-	"random_walk_06p_02",
-	"random_walk_07p_01",
-	"random_walk_07p_02",
-	"random_walk_08p_01",
-	"random_walk_08p_02",
-	"random_walk_09p_01",
-	"random_walk_09p_02",
-	"random_walk_10p_01",
-	"random_walk_10p_02",
-}
-
 func TestMapFill(t *testing.T) {
 	file := "testdata/fill2.map" // fill.2 Point{r:4, c:5}
 	m, err := MapLoadFile(file)
@@ -76,7 +38,7 @@ func TestMapFill(t *testing.T) {
 // Benchmark the version which does not maintain a seed array
 // but allocates per fill
 func BenchmarkMapFillAlloc(b *testing.B) {
-	file := "testdata/maps/mmaze_05p_01.map"
+	file := "../maps/testdata/maps/mmaze_05p_01.map"
 	m, err := MapLoadFile(file)
 	if m == nil || err != os.EOF {
 		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
@@ -95,7 +57,7 @@ func BenchmarkMapFillAlloc(b *testing.B) {
 
 // Benchmark not reusing the fill struct.
 func BenchmarkMapFill(b *testing.B) {
-	file := "testdata/maps/mmaze_05p_01.map"
+	file := "../maps/testdata/maps/mmaze_05p_01.map"
 	m, err := MapLoadFile(file)
 	if m == nil || err != os.EOF {
 		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
@@ -115,7 +77,7 @@ func BenchmarkMapFill(b *testing.B) {
 
 // Benchmark allocating fill + computing seed.
 func BenchmarkMapFillSeed(b *testing.B) {
-	file := "testdata/maps/mmaze_05p_01.map"
+	file := "../maps/testdata/maps/mmaze_05p_01.map"
 	m, err := MapLoadFile(file)
 	if m == nil || err != os.EOF {
 		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
@@ -136,7 +98,7 @@ func TestMapFillDist(t *testing.T) {
 	defer out.Close()
 
 	for _, name := range AllMaps {
-		filename := "testdata/maps/" + name + ".map"
+		filename := "../maps/testdata/maps/" + name + ".map"
 		m, err := MapLoadFile(filename)
 		if m == nil || err != os.EOF {
 			log.Panicf("Error: failed to read %s: %v", filename, err)
@@ -186,7 +148,7 @@ func TestMapFillDist(t *testing.T) {
 // Take a map and generate montecarlo ant densities...
 func TestMonteCarloPathing(t *testing.T) {
 	for _, name := range AllMaps {
-		filename := "testdata/maps/" + name + ".map"
+		filename := "../maps/testdata/maps/" + name + ".map"
 		m, err := MapLoadFile(filename)
 		if m == nil || err != os.EOF {
 			log.Panicf("Error: failed to read %s: %v", filename, err)

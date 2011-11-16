@@ -1,7 +1,7 @@
-package main
+package maps
 
 import (
-	_ "log"
+	. "bugnuts/util"
 )
 
 var symMask [25][8]int // the mask for 4 rotations and 2 mirrorings
@@ -90,8 +90,8 @@ func (m *Map) SymCompute(loc Location) (int, *[8]int) {
 	nl := loc
 	for r := -2; r < 3; r++ {
 		for c := -2; c < 3; c++ {
-			if p.r < 2 || p.r > m.Rows-3 || p.c < 2 || p.c > m.Cols-3 {
-				nl = m.ToLocation(m.PointAdd(p, Point{r: r, c: c}))
+			if p.R < 2 || p.R > m.Rows-3 || p.C < 2 || p.C > m.Cols-3 {
+				nl = m.ToLocation(m.PointAdd(p, Point{R: r, C: c}))
 			} else {
 				nl = loc + Location(r*m.Cols+c)
 			}

@@ -1,4 +1,4 @@
-package main
+package maps
 
 import (
 	"testing"
@@ -137,7 +137,7 @@ func TestSymmie(t *testing.T) {
 				for _, l1 := range llist {
 					for _, l2 := range llist {
 						pd := m.SymDiff(l1, l2)
-						str += fmt.Sprintf(" [%3d%4d]", pd.r, pd.c)
+						str += fmt.Sprintf(" [%3d%4d]", pd.R, pd.C)
 					}
 					str += "\n"
 				}
@@ -151,8 +151,8 @@ func (m *Map) SymDiff(l1, l2 Location) Point {
 	p1 := m.ToPoint(l1)
 	p2 := m.ToPoint(l2)
 
-	r := p2.r - p1.r
-	c := p2.c - p1.c
+	r := p2.R - p1.R
+	c := p2.C - p1.C
 
 	if r > m.Rows/2 {
 		r -= m.Rows
@@ -170,5 +170,5 @@ func (m *Map) SymDiff(l1, l2 Location) Point {
 		r = -r
 		c = -c
 	}
-	return Point{r: r, c: c}
+	return Point{R: r, C: c}
 }
