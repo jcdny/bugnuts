@@ -1,4 +1,4 @@
-package main
+package watcher
 
 import (
 	"os"
@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"math"
 	"log"
+	. "bugnuts/util"
 )
 
 type Watch struct {
@@ -46,7 +47,7 @@ func (ws *Watches) Load(wlist []string) {
 	}
 }
 
-func (ws *Watches) Watched(l Location, turn int, player int) bool {
+func (ws *Watches) Watched(l, turn, player int) bool {
 	if len(ws.W) == 0 {
 		return false
 	}

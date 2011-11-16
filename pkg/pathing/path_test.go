@@ -1,4 +1,4 @@
-package main
+package pathing
 
 import (
 	"testing"
@@ -7,6 +7,7 @@ import (
 	"time"
 	"fmt"
 	"strconv"
+	. "bugnuts/maps"
 )
 
 var AllMaps = []string{
@@ -59,7 +60,7 @@ func TestMapFill(t *testing.T) {
 
 	// log.Printf("%v", m) // TODO test String() func round trip.
 	l := make(map[Location]int, 0)
-	for _, hill := range m.HillLocations(-1) {
+	for _, hill := range m.Hills(-1) {
 		l[hill] = 1
 	}
 
@@ -83,7 +84,7 @@ func BenchmarkMapFillAlloc(b *testing.B) {
 
 	l := make(map[Location]int, 40)
 
-	for _, hill := range m.HillLocations(-1) {
+	for _, hill := range m.Hills(-1) {
 		l[hill] = 1
 	}
 
@@ -102,10 +103,10 @@ func BenchmarkMapFill(b *testing.B) {
 
 	l := make(map[Location]int, 40)
 
-	for _, hill := range m.HillLocations(-1) {
+	for _, hill := range m.Hills(-1) {
 		l[hill] = 1
 	}
-	f := m.NewFill()
+	f := NewFill(m)
 	for i := 0; i < b.N; i++ {
 		f.Reset()
 		f.MapFill(m, l, 1)
@@ -122,7 +123,7 @@ func BenchmarkMapFillSeed(b *testing.B) {
 
 	l := make(map[Location]int, 40)
 
-	for _, hill := range m.HillLocations(-1) {
+	for _, hill := range m.Hills(-1) {
 		l[hill] = 1
 	}
 	for i := 0; i < b.N; i++ {
@@ -142,7 +143,7 @@ func TestMapFillDist(t *testing.T) {
 		}
 		for _, player := range []int{-1, 0} {
 			l := make(map[Location]int)
-			for _, hill := range m.HillLocations(player) {
+			for _, hill := range m.Hills(player) {
 				l[hill] = 1
 			}
 			pre := time.Nanoseconds()
@@ -192,7 +193,7 @@ func TestMonteCarloPathing(t *testing.T) {
 		}
 
 		lend := make(map[Location]int)
-		for _, hill := range m.HillLocations(0) {
+		for _, hill := range m.Hills(0) {
 			lend[hill] = 1
 		}
 
@@ -205,7 +206,7 @@ func TestMonteCarloPathing(t *testing.T) {
 			}
 		}*/
 
-		lsrc := m.HillLocations(1)
+		lsrc := m.Hills(1)
 
 		d := 10000 / len(lsrc)
 		pre := time.Nanoseconds()

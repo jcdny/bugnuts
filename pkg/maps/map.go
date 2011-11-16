@@ -1,4 +1,4 @@
-package main
+package maps
 
 import (
 	"log"
@@ -7,49 +7,17 @@ import (
 	"bufio"
 	"strings"
 	"fmt"
+	. "bugnuts/util"
 )
 
-const NTHREAT = 5
-
 type Map struct {
-	Rows    int
-	Cols    int
-	Players int
-	Grid    []Item // Items seen
-	// dynamic data -- consider tracking per ant.
-	Seen     []int      // Turn on which cell was last visible.
-	VisCount []int      // How many ants see this cell.
-	Threat   [][]int8   // how much threat is there on a given cell
-	PThreat  [][]uint16 // Prob of n threat
-	Horizon  []bool     // Inside the event horizon.  false means there could be an ant there we have not seen
-	HBorder  []Location // List of border points
+	Torus          // Defines the geometry of the map
+	Players int    // This is stored in the map file
+	Grid    []Item // The actual map data
 
-	Land    []int // Count of land tiles visible from a given tile
-	PrFood  []int // Count of Turn * Land adjusted for # that see it.
-	Unknown []int // Count of Unknown
-	VisSum  []int // sum of count of visibles for overlap.
-
-	FHill     *Fill
-	FDownhill *Fill
-	FAll      *Fill
-
-	// MC distributions
-	MCDist    []int
-	MCFlow    [][4]int
-	MCDistMax int
-	MCPaths   int
-
-	// cache data
-	BorderDist []uint8       // border distance
-	LocStep    [][4]Location // adjecent tile map
-}
-
-type Point struct {
-	r, c int
-}
-
-func (p *Point) String() string {
-	return fmt.Sprintf("r:%d s:%d", p.r, p.c)
+	// internal cache data
+	borderDist []uint8       // border distance
+	LocStep    [][4]Location // adjecent tile pointer
 }
 
 func NewMap(rows, cols, players int) *Map {
@@ -58,74 +26,22 @@ func NewMap(rows, cols, players int) *Map {
 	}
 
 	m := &Map{
-		Rows:       rows,
-		Cols:       cols,
-		Players:    players,
-		Grid:       make([]Item, rows*cols),
-		Seen:       make([]int, rows*cols),
-		VisCount:   make([]int, rows*cols),
-		Land:       make([]int, rows*cols),
-		PrFood:     make([]int, rows*cols),
-		Unknown:    make([]int, rows*cols),
-		VisSum:     make([]int, rows*cols),
-		Horizon:    make([]bool, rows*cols),
-		HBorder:    make([]Location, 0, 1000),
-		BorderDist: BorderDistance(rows, cols),
-		LocStep:    LocationStep(rows, cols),
-	}
-
-	for i := 0; i < NTHREAT; i++ {
-		m.Threat = append(m.Threat, make([]int8, rows*cols))
-		m.PThreat = append(m.PThreat, make([]uint16, rows*cols))
+		Torus: Torus{
+			Rows: rows,
+			Cols: cols,
+		},
+		Players: players,
+		Grid:    make([]Item, rows*cols),
+		// cache data
+		borderDist: borderDistance(rows, cols),
+		LocStep:    locationStep(rows, cols),
 	}
 
 	return m
 }
 
-func (m *Map) Size() int {
-	return m.Rows * m.Cols
-}
-
-func (m *Map) ToLocation(p Point) Location {
-	p = m.Donut(p)
-	return Location(p.r*m.Cols + p.c)
-}
-
-func (m *Map) ToPoint(l Location) (p Point) {
-	p = Point{r: int(l) / m.Cols, c: int(l) % m.Cols}
-
-	return
-}
-
-func (m *Map) Donut(p Point) Point {
-	if p.r < 0 {
-		p.r += m.Rows
-	}
-	if p.r >= m.Rows {
-		p.r -= m.Rows
-	}
-	if p.c < 0 {
-		p.c += m.Cols
-	}
-	if p.c >= m.Cols {
-		p.c -= m.Cols
-	}
-
-	return p
-}
-
-func (m *Map) PointEqual(p1, p2 Point) bool {
-	// todo donuts
-	return p1.c == p2.c && p1.r == p2.r
-}
-
-func (m *Map) PointAdd(p1, p2 Point) Point {
-	return m.Donut(Point{r: p1.r + p2.r, c: p1.c + p2.c})
-}
-
 func (m *Map) String() string {
-	s := ""
-	s += "rows " + strconv.Itoa(m.Rows) + "\n"
+	s := "rows " + strconv.Itoa(m.Rows) + "\n"
 	s += "cols " + strconv.Itoa(m.Rows) + "\n"
 	s += "players " + strconv.Itoa(m.Players) + "\n"
 	for r := 0; r < m.Rows; r++ {
@@ -133,7 +49,6 @@ func (m *Map) String() string {
 		for _, item := range m.Grid[r*m.Cols : (r+1)*m.Cols] {
 			s += string(item.ToSymbol())
 		}
-		s += "\n"
 	}
 
 	return s
@@ -155,19 +70,16 @@ func MapLoad(in *bufio.Reader) (*Map, os.Error) {
 
 		line, err = in.ReadString('\n')
 		lines++
-
 		if err != nil {
 			break
 		}
 
 		line = line[:len(line)-1] //remove the delimiter
-
 		if line == "" {
 			continue
 		}
 
 		words := strings.SplitN(line, " ", 2)
-
 		if len(words) != 2 {
 			log.Printf("Invaid param line \"%s\"", line)
 			continue
@@ -204,27 +116,10 @@ func MapLoad(in *bufio.Reader) (*Map, os.Error) {
 	return m, err
 }
 
-// player -1 is all players
-func (m *Map) HillLocations(player int) []Location {
-	// find a hill for start
-	hills := make([]Location, 0, 10)
-
-	for i, item := range m.Grid {
-		if item.IsHill() && (player < 0 || item == MY_HILL+Item(player)) {
-			hills = append(hills, Location(i))
-		}
-	}
-
-	return hills
-}
-
-func MapLoadFile(file string) (*Map, os.Error) {
-	var m *Map = nil
-
+func MapLoadFile(file string) (m *Map, err os.Error) {
 	f, err := os.Open(file)
-
 	if err != nil {
-		return nil, err
+		return
 	} else {
 		defer f.Close()
 
@@ -232,7 +127,7 @@ func MapLoadFile(file string) (*Map, os.Error) {
 		m, err = MapLoad(in)
 	}
 
-	return m, err
+	return
 }
 
 func MapValidate(ref *Map, gen *Map) (int, string) {
@@ -240,7 +135,7 @@ func MapValidate(ref *Map, gen *Map) (int, string) {
 	count := 0
 
 	if gen.Rows != ref.Rows || gen.Cols != ref.Cols {
-		out += fmt.Sprintf("Map size mismatch: refence map r:%d c:%d and generated map r:%d c:%d\n",
+		out += fmt.Sprintf("Map size mismatch: refence map r:%d C:%d and generated map r:%d C:%d\n",
 			ref.Rows, ref.Cols, gen.Rows, gen.Cols)
 		count++
 	} else {
@@ -257,28 +152,8 @@ func MapValidate(ref *Map, gen *Map) (int, string) {
 	return count, out
 }
 
-//Take a slice of Point and return a slice of Location
-//Used for offsets so it does not donut things.
-func (m *Map) ToPoints(lv []Location) []Point {
-	pv := make([]Point, len(lv))
-	for i, l := range lv {
-		pv[i] = m.ToPoint(l)
-	}
-
-	return pv
-
-}
-
-func (s *State) Item(l Location) Item {
-	_, food := s.Food[l]
-	if food {
-		return FOOD
-	}
-	return s.Map.Grid[l]
-}
-
 // Ruturn a uint8 array with distance to border in each cell
-func BorderDistance(rows, cols int) (out []uint8) {
+func borderDistance(rows, cols int) (out []uint8) {
 	if rows > 255 || cols > 255 {
 		log.Panic("Rows or cols > 255 in BorderDist")
 	}
@@ -294,15 +169,15 @@ func BorderDistance(rows, cols int) (out []uint8) {
 }
 
 // Generate the cache of one step moves from current cell
-func LocationStep(rows, cols int) (out [][4]Location) {
+func locationStep(rows, cols int) (out [][4]Location) {
 	out = make([][4]Location, rows*cols)
 
 	for r := 0; r < rows; r++ {
 		for c := 0; c < cols; c++ {
 			loc := r*cols + c
 			for i, step := range Steps {
-				rstep := r + step.r
-				cstep := c + step.c
+				rstep := r + step.R
+				cstep := c + step.C
 				// Wrap if we need to
 				if rstep < 0 {
 					rstep += rows
@@ -325,63 +200,20 @@ func LocationStep(rows, cols int) (out [][4]Location) {
 	return
 }
 
-func (m *Map) UpdateCounts(loc Location, mask *Mask) {
-	nunknown := 0
-	nland := 0
-	p := m.ToPoint(loc)
-	for _, op := range mask.P {
-		nloc := m.ToLocation(m.PointAdd(p, op))
-		if m.Grid[nloc] == UNKNOWN {
-			nunknown++
-		}
-		if m.Grid[nloc] != WATER {
-			nland++
+// Return list of Hill Locations, player -1 is all players
+func (m *Map) Hills(player int) []Location {
+	// find a hill for start
+	hills := make([]Location, 0)
+
+	for i, item := range m.Grid {
+		if item.IsHill() && (player < 0 || item == MY_HILL+Item(player)) {
+			hills = append(hills, Location(i))
 		}
 	}
-	m.Unknown[loc] = nunknown
-	m.Land[loc] = nland
+
+	return hills
 }
 
-func (m *Map) SumVisCount(loc Location, mask *Mask) {
-	nvis := 0
-	p := m.ToPoint(loc)
-	for _, op := range mask.P {
-		nloc := m.ToLocation(m.PointAdd(p, op))
-		nvis += m.VisCount[nloc]
-	}
-	m.VisSum[loc] = nvis
-}
-
-func (m *Map) ComputePrFood(loc, sloc Location, turn int, mask *Mask, f *Fill) int {
-	prfood := 0
-	turn++
-	horizonwt := 0
-	p := m.ToPoint(loc)
-
-	for _, op := range mask.P {
-		nloc := m.ToLocation(m.PointAdd(p, op))
-		if sloc == f.Seed[nloc] &&
-			f.Distance(sloc, nloc) < 15 {
-			viewwt := MaxV(4-m.VisCount[nloc], 1)
-
-			// food we compete for is more of a priority
-			if m.Horizon[nloc] {
-				horizonwt = 4
-			} else {
-				horizonwt = 5
-			}
-
-			foodp := 0
-			if m.Grid[nloc] != WATER {
-				// TODO Max turn magic here should maybe decline over time.
-				// also should test values
-				foodp = MinV(turn-m.Seen[nloc], 12)
-			}
-
-			prfood += foodp * viewwt * horizonwt
-		}
-	}
-	m.PrFood[loc] = prfood
-
-	return prfood
+func (m *Map) Item(l Location) Item {
+	return m.Grid[l]
 }

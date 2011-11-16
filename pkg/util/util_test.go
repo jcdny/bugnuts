@@ -1,4 +1,4 @@
-package main
+package util
 
 import (
 	"testing"
@@ -24,25 +24,6 @@ func TestMinMax(t *testing.T) {
 		}
 		if amax := Max(l.list); amax != l.emax {
 			t.Errorf("For max(%v) got %d expected %d", l.list, amax, l.emax)
-		}
-	}
-}
-
-func TestPoints(t *testing.T) {
-	v := maskCircle(10)
-
-	vl := ToOffsets(v, 13)
-	vp := ToOffsetPoints(vl, 13)
-	vl2 := ToOffsets(vp, 13)
-
-	if len(vl) != len(vl2) || len(v) != len(vp) {
-		t.Error("Point length mismatch")
-	} else {
-		for i, l := range vl {
-			if l != vl2[i] {
-				t.Error("Point roundtrip failed %v, %v, %v, %v", v, vl, vp, vl2)
-				break
-			}
 		}
 	}
 }

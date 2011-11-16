@@ -1,4 +1,4 @@
-package main
+package watcher
 
 import (
 	"testing"
@@ -84,7 +84,7 @@ func TestWatches(t *testing.T) {
 			s := ""
 			for r := 0; r < ws.Rows; r++ {
 				for c := 0; c < ws.Cols; c++ {
-					if ws.Watched(Location(r*ws.Cols+c), turn, 0) {
+					if ws.Watched(r*ws.Cols+c, turn, 0) {
 						n++
 						s += "T"
 					} else {

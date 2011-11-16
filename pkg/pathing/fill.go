@@ -1,61 +1,29 @@
-package main
+package pathing
 
 import (
 	"log"
 	"strconv"
 	"sort"
 	"rand"
+	. "bugnuts/maps"
+	. "bugnuts/debug"
+	. "bugnuts/util"
 )
 
 type Fill struct {
 	// add offset and wrap flag for subfill work
-	Rows  int
-	Cols  int
 	Depth []uint16
 	Seed  []Location
-	m     *Map
+	*Map
 }
 
-func (m *Map) NewFill() *Fill {
+func NewFill(m *Map) *Fill {
 	f := &Fill{
 		Depth: make([]uint16, m.Size(), m.Size()),
-		Rows:  m.Rows,
-		Cols:  m.Cols,
-		m:     m,
+		Map:   m,
 	}
 
 	return f
-}
-
-func (f *Fill) ToLocation(p Point) Location {
-	p = f.Donut(p)
-	return Location(p.r*f.Cols + p.c)
-}
-
-func (f *Fill) ToPoint(l Location) (p Point) {
-	p = Point{r: int(l) / f.Cols, c: int(l) % f.Cols}
-
-	return
-}
-func (f *Fill) PointAdd(p1, p2 Point) Point {
-	return f.Donut(Point{r: p1.r + p2.r, c: p1.c + p2.c})
-}
-
-func (f *Fill) Donut(p Point) Point {
-	if p.r < 0 {
-		p.r += f.Rows
-	}
-	if p.r >= f.Rows {
-		p.r -= f.Rows
-	}
-	if p.c < 0 {
-		p.c += f.Cols
-	}
-	if p.c >= f.Cols {
-		p.c -= f.Cols
-	}
-
-	return p
 }
 
 func (f *Fill) PathIn(loc Location) (Location, int) {
@@ -70,7 +38,7 @@ func (f *Fill) NPathIn(loc Location, steps int) (Location, int) {
 		depth := f.Depth[loc]
 		done = true
 		for _, d := range Permute4() {
-			nl := f.m.LocStep[loc][d]
+			nl := f.LocStep[loc][d]
 			if f.Depth[nl] < depth && f.Depth[nl] > 0 {
 				loc = nl
 				steps--
@@ -84,7 +52,7 @@ func (f *Fill) NPathIn(loc Location, steps int) (Location, int) {
 		}
 	}
 
-	if Debug[DBG_PathIn] && WS.Watched(loc, -1, 0) {
+	if Debug[DBG_PathIn] && WS.Watched(int(loc), -1, 0) {
 		log.Printf("step from %v to %v depth %d to %d, steps %d\n", f.ToPoint(origloc), f.ToPoint(loc), f.Depth[origloc], f.Depth[loc], steps)
 	}
 
@@ -154,10 +122,10 @@ func (f *Fill) String() string {
 func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string {
 	s := ""
 	for i, d := range f.Depth {
-		curp := Point{r: i / f.Cols, c: i % f.Cols}
+		curp := Point{R: i / f.Cols, C: i % f.Cols}
 
-		if curp.c == 0 {
-			switch curp.r {
+		if curp.C == 0 {
+			switch curp.R {
 			case 1:
 				s += "  Depth: " + strconv.Itoa(int(Depth))
 			case 2:
@@ -206,7 +174,7 @@ func MapFillSlow(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint1
 
 	safe := 0
 
-	f := m.NewFill()
+	f := NewFill(m)
 
 	q := QNew(100)
 
@@ -250,12 +218,12 @@ func MapFillSlow(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint1
 // Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
 // use map value
 func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
-	f := m.NewFill()
+	f := NewFill(m)
 	return f.MapFill(m, origin, pri)
 }
 
 func MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
-	f := m.NewFill()
+	f := NewFill(m)
 	return f.MapFillSeed(m, origin, pri)
 }
 
@@ -372,7 +340,7 @@ func (f *Fill) DistanceStep(loc Location, d Direction) int {
 		return 0
 	}
 	//log.Printf("%v %d %v %d", f.m.ToPoint(loc), f.Depth[loc], f.m.ToPoint(f.m.LocStep[loc][d]), f.Depth[f.m.LocStep[loc][d]])
-	return int(f.Depth[loc]) - int(f.Depth[f.m.LocStep[loc][d]])
+	return int(f.Depth[loc]) - int(f.Depth[f.LocStep[loc][d]])
 }
 
 // Build list of locations ordered by depth from closest to furthest

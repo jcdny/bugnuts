@@ -1,7 +1,8 @@
-package main
+package debug
 
 import (
 	"log"
+	. "bugnuts/watcher"
 )
 
 const (
@@ -26,6 +27,8 @@ const (
 )
 
 var Debug = make([]bool, maxDBG)
+var WS *Watches
+
 // DebugLevels are cumulative, but a 0 resets all to false and a -Level unsets.
 var debugLevels = [][]int{
 	0: []int{0},

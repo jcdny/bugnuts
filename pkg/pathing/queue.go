@@ -1,7 +1,8 @@
-package main
+package pathing
 
 import (
 	"log"
+	. "bugnuts/maps"
 )
 
 type Queue struct {
@@ -51,7 +52,7 @@ func (q *Queue) Position(p Point) int {
 
 	for i, qp := range q.c {
 		// assumes we have aleady wrapped.
-		if p.c == qp.c && p.r == qp.r {
+		if p.C == qp.C && p.R == qp.R {
 			pos = i
 			break
 		}

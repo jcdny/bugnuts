@@ -1,4 +1,4 @@
-package main
+package maps
 
 import (
 	"math"
@@ -45,14 +45,14 @@ func maskCircle(r2 int) []Point {
 	v := make([]Point, 0, (r2*22)/7+5)
 
 	// Make the origin the first element so you can easily skip it.
-	p := Point{r: 0, c: 0}
+	p := Point{R: 0, C: 0}
 	v = append(v, p)
 
 	for r := -d; r <= d; r++ {
 		for c := -d; c <= d; c++ {
 			if c != 0 || r != 0 {
 				if c*c+r*r <= r2 {
-					p = Point{r: int(r), c: int(c)}
+					p = Point{R: int(r), C: int(c)}
 					v = append(v, p)
 				}
 			}
@@ -83,17 +83,17 @@ func maskChange(r2 int, v []Point) (add, remove [][]Point, union []Point) {
 		rv := []Point{}
 
 		for _, p := range v {
-			m[(p.c+off)+(p.r+off)*size]++
-			m[(p.c+s.c+off)+(p.r+s.r+off)*size]--
+			m[(p.C+off)+(p.R+off)*size]++
+			m[(p.C+s.C+off)+(p.R+s.R+off)*size]--
 		}
 
 		for r := 0; r < size; r++ {
 			for c := 0; c < size; c++ {
 				switch {
 				case m[c+r*size] > 0:
-					rv = append(rv, Point{r: r - off, c: c - off})
+					rv = append(rv, Point{R: r - off, C: c - off})
 				case m[c+r*size] < 0:
-					av = append(av, Point{r: r - off, c: c - off})
+					av = append(av, Point{R: r - off, C: c - off})
 				}
 			}
 		}
@@ -165,7 +165,7 @@ func makeMoveMask(r2 int, cols int) []*MoveMask {
 		// now generate the actual probabilities
 		for bit := uint(0); bit < 5; bit++ {
 			if (i+16)&(1<<bit) > 0 {
-				offset := Location(DirectionOffset[bit].r*stride + DirectionOffset[bit].c)
+				offset := Location(DirectionOffset[bit].R*stride + DirectionOffset[bit].C)
 				for _, l := range mlocs {
 					loc := center + offset + l
 					pr[loc] += pstep
@@ -183,7 +183,7 @@ func makeMoveMask(r2 int, cols int) []*MoveMask {
 			for c := 0; c < stride; c++ {
 				p := pr[r*stride+c]
 				if p > 0 {
-					mpt = append(mpt, Point{r: r - off, c: c - off})
+					mpt = append(mpt, Point{R: r - off, C: c - off})
 					minpr = append(minpr, uint16(60-p))
 					maxpr = append(maxpr, uint16(p))
 				}
@@ -212,11 +212,15 @@ func (mm *MoveMask) String() string {
 	stride := int(2*mm.R + 3)
 
 	minpr := make([]uint16, stride*stride)
+	for i := range minpr {
+		minpr[i] = MoveMaskPStep
+	}
+
 	maxpr := make([]uint16, stride*stride)
 	off := stride * stride / 2
 	for i, p := range mm.Point {
-		minpr[p.r*stride+p.c+off] = mm.MinPr[i]
-		maxpr[p.r*stride+p.c+off] = mm.MaxPr[i]
+		minpr[p.R*stride+p.C+off] = mm.MinPr[i]
+		maxpr[p.R*stride+p.C+off] = mm.MaxPr[i]
 	}
 
 	for r := 0; r < stride; r++ {
@@ -236,10 +240,10 @@ func (mm *MoveMask) String() string {
 	return s
 }
 
-func (s *State) FreedomKey(loc Location) int {
+func (m *Map) FreedomKey(loc Location) int {
 	key := 0
-	for i, l := range s.Map.LocStep[loc] {
-		if s.Stepable(l) {
+	for i, l := range m.LocStep[loc] {
+		if StepableItem[m.Grid[l]] {
 			key += 1 << uint(i)
 		}
 	}

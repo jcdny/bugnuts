@@ -1,8 +1,6 @@
-package main
+package maps
 
 import ()
-
-type Location int
 
 // Item codes from parsing turns
 type Item byte
@@ -73,7 +71,8 @@ var itemToSym = [256]byte{' ', '%', '*', '.',
 
 var symToItem [256]Item
 
-var Terminal = map[Item]bool{EXPLORE: true, DEFEND: true, WAYPOINT: false, FOOD: false, RALLY: true}
+var TerminalItem [256]bool
+var StepableItem [256]bool
 
 func init() {
 	// Set up static symbol item mappings.
@@ -84,6 +83,29 @@ func init() {
 		symToItem[itemToSym[i]] = i
 	}
 
+	// Make Terminal
+	for _, item := range []Item{EXPLORE, DEFEND, RALLY} {
+		TerminalItem[item] = true
+	}
+	for item := Item(HILL1); item <= HILL_GUESS; item++ {
+		TerminalItem[item] = true
+	}
+	for item := Item(HILLANT1); item <= HILLANT9; item++ {
+		TerminalItem[item] = true
+	}
+
+	// StepableItem
+	for i := range StepableItem {
+		StepableItem[i] = true
+	}
+	for _, item := range []Item{WATER, BLOCK, FOOD} {
+		StepableItem[item] = false
+	}
+
+}
+
+func (o Item) String() string {
+	return string(o.ToSymbol())
 }
 
 // Map an Item code to a character
@@ -103,11 +125,15 @@ func (o Item) IsHill() bool {
 
 	return false
 }
+
 func (o Item) IsEnemyHill(player int) bool {
+	if o == LAND || o == WATER {
+		return false
+	}
 	if o >= MY_HILL && o <= HILL_GUESS {
 		return player != int(o-MY_HILL)
 	}
-	if o > MY_HILLANT && o <= HILLANT9 {
+	if o >= MY_HILLANT && o <= HILLANT9 {
 		return player != int(o-MY_HILLANT)
 	}
 
@@ -121,18 +147,9 @@ func (o Item) IsEnemyAnt(player int) bool {
 	if o >= MY_ANT && o <= PLAYER9 {
 		return player != int(o-MY_ANT)
 	}
-	if o > MY_HILLANT && o <= HILLANT9 {
+	if o >= MY_HILLANT && o <= HILLANT9 {
 		return player != int(o-MY_HILLANT)
 	}
 
 	return false
-}
-
-func (o Item) IsTerminal() bool {
-	termp, ok := Terminal[o]
-	return termp || (!ok && o.IsEnemyHill(0))
-}
-
-func (o Item) String() string {
-	return string(o.ToSymbol())
 }
