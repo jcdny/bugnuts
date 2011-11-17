@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"sync"
 	"log"
+	"time"
 )
 
 type Mapper struct {
@@ -27,6 +28,7 @@ type Reducer struct {
 }
 
 var (
+	ST        = int64(1000000)
 	MaxFiles  = 100
 	MaxReplay = 10
 	MaxReduce = 10
@@ -39,33 +41,37 @@ func NewDispatch() (chan *os.FileInfo, chan *Replay) {
 }
 
 func Walk(files []string, fprocess chan *os.FileInfo) {
-	fin := make(chan *os.FileInfo, MaxFiles)
+	fin := make(chan string, MaxFiles)
 
 	go walk(fin, fprocess)
 
 	log.Printf("%#v", files)
 	for _, file := range files {
 		log.Printf("Sending %s to walk", file)
-		finfo, _ := os.Lstat(file)
-		fin <- finfo
+		fin <- file
 	}
+	time.Sleep(2 * ST)
+	log.Printf("Done Walk")
 }
 
-func walk(fin chan *os.FileInfo, fprocess chan *os.FileInfo) {
-	for {
-		finfo := <-fin
+func walk(fin chan string, fprocess chan *os.FileInfo) {
+	for file := range fin {
+		finfo, _ := os.Lstat(file)
 		if finfo.IsRegular() {
-			log.Printf("Walk: File %s", finfo.Name)
+			log.Printf("walk: File %s", finfo.Name)
 			fprocess <- finfo
 		} else if finfo.IsDirectory() {
-			log.Printf("Walk: Directory %s - descending", finfo.Name)
-			flist, _ := ioutil.ReadDir(finfo.Name)
+			flist, _ := ioutil.ReadDir(file)
+			log.Printf("walk: Directory %s - descending, N %d", finfo.Name, len(flist))
 			for _, finfo := range flist {
-				fin <- finfo
+				fin <- file + "/" + finfo.Name
 			}
+		} else {
+			log.Printf("Huh? %#v", finfo)
 		}
-		log.Printf("Huh? %#v", finfo)
 	}
+	time.Sleep(ST)
+	log.Printf("Done walk")
 }
 
 func Stage(fprocess chan *os.FileInfo, replays chan *Replay) {
@@ -73,13 +79,14 @@ func Stage(fprocess chan *os.FileInfo, replays chan *Replay) {
 		finfo := <-fprocess
 		replays <- &Replay{NBytes: finfo.Size, Name: finfo.Name}
 	}
+	time.Sleep(ST)
+	log.Printf("Done Stage")
 }
 
-func mapper(replays chan *Replay) {
+func mapper(replays <-chan *Replay) {
 	mapper := &Mapper{reduce: make(map[string]chan *Replay)}
 
-	for {
-		r := <-replays
+	for r := range replays {
 		log.Printf("Looking up key for %s", r.Name)
 		key := r.Name[0:1]
 		m, ok := mapper.reduce[key]
@@ -92,14 +99,17 @@ func mapper(replays chan *Replay) {
 		log.Printf("Sending %s to %s", r.Name, key)
 		mapper.reduce[key] <- r
 	}
+	time.Sleep(ST)
+	log.Printf("Done mapper")
 }
 
-func Reduce(key string, in chan *Replay) {
+func Reduce(key string, in <-chan *Replay) {
 	out := Results{}
-	for {
-		r := <-in
+	for r := range in {
 		log.Printf("Reducing %s on key %s", r.Name, key)
 		out.N++
 		out.NBytes += r.NBytes
 	}
+	time.Sleep(ST)
+	log.Printf("Done reducer %s", key)
 }

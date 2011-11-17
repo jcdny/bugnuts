@@ -5,6 +5,7 @@ import (
 	"log"
 	"fmt"
 	"os"
+	"time"
 )
 
 func init() {
@@ -36,4 +37,5 @@ func main() {
 	go Stage(files, replays)
 	go mapper(replays)
 	Walk(args, files)
+	time.Sleep(int64(10000000))
 }
