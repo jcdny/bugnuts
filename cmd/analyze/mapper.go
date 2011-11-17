@@ -5,7 +5,7 @@ import (
 	"io/ioutil"
 	"sync"
 	"log"
-	"time"
+	//	"time"
 )
 
 type Mapper struct {
@@ -28,7 +28,7 @@ type Reducer struct {
 }
 
 var (
-	ST        = int64(1000000)
+	ST        = int64(5000000)
 	MaxFiles  = 100
 	MaxReplay = 10
 	MaxReduce = 10
@@ -50,11 +50,11 @@ func Walk(files []string, fprocess chan *os.FileInfo) {
 		log.Printf("Sending %s to walk", file)
 		fin <- file
 	}
-	time.Sleep(2 * ST)
+	close(fin)
 	log.Printf("Done Walk")
 }
 
-func walk(fin chan string, fprocess chan *os.FileInfo) {
+func walk(fin chan string, fprocess chan<- *os.FileInfo) {
 	for file := range fin {
 		finfo, _ := os.Lstat(file)
 		if finfo.IsRegular() {
@@ -64,22 +64,24 @@ func walk(fin chan string, fprocess chan *os.FileInfo) {
 			flist, _ := ioutil.ReadDir(file)
 			log.Printf("walk: Directory %s - descending, N %d", finfo.Name, len(flist))
 			for _, finfo := range flist {
+				log.Printf("walk: sub " + file + "/" + finfo.Name)
 				fin <- file + "/" + finfo.Name
 			}
 		} else {
-			log.Printf("Huh? %#v", finfo)
+			log.Printf("Huh? %#v", file)
 		}
 	}
-	time.Sleep(ST)
-	log.Printf("Done walk")
+	close(fprocess)
+	log.Printf("Done _walk")
+
 }
 
-func Stage(fprocess chan *os.FileInfo, replays chan *Replay) {
-	for {
-		finfo := <-fprocess
+func Stage(fprocess <-chan *os.FileInfo, replays chan<- *Replay) {
+	for finfo := range fprocess {
+		log.Printf("Staging %s", finfo.Name)
 		replays <- &Replay{NBytes: finfo.Size, Name: finfo.Name}
 	}
-	time.Sleep(ST)
+	close(replays)
 	log.Printf("Done Stage")
 }
 
@@ -95,21 +97,22 @@ func mapper(replays <-chan *Replay) {
 			go Reduce(key, m)
 			mapper.reduce[key] = m
 		}
-		m <- r
 		log.Printf("Sending %s to %s", r.Name, key)
-		mapper.reduce[key] <- r
+		m <- r
 	}
-	time.Sleep(ST)
+	for _, m := range mapper.reduce {
+		close(m)
+	}
 	log.Printf("Done mapper")
 }
 
 func Reduce(key string, in <-chan *Replay) {
 	out := Results{}
+	log.Printf("Reducing key %s", key)
 	for r := range in {
-		log.Printf("Reducing %s on key %s", r.Name, key)
+		log.Printf("Reducing key %s: %s", key, r.Name)
 		out.N++
 		out.NBytes += r.NBytes
 	}
-	time.Sleep(ST)
 	log.Printf("Done reducer %s", key)
 }
