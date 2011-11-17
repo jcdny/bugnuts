@@ -1,6 +1,6 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=analyze
+TARG=mapper
 GOFILES=\
 	mapper.go\
 	main.go
