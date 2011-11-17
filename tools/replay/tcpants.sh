@@ -1,27 +1,30 @@
 #!/bin/bash
-export HOST=tcpants.com
+HOST=tcpants.com
 URLBASE=http://tcpants.com/replay
 ROOT=~/src/ai/bot/
-LAST=$ROOT/data/LAST.$HOST
-END="`curl -s http://$HOST | egrep "href='/replay" | head -n1 | sed -e 's#^.*/replay\.\([0-9]*\)[^0-9].*#\1#'`"
+LAST=$ROOT/data/$HOST/LAST
+LOCK=$ROOT/data/$HOST/LOCK
 
 if [ ! -d $ROOT/data ]; then
     echo "Fatal $ROOT/data does not exist"
     exit 1
 fi
-
 cd $ROOT/data
-
 mkdir -p $HOST || exit 1
 
-GAME="`cat $LAST || echo 1`"
-
-if [ "$END" = "" -o "$GAME" = "" ]; then
-    echo "FATAL: game range unkown end: $END start: $GAME"
+if [ -f $LOCK ]; then
+    echo "LOCK for $HOST exists.  remove $LOCK to run"
     exit 1
 fi
-echo Get $GAME $END
+echo `date` > $HOST/LOCK
 
+END="`curl -s http://$HOST | egrep "href='/replay" | head -n1 | sed -e 's#^.*/replay\.\([0-9]*\)[^0-9].*#\1#'`"
+GAME="`cat $LAST || echo 1`"
+
+if [ "$END" = "" -o "$GAME" = "" -o "$END" -lt "$GAME" ]; then
+    echo "FATAL: game range error end: \"$END\" start: \"$GAME\""
+    exit 1
+fi
 
 DATE="`date +%Y%m%d-%H%M`"
 LOG="log/log.${HOST}.$DATE"
@@ -52,3 +55,4 @@ while [ $GAME -lt $END ]; do
     GAME="`expr $GAME + 1`"
     echo $GAME > $LAST
 done
+rm -f $LOCK

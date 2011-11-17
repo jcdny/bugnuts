@@ -4,22 +4,27 @@ URLBASE=http://aichallenge.org/game/0/
 ROOT=~/src/ai/bot/
 SUFFIX=".replaygz"
 PREFIX=""
-LAST=$ROOT/data/LAST.$HOST
+LAST=$ROOT/data/$HOST/LAST
+LOCK=$ROOT/data/$HOST/LOCK
 
 if [ ! -d $ROOT/data ]; then
     echo "Fatal $ROOT/data does not exist"
     exit 1
 fi
-
 cd $ROOT/data
-
 mkdir -p $HOST || exit 1
+
+if [ -f $LOCK ]; then
+    echo "LOCK for $HOST exists.  remove $LOCK to run"
+    exit 1
+fi
+echo `date` > $HOST/LOCK
 
 GAME="`cat $LAST || echo 1`"
 END="`curl -s http://aichallenge.org/games.php | egrep visualizer.php | head -n1 | sed 's/.*game=\([0-9]*\)[^0-9].*/\1/'`"
 
-if [ "$END" = "" -o "$GAME" = "" ]; then
-    echo "FATAL: game range unkown end: $END start: $GAME"
+if [ "$END" = "" -o "$GAME" = "" -o "$END" -lt "$GAME" ]; then
+    echo "FATAL: game range error end: \"$END\" start: \"$GAME\""
     exit 1
 fi
 
@@ -54,3 +59,5 @@ while [ $GAME -lt $END ]; do
     GAME="`expr $GAME + 1`"
     echo $GAME > $LAST
 done
+
+rm -f $LOCK
