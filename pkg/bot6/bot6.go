@@ -1,4 +1,5 @@
-package main
+package bot6
+
 // The v6 Bot -- Now Officially not terrible
 //
 // Lesons from v5:
@@ -16,44 +17,42 @@ import (
 	"log"
 	. "bugnuts/maps"
 	. "bugnuts/state"
-	. "bugnuts/util"
+	. "bugnuts/MyBot"
+	. "bugnuts/parameters"
+	. "bugnuts/debug"
+	. "bugnuts/pathing"
+	. "bugnuts/viz"
 )
 
 type BotV6 struct {
 	P          *Parameters
-	Primap     []int // array mapping Item to priority
+	PriMap     [256]int // array mapping Item to priority
 	Explore    *TargetSet
 	IdleAnts   []int
 	StaticAnts []int
 }
 
-func (bot *BotV6) Priority(i Item) int {
-	return bot.Primap[i]
+func init() {
+	RegisterABot(ABot{Key: "v6", Desc: "V6 - Final Noncombat bot", PSet: "v6", NewBot: NewBotV6})
 }
 
 //NewBot creates a new instance of your bot
-func NewBotV6(s *State) Bot {
-	if paramKey == "" {
-		paramKey = "V6"
-	}
-	if _, ok := ParameterSets[paramKey]; !ok {
-		log.Panicf("Unknown parameter key %s", paramKey)
-	}
-
+func NewBotV6(s *State, pset *Parameters) Bot {
 	mb := &BotV6{
-		P:          ParameterSets[paramKey],
+		P:          pset,
 		IdleAnts:   make([]int, 0, s.Turns+2),
 		StaticAnts: make([]int, s.Turns+2),
 	}
 
-	mb.Primap = mb.P.MakePriMap()
+	mb.PriMap = mb.P.MakePriMap()
 
 	if true {
-		mb.Explore = MakeExplorers(s, .8, 1, mb.Priority(EXPLORE))
+		mb.Explore = MakeExplorers(s, .8, 1, mb.PriMap[EXPLORE])
 	} else {
 		ts := make(TargetSet, 0)
 		mb.Explore = &ts
 	}
+
 	return mb
 }
 
@@ -62,15 +61,15 @@ func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
 
 	// TODO figure out how to handle multihill defense.
 	if s.NHills[0] < 3 {
-		s.AddEnemyPathinTargets(tset, bot.Priority(DEFEND), bot.P.DefendDistance)
-		s.AddMCBlock(tset, bot.Priority(DEFEND), bot.P.DefendDistance)
+		s.AddEnemyPathinTargets(tset, bot.PriMap[DEFEND], bot.P.DefendDistance)
+		s.AddMCBlock(tset, bot.PriMap[DEFEND], bot.P.DefendDistance)
 	}
 
 	// Generate list of food and enemy hill points.
 	// Food locations should be set after ant list is done since we
 	// remove adjacent food at that step.
 	for _, loc := range s.FoodLocations() {
-		tset.Add(FOOD, loc, 1, bot.Priority(FOOD))
+		tset.Add(FOOD, loc, 1, bot.PriMap[FOOD])
 	}
 
 	tset.Merge(bot.Explore)
@@ -85,7 +84,7 @@ func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
 		if s.Turn > 1000 {
 			ndefend = 200
 		}
-		tset.Add(HILL1, loc, ndefend+2, bot.Priority(HILL1))
+		tset.Add(HILL1, loc, ndefend+2, bot.PriMap[HILL1])
 	}
 
 	if s.NHills[0] < 3 {
@@ -93,7 +92,7 @@ func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
 			depth := s.Map.FHill.Depth[loc]
 			if depth > 2 && depth < uint16(bot.P.MinHorizon) {
 				// Just add these as transients.
-				tset.Add(WAYPOINT, loc, 1, bot.Priority(WAYPOINT))
+				tset.Add(WAYPOINT, loc, 1, bot.PriMap[WAYPOINT])
 			}
 		}
 	}

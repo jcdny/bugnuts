@@ -69,8 +69,8 @@ func (p *Parameters) Priority(i Item) int {
 	return val
 }
 
-func (p *Parameters) MakePriMap() []int {
-	out := make([]int, MAX_ITEM)
+func (p *Parameters) MakePriMap() [256]int {
+	var out [256]int
 	for i := Item(0); i < MAX_ITEM; i++ {
 		out[i] = p.Priority(i)
 	}

@@ -13,6 +13,7 @@ import (
 	. "bugnuts/viz"
 	. "bugnuts/debug"
 	. "bugnuts/state"
+	. "bugnuts/bot6"
 )
 
 var runBot string
@@ -69,14 +70,16 @@ func main() {
 
 	// Set up bot
 	switch runBot {
-	case "v0":
-		bot = NewBotV0(&s)
-	case "v3":
-		bot = NewBotV3(&s)
-	case "v4":
-		bot = NewBotV4(&s)
-	case "v5":
-		bot = NewBotV5(&s)
+	/* 
+		case "v0":
+			bot = NewBotV0(&s)
+		case "v3":
+			bot = NewBotV3(&s)
+		case "v4":
+			bot = NewBotV4(&s)
+		case "v5":
+			bot = NewBotV5(&s)
+	*/
 	case "CUR":
 		fallthrough // no flag given run latest defined bot...
 	case "v6":
@@ -88,7 +91,7 @@ func main() {
 
 	// some of the state updating like treatment of non-visible food 
 	// depends on the bot parameters.
-	s.bot = &bot
+	//s.bot = &bot
 
 	var refmap *Map
 	if mapFile != "" {

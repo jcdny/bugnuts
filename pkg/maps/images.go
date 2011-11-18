@@ -39,7 +39,7 @@ func (m *Map) Bounds() image.Rectangle {
 
 func (m *Map) At(x, y int) image.NRGBAColor {
 	loc := m.ToLocation(Point{y, x})
-	return m.Grid[loc].Color()
+	return ItemColor(uint8(m.Grid[loc]))
 }
 
 func (m *Map) WriteDebugImage(Desc string, seq int, At func(row, col int) image.NRGBAColor) {

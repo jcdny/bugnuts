@@ -13,8 +13,8 @@ type ImageLayer struct {
 	color image.ColorImage
 }
 
-func Color(o Item) image.NRGBAColor {
-	switch o {
+func ItemColor(o uint8) image.NRGBAColor {
+	switch Item(o) {
 	case UNKNOWN:
 		return image.NRGBAColor{0xb0, 0xb0, 0xb0, 0xff}
 	case WATER:

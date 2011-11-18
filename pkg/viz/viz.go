@@ -3,6 +3,8 @@ package viz
 import (
 	"os"
 	"fmt"
+	"strings"
+	"log"
 	. "bugnuts/maps"
 	. "bugnuts/util"
 	. "bugnuts/state"
@@ -19,7 +21,7 @@ var Viz = map[string]bool{
 	"monte":   false,
 }
 
-func VizSet(vizList string, Viz map[string]bool) {
+func SetViz(vizList string, Viz map[string]bool) {
 	if vizList != "" {
 		for _, word := range strings.Split(strings.ToLower(vizList), ",") {
 			switch word {
