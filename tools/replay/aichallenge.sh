@@ -21,10 +21,14 @@ fi
 echo `date` > $HOST/LOCK
 
 GAME="`cat $LAST || echo 1`"
-END="`curl -s http://aichallenge.org/games.php | egrep visualizer.php | head -n1 | sed 's/.*game=\([0-9]*\)[^0-9].*/\1/'`"
+END=$(curl -s http://aichallenge.org/games.php | egrep 'visualizer.php.*game=[0-9]' | head -n1 | sed 's/.*game=\([0-9]*\)[^0-9].*/\1/')
 
-if [ "$END" = "" -o "$GAME" = "" -o "$END" -lt "$GAME" ]; then
+if [ "$END" = "" -o "$GAME" = "" ]; then
     echo "FATAL: game range error end: \"$END\" start: \"$GAME\""
+    exit 1
+fi
+if [ "$END" -lt "$GAME" ]; then
+    echo "FATAL: end before start, End: \"$END\" Start: \"$GAME\""
     exit 1
 fi
 
