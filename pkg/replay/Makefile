@@ -2,6 +2,7 @@ include $(GOROOT)/src/Make.inc
 
 TARG=bugnuts/replay
 GOFILES=\
+	metadata.go\
 	replay.go
 
 

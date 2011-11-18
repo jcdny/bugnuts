@@ -4,23 +4,12 @@ import (
 	"os"
 	"io/ioutil"
 	"log"
-	"fmt"
 )
-
-type JobData struct {
-	Name   string
-	NBytes int64
-}
-
-type Result struct {
-	Key    string
-	N      int
-	NBytes int64
-}
 
 type Job struct {
 	File  string
 	Finfo *os.FileInfo
+	Key   string
 	Data  *JobData
 }
 
@@ -104,18 +93,6 @@ func Stage(in <-chan *Job, out chan<- *Job, N int) {
 	close(out)
 }
 
-func stager(in chan *Job, out chan<- *Job, ring chan chan *Job, done chan<- int) {
-	for job := range in {
-		// Populate the job data
-		job.Data = &JobData{NBytes: job.Finfo.Size, Name: job.Finfo.Name}
-		// Pass job off to next step
-		out <- job
-		// Release this proc back into the ring buffer
-		ring <- in
-	}
-	done <- 1
-}
-
 func Mapper(in <-chan *Job, out chan<- []*Result) {
 	reducers := make(map[string]chan *Job)
 	// The channel reducers use to pass back their results at
@@ -125,13 +102,12 @@ func Mapper(in <-chan *Job, out chan<- []*Result) {
 	for job := range in {
 		// Just us the first letter of the filename as the key for the
 		// reducers
-		key := job.Finfo.Name[:1]
 
-		rin, ok := reducers[key]
+		rin, ok := reducers[job.Key]
 		if !ok {
 			rin = make(chan *Job, MaxReduce)
-			go reducer(key, rin, rout)
-			reducers[key] = rin
+			go reducer(job.Key, rin, rout)
+			reducers[job.Key] = rin
 		}
 		rin <- job
 	}
@@ -150,22 +126,4 @@ func Mapper(in <-chan *Job, out chan<- []*Result) {
 
 	out <- results
 	close(out)
-}
-
-// Take staged Jobs in and accumulate results until the channel is
-// closed
-func reducer(key string, in <-chan *Job, out chan<- *Result) {
-	res := Result{Key: key}
-
-	for r := range in {
-		res.N++
-		res.NBytes += r.Data.NBytes
-	}
-
-	out <- &res
-}
-
-func (r *Result) String() string {
-	return fmt.Sprintf("Files starting with %s: %d files %d bytes",
-		r.Key, r.N, r.NBytes)
 }

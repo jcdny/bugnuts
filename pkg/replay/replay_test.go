@@ -8,21 +8,38 @@ import (
 )
 
 func TestReplayLoad(t *testing.T) {
-	m := &Match{}
 
-	buf, err := ioutil.ReadFile("testdata/replay.0.json")
-	if err != nil {
-		log.Panicf("Readfile error %v", err)
+	files := []string{
+		"testdata/replay.0.json",
+		"testdata/replay.1.json",
 	}
+	for _, s := range files {
+		m := &Match{}
 
-	// Do the actual parse here
-	err = json.Unmarshal(buf, m)
+		buf, err := ioutil.ReadFile(s)
+		if err != nil {
+			log.Panicf("Readfile error %v", err)
+		}
 
-	if err != nil || m.ReplayFormat != "json" {
-		t.Errorf("Error on Unmarshal %v, format found was %s", err, m.ReplayFormat)
+		// Do the actual parse here
+		err = json.Unmarshal(buf, m)
+
+		if err != nil || m.ReplayFormat != "json" {
+			t.Errorf("Error on Unmarshal: %v (format found was %s)", err, m.ReplayFormat)
+		}
+
+		log.Printf("\n******************** %s ********************", s)
+
+		log.Printf("%#v", m)
+		// log.Printf("%#v", m.Replay.Hills)
+
+		g, p := m.ExtractMetaData()
+		log.Printf("%#v", g)
+		for _, pd := range p {
+			s, _ := json.Marshal(pd)
+			log.Printf("%s", string(s))
+		}
 	}
-
-	log.Printf("%#v", m)
 }
 
 func BenchmarkReplayLoad(b *testing.B) {

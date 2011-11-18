@@ -49,7 +49,7 @@ type ReplayData struct {
 	FoodTurn      int `json:"food_turn"`
 	Hills         []HillData
 	HiveHistory   [][]int `json:"hive_history"`
-	Loadtime      int
+	LoadTime      int
 	Map           MapData
 	PlayerSeed    int64 `json:"player_seed"`
 	Players       int
@@ -58,34 +58,46 @@ type ReplayData struct {
 	Scores        [][]int
 	SpawnRadius2  int
 	Turns         int
-	Turntime      int
+	TurnTime      int
 	ViewRadius2   int
 	WinningTurn   int `json:"winning_turn"`
 }
 
 type Match struct {
-	Score        []int
-	Challenge    string
-	GameId       int `json:"game_id"`
-	GameLength   int `json:"game_length"`
-	Location     string
-	PlayerNames  []string
-	PlayerTurns  []int
-	Rank         []int
-	Replay       *ReplayData `json:"replaydata"`
+	// Game Meta
+	GameId     int `json:"game_id"`
+	Date       string
+	GameLength int `json:"game_length"`
+	Challenge  string
+	MatchupId  *int   `json:"matchup_id"`
+	PostId     *int   `json:"post_id"`
+	WorkerId   string `json:"worker_id"`
+	GameUrl    string `json:"game_url"`
+	UserUrl    string `json:"user_url"`
+	Location   string
+	// Per Player data
+	PlayerNames    []string
+	PlayerTurns    []int
+	UserIds        []string `json:"user_ids"`
+	SubmissionIds  []string `json:"submission_ids"`
+	Score          []int
+	Rank           []int
+	Status         []string
+	ChallengeRank  []string `json:"challenge_rank"`
+	ChallengeSkill []string `json:"challenge_skill"`
+	// Game replay
 	ReplayFormat string
-	Status       []string
+	Replay       *ReplayData `json:"replaydata"`
 }
 
-func ReplayUnmarshal(b []byte) (*Match, os.Error) {
-	m := &Match{}
-	err := json.Unmarshal(b[:], m)
+func (m *Match) Unmarshal(b []byte) os.Error {
+	err := json.Unmarshal(b, m)
 
-	return m, err
+	return err
 }
 
 func (a *AntHistory) UnmarshalJSON(b []byte) os.Error {
-	var ah = make([]interface{}, 0, 6)
+	var ah []interface{}
 
 	err := json.Unmarshal(b, &ah)
 	if err != nil {
@@ -106,7 +118,7 @@ func (a *AntHistory) UnmarshalJSON(b []byte) os.Error {
 }
 
 func (h *HillData) UnmarshalJSON(b []byte) os.Error {
-	var ah = make([]interface{}, 0, 5)
+	var ah []interface{}
 
 	err := json.Unmarshal(b, &ah)
 	if err != nil {
@@ -124,7 +136,7 @@ func (h *HillData) UnmarshalJSON(b []byte) os.Error {
 }
 
 func (f *FoodHistory) UnmarshalJSON(b []byte) os.Error {
-	var fa = make([]interface{}, 0, 5)
+	var fa []interface{}
 
 	err := json.Unmarshal(b, &fa)
 	if err != nil {
@@ -135,11 +147,11 @@ func (f *FoodHistory) UnmarshalJSON(b []byte) os.Error {
 
 	f.Row = int(fa[0].(float64))
 	f.Col = int(fa[1].(float64))
-	f.Spawn = int(fa[1].(float64))
-	f.Gather = int(fa[1].(float64))
+	f.Spawn = int(fa[2].(float64))
+	f.Gather = int(fa[3].(float64))
 	if len(fa) == 5 {
 		f.Player = new(int)
-		*f.Player = int(fa[1].(float64))
+		*f.Player = int(fa[4].(float64))
 	}
 
 	return err
