@@ -13,6 +13,7 @@ const (
 	South
 	West
 	NoMovement
+	InvalidMove
 )
 
 func (d Direction) String() string {

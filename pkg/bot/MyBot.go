@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	. "bugnuts/state"
 )
 
 //Bot interface defines what we need from a bot

@@ -1,4 +1,4 @@
-package main
+package state
 
 import (
 	"os"
@@ -7,6 +7,9 @@ import (
 	"bufio"
 	"strconv"
 	"strings"
+	. "bugnuts/maps"
+	. "bugnuts/pathing"
+	. "bugnuts/util"
 )
 
 const (
@@ -59,8 +62,7 @@ type State struct {
 
 	// Map State
 	Map *Map
-
-	bot *Bot
+	Met *Metrics
 }
 
 //Start takes the initial parameters from stdin
@@ -133,14 +135,15 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 
 	// Initialize Maps and cache some precalculated results
 	s.Map = NewMap(s.Rows, s.Cols, -1)
+	s.Met = NewMetrics(s.Map)
 
 	// Mask Cache
-	s.viewMask = makeMask(s.ViewRadius2, s.Rows, s.Cols)
-	s.attackMask = makeMask(s.AttackRadius2, s.Rows, s.Cols)
+	s.viewMask = MakeMask(s.ViewRadius2, s.Rows, s.Cols)
+	s.attackMask = MakeMask(s.AttackRadius2, s.Rows, s.Cols)
 
 	// From every point on the map we know nothing.
-	for i := range s.Map.Unknown {
-		s.Map.Unknown[i] = len(s.viewMask.P)
+	for i := range s.Met.Unknown {
+		s.Met.Unknown[i] = len(s.viewMask.P)
 	}
 
 	// Food and Ant things
@@ -159,17 +162,17 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 }
 
 func (s *State) Donut(p Point) Point {
-	if p.r < 0 {
-		p.r += s.Rows
+	if p.R < 0 {
+		p.R += s.Rows
 	}
-	if p.r >= s.Rows {
-		p.r -= s.Rows
+	if p.R >= s.Rows {
+		p.R -= s.Rows
 	}
-	if p.c < 0 {
-		p.c += s.Cols
+	if p.C < 0 {
+		p.C += s.Cols
 	}
-	if p.c >= s.Cols {
-		p.c -= s.Cols
+	if p.C >= s.Cols {
+		p.C -= s.Cols
 	}
 
 	return p
@@ -178,7 +181,7 @@ func (s *State) Donut(p Point) Point {
 // Take a Point and return a Location
 func (s *State) ToLocation(p Point) Location {
 	p = s.Donut(p)
-	return Location(p.r*s.Cols + p.c)
+	return Location(p.R*s.Cols + p.C)
 }
 
 //Take a slice of Point and return a slice of Location
@@ -186,31 +189,31 @@ func (s *State) ToLocation(p Point) Location {
 func (s *State) ToLocations(pv []Point) []Location {
 	lv := make([]Location, len(pv), len(pv)) // maybe use cap(pv)
 	for i, p := range pv {
-		lv[i] = Location(p.r*s.Cols + p.c)
+		lv[i] = Location(p.R*s.Cols + p.C)
 	}
 
 	return lv
 }
 
 func (s *State) PointAdd(p1, p2 Point) Point {
-	return s.Donut(Point{r: p1.r + p2.r, c: p1.c + p2.c})
+	return s.Donut(Point{R: p1.R + p2.R, C: p1.C + p2.C})
 }
 
 func (s *State) ResetGrid() {
 	// Rotate threat maps and clear first.
-	n := len(s.Map.Threat)
+	n := len(s.Met.Threat)
 	if n > 1 {
-		s.Map.Threat = append(s.Map.Threat[1:n], s.Map.Threat[0])
-		s.Map.PThreat = append(s.Map.PThreat[1:n], s.Map.PThreat[0])
+		s.Met.Threat = append(s.Met.Threat[1:n], s.Met.Threat[0])
+		s.Met.PThreat = append(s.Met.PThreat[1:n], s.Met.PThreat[0])
 	}
-	for i := range s.Map.Threat[0] {
-		s.Map.Threat[0][i] = 0
-		s.Map.PThreat[0][i] = 0
+	for i := range s.Met.Threat[0] {
+		s.Met.Threat[0][i] = 0
+		s.Met.PThreat[0][i] = 0
 	}
 
 	// Set all seen map to land
-	for i, t := range s.Map.Seen {
-		s.Map.VisCount[i] = 0
+	for i, t := range s.Met.Seen {
+		s.Met.VisCount[i] = 0
 		if t == s.Turn && s.Map.Grid[i] > LAND {
 			s.Map.Grid[i] = LAND
 		}
@@ -278,7 +281,7 @@ func (s *State) ParseTurn() (line string, err os.Error) {
 			continue
 		}
 
-		loc := s.Map.ToLocation(Point{r: Row, c: Col})
+		loc := s.Map.ToLocation(Point{R: Row, C: Col})
 
 		if len(words) > 3 {
 			Player, err = strconv.Atoi(words[3])
@@ -328,7 +331,7 @@ func (s *State) AddAnt(loc Location, player int) {
 	s.Ants[player][loc] = s.Turn
 
 	if player == 0 {
-		if s.Map.Unknown[loc] > 0 {
+		if s.Met.Unknown[loc] > 0 {
 			s.UpdateLand(player, loc)
 		}
 		s.UpdateSeen(player, loc)
@@ -420,20 +423,20 @@ func (s *State) UpdateLand(player int, loc Location) {
 		}
 	}
 
-	s.Map.Land[loc] = nland
+	s.Met.Land[loc] = nland
 }
 
 func (s *State) UpdateSeen(player int, loc Location) {
-	s.Map.Unknown[loc] = 0
+	s.Met.Unknown[loc] = 0
 	if s.Map.BorderDist[loc] > s.viewMask.R {
 		// In interior of map so use loc offsets
 		for _, offset := range s.viewMask.Loc {
-			s.Map.Seen[loc+offset] = s.Turn
+			s.Met.Seen[loc+offset] = s.Turn
 		}
 	} else {
 		p := s.Map.ToPoint(loc)
 		for _, op := range s.viewMask.P {
-			s.Map.Seen[s.ToLocation(s.PointAdd(p, op))] = s.Turn
+			s.Met.Seen[s.ToLocation(s.PointAdd(p, op))] = s.Turn
 		}
 	}
 }
@@ -442,12 +445,12 @@ func (s *State) UpdateVisCount(player int, loc Location) {
 	if s.Map.BorderDist[loc] > s.viewMask.R {
 		// In interior of map so use loc offsets
 		for _, offset := range s.viewMask.Loc {
-			s.Map.VisCount[loc+offset]++
+			s.Met.VisCount[loc+offset]++
 		}
 	} else {
 		p := s.Map.ToPoint(loc)
 		for _, op := range s.viewMask.P {
-			s.Map.VisCount[s.ToLocation(s.PointAdd(p, op))]++
+			s.Met.VisCount[s.ToLocation(s.PointAdd(p, op))]++
 		}
 	}
 }
@@ -491,7 +494,7 @@ func (s *State) ProcessState() {
 	}
 
 	for loc, hill := range s.Hills {
-		if hill.Killed == 0 && s.Map.Seen[loc] > hill.Seen {
+		if hill.Killed == 0 && s.Met.Seen[loc] > hill.Seen {
 			if hill.guess {
 				// We just guessed at a location anyway, just remove it
 				s.Hills[loc] = &Hill{}, false
@@ -501,10 +504,10 @@ func (s *State) ProcessState() {
 		}
 
 		if hill.Killed == 0 {
-			if s.Map.Seen[loc] < s.Turn {
+			if s.Met.Seen[loc] < s.Turn {
 				// If the hill is not visible then set Horizon false
 				// since it could be a source of ant.
-				s.Map.Horizon[loc] = false
+				s.Met.Horizon[loc] = false
 			}
 		}
 	}
@@ -521,11 +524,11 @@ func (s *State) ProcessState() {
 
 	for player, ants := range s.Ants {
 		for loc, seen := range ants {
-			if seen < s.Map.Seen[loc] || (player == 0 && seen < s.Turn) {
+			if seen < s.Met.Seen[loc] || (player == 0 && seen < s.Turn) {
 				ants[loc] = 0, false
 			} else {
 				if seen < s.Turn && player != 0 {
-					s.Map.Horizon[loc] = false
+					s.Met.Horizon[loc] = false
 				}
 				if s.Map.Grid[loc].IsHill() {
 					s.Map.Grid[loc] = MY_HILLANT + Item(player)
@@ -547,22 +550,22 @@ func (s *State) ProcessState() {
 
 	for loc, _ := range s.Ants[0] {
 		// Update the one step land count and unseen count for my ants
-		s.Map.SumVisCount(loc, s.viewMask)
+		s.Met.SumVisCount(loc, s.viewMask)
 		for _, nloc := range s.Map.LocStep[loc] {
-			s.Map.SumVisCount(nloc, s.viewMask)
-			if s.Map.Unknown[nloc] > 0 {
-				s.Map.UpdateCounts(nloc, s.viewMask)
+			s.Met.SumVisCount(nloc, s.viewMask)
+			if s.Met.Unknown[nloc] > 0 {
+				s.Met.UpdateCounts(nloc, s.viewMask)
 			}
 		}
 	}
 
-	s.Map.HBorder = s.StepHorizon(s.Map.HBorder)
+	s.Met.HBorder = s.StepHorizon(s.Met.HBorder)
 
 	s.UpdateHillMaps()
 
 	s.MonteCarloDensity()
 
-	s.ComputeThreat(1, 0, s.attackMask.MM, s.Map.Threat[len(s.Map.Threat)-1], s.Map.PThreat[len(s.Map.PThreat)-1])
+	s.ComputeThreat(1, 0, s.attackMask.MM, s.Met.Threat[len(s.Met.Threat)-1], s.Met.PThreat[len(s.Met.PThreat)-1])
 }
 
 func (s *State) UpdateHillMaps() {
@@ -576,11 +579,11 @@ func (s *State) UpdateHillMaps() {
 		lend[hill] = 1
 	}
 
-	s.Map.FHill, _, _ = MapFillSeed(s.Map, lend, 1)
+	s.Met.FHill, _, _ = MapFillSeed(s.Map, lend, 1)
 
 	outbound := make(map[Location]int)
 	R := MaxV(MinV(s.Rows, s.Cols)/s.NHills[0]/2, 8)
-	samples, _ := s.Map.FHill.Sample(0, R, R)
+	samples, _ := s.Met.FHill.Sample(0, R, R)
 
 	for _, loc := range samples {
 		outbound[loc] = 1
@@ -589,11 +592,11 @@ func (s *State) UpdateHillMaps() {
 	if len(outbound) < 1 {
 		log.Panicf("UpdateHillMaps no outside border")
 	} else {
-		s.Map.FDownhill, _, _ = MapFillSeed(s.Map, outbound, 1)
-		for i, d := range s.Map.FHill.Depth {
+		s.Met.FDownhill, _, _ = MapFillSeed(s.Map, outbound, 1)
+		for i, d := range s.Met.FHill.Depth {
 			if int(d) > R {
-				s.Map.FDownhill.Depth[i] = 0
-				s.Map.FDownhill.Seed[i] = 0
+				s.Met.FDownhill.Depth[i] = 0
+				s.Met.FDownhill.Seed[i] = 0
 			}
 		}
 	}
@@ -610,7 +613,7 @@ func (s *State) FoodUpdate(age int) {
 		// Should track that anyway since does not make sense to run for 
 		// food another bot will certainly get unless its to enter combat.
 
-		if s.Map.Seen[loc] > seen || seen < s.Turn-age {
+		if s.Met.Seen[loc] > seen || seen < s.Turn-age {
 			s.Food[loc] = 0, false
 			if s.Map.Grid[loc] == FOOD {
 				s.Map.Grid[loc] = LAND
@@ -664,7 +667,7 @@ func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8,
 			for loc, _ := range s.Ants[i] {
 				p := s.Map.ToPoint(loc)
 				if turn > 0 {
-					m = mask[s.FreedomKey(loc)]
+					m = mask[s.Map.FreedomKey(loc)]
 				}
 				for i, op := range m.Point {
 					threat[s.ToLocation(s.PointAdd(p, op))]++
@@ -678,30 +681,30 @@ func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8,
 }
 
 func (s *State) Threat(turn int, l Location) int8 {
-	i := len(s.Map.Threat) - turn + s.Turn - 1
+	i := len(s.Met.Threat) - turn + s.Turn - 1
 	if i < 0 {
-		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Map.Threat))
+		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Met.Threat))
 		return 0
 	}
-	return s.Map.Threat[i][l]
+	return s.Met.Threat[i][l]
 }
 
 func (s *State) PThreat(turn int, l Location) uint16 {
-	i := len(s.Map.PThreat) - turn + s.Turn - 1
+	i := len(s.Met.PThreat) - turn + s.Turn - 1
 	if i < 0 {
-		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Map.Threat))
+		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Met.Threat))
 		return 0
 	}
-	return s.Map.PThreat[i][l]
+	return s.Met.PThreat[i][l]
 }
 
 func (s *State) ThreatMap(turn int) []int8 {
-	i := len(s.Map.Threat) - turn + s.Turn - 1
+	i := len(s.Met.Threat) - turn + s.Turn - 1
 	if i < 0 {
-		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Map.Threat))
+		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Met.Threat))
 		return nil
 	}
-	return s.Map.Threat[i]
+	return s.Met.Threat[i]
 }
 
 func (s *State) SetBlock(l Location) {
@@ -734,7 +737,7 @@ func (s *State) Stepable(loc Location) bool {
 }
 
 func (s *State) StepHorizon(hlist []Location) []Location {
-	m := s.Map
+	m := s.Met
 	hlist = hlist[0:0]
 
 	// Remove now visible cells; dont bother with water here.
@@ -802,15 +805,15 @@ func (s *State) MonteCarloDensity() {
 			for paths*len(ants) > 2048 {
 				paths = paths >> 1
 			}
-			s.Map.MCDist, s.Map.MCFlow = f.MontePathIn(s.Map, ants, paths, 1)
-			s.Map.MCDistMax = Max(s.Map.MCDist)
-			s.Map.MCPaths = paths
+			s.Met.MCDist, s.Met.MCFlow = f.MontePathIn(s.Map, ants, paths, 1)
+			s.Met.MCDistMax = Max(s.Met.MCDist)
+			s.Met.MCPaths = paths
 		} else {
-			s.Map.MCPaths = 0
+			s.Met.MCPaths = 0
 		}
 	}
 }
 func (s *State) ToPoint(l Location) (p Point) {
-	p = Point{r: int(l) / s.Cols, c: int(l) % s.Cols}
+	p = Point{R: int(l) / s.Cols, C: int(l) % s.Cols}
 	return
 }

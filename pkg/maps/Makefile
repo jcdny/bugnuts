@@ -5,17 +5,13 @@ GOFILES=\
 	data.go\
 	direction.go\
 	item.go\
+	images.go\
 	map.go\
 	mask.go\
 	point.go\
 	torus.go\
 	sym.go\
-	util.go
+	util.go\
 
 
 include $(GOROOT)/src/Make.pkg
-
-.PHONY: gofmt
-gofmt:
-	gofmt -w $(GOFILES)
-

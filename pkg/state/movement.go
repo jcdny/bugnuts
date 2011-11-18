@@ -1,4 +1,4 @@
-package main
+package state
 
 import (
 	"log"
@@ -6,6 +6,8 @@ import (
 	"fmt"
 	"sort"
 	"os"
+	. "bugnuts/maps"
+	. "bugnuts/debug"
 )
 
 type Neighborhood struct {
@@ -48,7 +50,7 @@ func (s *State) GenerateAnts(tset *TargetSet, risk int) (ants map[Location]*AntS
 		hill, ok := s.Hills[loc]
 		if ok && hill.Player == 0 {
 			for _, nloc := range s.Map.LocStep[loc] {
-				if s.Item(nloc).IsEnemyAnt(0) {
+				if s.Map.Item(nloc).IsEnemyAnt(0) {
 					fixed = true
 					break
 				}
@@ -59,7 +61,7 @@ func (s *State) GenerateAnts(tset *TargetSet, risk int) (ants map[Location]*AntS
 		// someone already paused for this food.
 		if ants[loc].foodp && ants[loc].steptot == 0 {
 			for _, nloc := range s.Map.LocStep[loc] {
-				if s.Item(nloc) == FOOD && (*tset)[nloc].Count > 0 {
+				if s.Map.Item(nloc) == FOOD && (*tset)[nloc].Count > 0 {
 					(*tset)[nloc].Count = 0
 					s.SetOccupied(nloc) // food cant move but it will be gone.
 					fixed = true
@@ -84,9 +86,9 @@ func (s *State) Neighborhood(loc Location, nh *Neighborhood, d Direction) {
 	nh.threat = int(s.Threat(s.Turn, loc))
 	nh.pthreat = int(s.PThreat(s.Turn, loc))
 	//nh.vis = s.Map.VisSum[loc]
-	//nh.unknown = s.Map.Unknown[loc]
-	//nh.land = s.Map.Land[loc]
-	nh.prfood = s.Map.PrFood[loc]
+	//nh.unknown = s.Met.Unknown[loc]
+	//nh.land = s.Met.Land[loc]
+	nh.prfood = s.Met.PrFood[loc]
 	nh.d = d
 }
 
@@ -94,7 +96,7 @@ func (s *State) AntStep(loc Location, risk int) *AntStep {
 	as := &AntStep{
 		source:  loc,
 		steptot: 0,
-		move:    -1,
+		move:    6,
 		dest:    make([]Location, 0, 4),
 		steps:   make([]int, 0, 4),
 		N:       make([]*Neighborhood, 5),
@@ -111,9 +113,9 @@ func (s *State) AntStep(loc Location, risk int) *AntStep {
 	for d := 0; d < 4; d++ {
 		nloc := s.Map.LocStep[loc][d]
 		s.Neighborhood(nloc, as.N[d], Direction(d))
-		as.N[d].perm = permute[d]
+		as.N[d].perm = int(permute[d])
 
-		if s.Item(nloc) == FOOD {
+		if s.Map.Item(nloc) == FOOD {
 			as.foodp = true
 		}
 		if s.ValidStep(nloc) {
@@ -122,7 +124,7 @@ func (s *State) AntStep(loc Location, risk int) *AntStep {
 		}
 	}
 	s.Neighborhood(loc, as.N[4], Direction(4))
-	as.N[4].perm = permute[4]
+	as.N[4].perm = int(permute[4])
 	as.N[4].valid = true
 
 	// Compute the min threat moves.
@@ -153,10 +155,10 @@ func (s *State) EmitMoves(ants []*AntStep) {
 	for _, ant := range ants {
 		if ant.move >= 0 && ant.move < NoMovement {
 			p := s.ToPoint(ant.source)
-			fmt.Fprintf(os.Stdout, "o %d %d %s\n", p.r, p.c, DirectionChar[ant.move])
+			fmt.Fprintf(os.Stdout, "o %d %d %s\n", p.R, p.C, DirectionChar[ant.move])
 		} else if ant.move != NoMovement {
 			p := s.ToPoint(ant.source)
-			log.Printf("Invalid move %d %d\n", p.r, p.c)
+			log.Printf("Invalid move %d %d\n", p.R, p.C)
 		}
 	}
 }
@@ -195,7 +197,7 @@ func (s *State) GenerateMoves(antsIn []*AntStep) {
 		perm := Permute5()
 		for _, ant := range ants {
 			for i, N := range ant.N {
-				N.perm = perm[i]
+				N.perm = int(perm[i])
 				if N.d == NoMovement {
 					N.valid = true
 				} else {
@@ -218,7 +220,7 @@ func (s *State) Step(ant *AntStep) bool {
 		if ant.move == NoMovement || s.MoveAnt(ant.source, s.Map.LocStep[ant.source][ant.N[0].d]) {
 			return true
 		}
-		ant.move = -1
+		ant.move = InvalidMove
 	}
 	return false
 }

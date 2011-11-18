@@ -9,6 +9,10 @@ import (
 	"time"
 	"runtime"
 	"strings"
+	. "bugnuts/watcher"
+	. "bugnuts/viz"
+	. "bugnuts/debug"
+	. "bugnuts/state"
 )
 
 var runBot string
@@ -16,16 +20,6 @@ var mapFile string
 var paramKey string
 var watchPoints string
 var debugLevel int
-
-var Viz = map[string]bool{
-	"path":    false,
-	"vcount":  false,
-	"horizon": false,
-	"threat":  false,
-	"error":   false,
-	"targets": false,
-	"monte":   false,
-}
 
 var WS *Watches
 
@@ -49,34 +43,7 @@ func init() {
 	flag.Parse()
 
 	SetDebugLevel(debugLevel)
-
-	if vizList != "" {
-		for _, word := range strings.Split(strings.ToLower(vizList), ",") {
-			switch word {
-			case "all":
-				for flag, _ := range Viz {
-					Viz[flag] = true
-				}
-			case "none":
-				for flag, _ := range Viz {
-					Viz[flag] = false
-				}
-			case "useful":
-				Viz["path"] = true
-				Viz["horizon"] = true
-				Viz["targets"] = true
-				Viz["error"] = true
-				Viz["monte"] = true
-			default:
-				_, ok := Viz[word]
-				if !ok {
-					log.Printf("Visualization flag %s not known", word)
-				} else {
-					Viz[word] = true
-				}
-			}
-		}
-	}
+	SetViz(vizList, Viz)
 }
 
 var Times = make(map[string]int64, 30)

@@ -12,7 +12,5 @@ tmp/
 *.log
 *.replaygz
 replay/data
-log/
-bot
 *.png
 nohup.out

@@ -1,39 +1,82 @@
-package main
+package viz
 
 import (
 	"os"
 	"fmt"
+	. "bugnuts/maps"
+	. "bugnuts/util"
+	. "bugnuts/state"
+	. "bugnuts/pathing"
 )
 
+var Viz = map[string]bool{
+	"path":    false,
+	"vcount":  false,
+	"horizon": false,
+	"threat":  false,
+	"error":   false,
+	"targets": false,
+	"monte":   false,
+}
+
+func VizSet(vizList string, Viz map[string]bool) {
+	if vizList != "" {
+		for _, word := range strings.Split(strings.ToLower(vizList), ",") {
+			switch word {
+			case "all":
+				for flag, _ := range Viz {
+					Viz[flag] = true
+				}
+			case "none":
+				for flag, _ := range Viz {
+					Viz[flag] = false
+				}
+			case "useful":
+				Viz["path"] = true
+				Viz["horizon"] = true
+				Viz["targets"] = true
+				Viz["error"] = true
+				Viz["monte"] = true
+			default:
+				_, ok := Viz[word]
+				if !ok {
+					log.Printf("Visualization flag %s not known", word)
+				} else {
+					Viz[word] = true
+				}
+			}
+		}
+	}
+}
 func VizLine(m *Map, p1, p2 Point, arrow bool) {
 	ltype := "line"
 	if arrow {
 		ltype = "arrow"
 	}
 
-	if Abs(p1.r-p2.r) > m.Rows/2 {
-		if p1.r < m.Rows/2 {
-			p2.r -= m.Rows
+	if Abs(p1.R-p2.R) > m.Rows/2 {
+		if p1.R < m.Rows/2 {
+			p2.R -= m.Rows
 		} else {
-			p2.r += m.Rows
+			p2.R += m.Rows
 		}
 	}
-	if Abs(p2.c-p1.c) > m.Cols/2 {
-		if p1.c < m.Cols/2 {
-			p2.c -= m.Cols
+	if Abs(p2.C-p1.C) > m.Cols/2 {
+		if p1.C < m.Cols/2 {
+			p2.C -= m.Cols
 		} else {
-			p2.c += m.Cols
+			p2.C += m.Cols
 		}
 	}
 
-	fmt.Fprintf(os.Stdout, "v %s %d %d %d %d\n", ltype, p1.r, p1.c, p2.r, p2.c)
+	fmt.Fprintf(os.Stdout, "v %s %d %d %d %d\n", ltype, p1.R, p1.C, p2.R, p2.C)
 }
 
-func (s *State) Viz() {
+func Visualize(s *State) {
 	if Viz["horizon"] {
-		for _, loc := range s.Map.HBorder {
-			p := s.Map.ToPoint(Location(loc))
-			fmt.Fprintf(os.Stdout, "v tileBorder %d %d MM\n", p.r, p.c)
+		for _, loc := range s.Met.HBorder {
+			p := s.ToPoint(Location(loc))
+			fmt.Fprintf(os.Stdout, "v tileBorder %d %d MM\n", p.R, p.C)
 		}
 	}
 
@@ -45,8 +88,8 @@ func (s *State) Viz() {
 					fmt.Fprintf(os.Stdout, "v setFillColor 255 0 0 %.1f\n", float64(threat)*.2)
 					lthreat = threat
 				}
-				p := s.Map.ToPoint(Location(i))
-				fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.r, p.c)
+				p := s.ToPoint(Location(i))
+				fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.R, p.C)
 			}
 		}
 		fmt.Fprintf(os.Stdout, "v setFillColor 0 0 0 1.0\n")
@@ -54,7 +97,7 @@ func (s *State) Viz() {
 
 	if Viz["vcount"] {
 		lnvis := -1
-		for i, nvis := range s.Map.VisCount {
+		for i, nvis := range s.Met.VisCount {
 			if nvis > 1 {
 				if nvis > 8 {
 					nvis = 8
@@ -64,47 +107,47 @@ func (s *State) Viz() {
 					lnvis = nvis
 				}
 
-				p := s.Map.ToPoint(Location(i))
-				fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.r, p.c)
+				p := s.ToPoint(Location(i))
+				fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.R, p.C)
 			}
 		}
 		fmt.Fprintf(os.Stdout, "v setFillColor 0 0 0 1.0\n")
 	}
 
 	if Viz["monte"] {
-		s.VizMCPaths()
+		VizMCPaths(s)
 	}
 }
 
-func (s *State) VizTargets(tset *TargetSet) {
+func VizTargets(s *State, tset *TargetSet) {
 	for loc, target := range *tset {
-		p := s.Map.ToPoint(loc)
-		fmt.Fprintf(os.Stdout, "v star %d %d .3 1 %d true\n", p.r, p.c, target.Count+2)
+		p := s.ToPoint(loc)
+		fmt.Fprintf(os.Stdout, "v star %d %d .3 1 %d true\n", p.R, p.C, target.Count+2)
 	}
 }
 
-func (s *State) VizMCPaths() {
-	if s.Map.MCPaths < 1 {
+func VizMCPaths(s *State) {
+	if s.Met.MCPaths < 1 {
 		return
 	}
 
-	for i, val := range s.Map.MCDist {
+	for i, val := range s.Met.MCDist {
 		if val > 0 {
-			vout := val * 64 / (s.Map.MCDistMax + 1)
-			if val == s.Map.MCDistMax {
+			vout := val * 64 / (s.Met.MCDistMax + 1)
+			if val == s.Met.MCDistMax {
 				fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
 					0, 0, 255, .75)
 			} else {
 				fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
 					heat64[vout].R, heat64[vout].G, heat64[vout].B, .4)
 			}
-			p := s.Map.ToPoint(Location(i))
-			fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.r, p.c)
+			p := s.ToPoint(Location(i))
+			fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.R, p.C)
 		}
 	}
 }
 
-func (s *State) VizMCHillIn() {
+func VizMCHillIn(s *State) {
 	hills := make(map[Location]int, 6)
 	for _, loc := range s.HillLocations(0) {
 		hills[loc] = 1
@@ -140,8 +183,8 @@ func (s *State) VizMCHillIn() {
 						fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
 							heat64[vout].R, heat64[vout].G, heat64[vout].B, .5)
 					}
-					p := s.Map.ToPoint(Location(i))
-					fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.r, p.c)
+					p := s.ToPoint(Location(i))
+					fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.R, p.C)
 				}
 			}
 		}

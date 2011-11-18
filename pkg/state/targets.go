@@ -1,11 +1,14 @@
-package main
+package state
 
 import (
 	"log"
 	"math"
 	"fmt"
-	"os"
 	"sort"
+	. "bugnuts/maps"
+	. "bugnuts/debug"
+	. "bugnuts/pathing"
+	. "bugnuts/util"
 )
 
 type Target struct {
@@ -45,7 +48,7 @@ func (tset *TargetSet) Add(item Item, loc Location, count, pri int) {
 			Loc:      loc,
 			Count:    count,
 			Pri:      pri,
-			Terminal: item.IsTerminal(),
+			Terminal: TerminalItem[item],
 		}
 	}
 
@@ -114,7 +117,7 @@ func MakeExplorers(s *State, scale float64, count, pri int) *TargetSet {
 
 	for r := 5; r < s.Rows; r += stride {
 		for c := 5; c < s.Cols; c += stride {
-			loc := s.Map.ToLocation(Point{r: r, c: c})
+			loc := s.ToLocation(Point{R: r, C: c})
 			tset.Add(EXPLORE, loc, count, pri)
 		}
 	}
@@ -147,15 +150,18 @@ func (s *State) AddBorderTargets(N int, tset *TargetSet, explore *TargetSet, pri
 	loc, n := fexp.Sample(N, 14, 20)
 	added := 0
 	for i, _ := range loc {
-		if s.Map.Seen[loc[i]] < s.Turn-1 {
+		if s.Met.Seen[loc[i]] < s.Turn-1 {
 			if Debug[DBG_BorderTargets] {
 				log.Printf("Adding %d", i)
 				log.Printf("Adding %d %v %v", i, s.ToPoint(loc[i]), n[i])
 			}
-			exp := s.ToPoint(loc[i])
-			if Viz["targets"] {
-				fmt.Fprintf(os.Stdout, "v star %d %d .5 1.5 9 true\n", exp.r, exp.c)
-			}
+
+			/* 
+				     exp := s.ToPoint(loc[i])
+					 if Viz["targets"] {
+							fmt.Fprintf(os.Stdout, "v star %d %d .5 1.5 9 true\n", exp.R, exp.C)
+					}
+			*/
 			if explore != nil {
 				(*explore).Add(EXPLORE, loc[i], 1, pri)
 			}
@@ -177,7 +183,7 @@ func (p DefScoreSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 func (p DefScoreSlice) Less(i, j int) bool { return p[i].score > p[j].score }
 
 func (s *State) AddMCBlock(tset *TargetSet, priority int, DefendDist int) {
-	if true || len(s.Map.MCDist) == 0 || s.NHills[0] > 2 || s.Turn < 30 {
+	if true || len(s.Met.MCDist) == 0 || s.NHills[0] > 2 || s.Turn < 30 {
 		return
 	}
 
@@ -191,12 +197,12 @@ func (s *State) AddMCBlock(tset *TargetSet, priority int, DefendDist int) {
 		Def := make([]DefScore, len(loclist))
 		for i, loc := range loclist {
 			(*tset).Remove(loc)
-			//log.Printf("DIST: %d %d", loc, len(s.Map.MCDist))
-			Def[i] = DefScore{loc: loc, score: s.Map.MCDist[loc]}
+			//log.Printf("DIST: %d %d", loc, len(s.Met.MCDist))
+			Def[i] = DefScore{loc: loc, score: s.Met.MCDist[loc]}
 		}
 		sort.Sort(DefScoreSlice(Def))
 		for i := 0; i < MinV(4, len(Def)); i++ {
-			if Def[i].score/s.Map.MCPaths > 2 {
+			if Def[i].score/s.Met.MCPaths > 2 {
 				(*tset).Add(DEFEND, Def[i].loc, 1, priority)
 			}
 		}
@@ -222,11 +228,11 @@ func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist 
 					log.Printf("Enemy Pathin: defense: %v @ %v", s.ToPoint(loc), s.ToPoint(tloc))
 				}
 				(*tset).Add(DEFEND, tloc, 1, priority)
-				if len(s.Map.MCDist) > 0 {
-					maxf := s.Map.MCFlow[tloc][0]
+				if len(s.Met.MCDist) > 0 {
+					maxf := s.Met.MCFlow[tloc][0]
 					d := 0
 					for i := 1; i < 4; i++ {
-						if s.Map.MCFlow[tloc][i] > maxf {
+						if s.Met.MCFlow[tloc][i] > maxf {
 							d = i
 						}
 					}
@@ -237,7 +243,7 @@ func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist 
 							(*tset).Add(DEFEND, nl, 1, priority)
 						}
 						if Debug[DBG_PathInDefense] {
-							log.Printf("Maxflow %v: %s, adding dirs %v %v", s.Map.MCFlow[tloc], Direction(d), dirs[d%2], s.ToPoint(nl))
+							log.Printf("Maxflow %v: %s, adding dirs %v %v", s.Met.MCFlow[tloc], Direction(d), dirs[d%2], s.ToPoint(nl))
 						}
 					}
 				}
@@ -248,7 +254,7 @@ func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist 
 
 func (tset *TargetSet) UpdateSeen(s *State, count int) {
 	for loc, _ := range *tset {
-		if s.Map.Seen[loc] == s.Turn {
+		if s.Met.Seen[loc] == s.Turn {
 			(*tset).Remove(loc)
 		} else {
 			(*tset)[loc].Count = count

@@ -1,4 +1,4 @@
-package main
+package maps
 
 import (
 	"fmt"
@@ -7,7 +7,7 @@ import (
 	"os"
 	"image"
 	"image/png"
-	"strconv"
+	. "bugnuts/viz"
 )
 
 type ImageHelper struct {
@@ -66,35 +66,4 @@ func (m *Map) WriteDebugImage(Desc string, seq int, At func(row, col int) image.
 	if err != nil {
 		log.Panicf("Couldn't encode png (%s)", err)
 	}
-}
-
-func (s *State) DumpSeen() string {
-	mseen := Max(s.Map.Seen)
-	str := ""
-
-	for r := 0; r < s.Rows; r++ {
-		for c := 0; c < s.Cols; c++ {
-			str += strconv.Itoa(s.Map.Seen[r*s.Cols+c] * 10 / (mseen + 1))
-		}
-		str += "\n"
-	}
-
-	return str
-}
-
-func (s *State) DumpMap() string {
-	m := make([]byte, len(s.Map.Grid))
-	str := ""
-
-	for i, o := range s.Map.Grid {
-		m[i] = o.ToSymbol()
-	}
-
-	for r := 0; r < s.Rows; r++ {
-		for c := 0; c < s.Cols; c++ {
-			str += string(m[r*s.Cols+c])
-		}
-		str += "\n"
-	}
-	return str
 }

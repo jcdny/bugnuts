@@ -14,6 +14,9 @@ import (
 	"os"
 	"fmt"
 	"log"
+	. "bugnuts/maps"
+	. "bugnuts/state"
+	. "bugnuts/util"
 )
 
 type BotV6 struct {

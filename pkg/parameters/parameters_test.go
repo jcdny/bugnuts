@@ -1,4 +1,4 @@
-package main
+package parameters
 
 import (
 	"testing"
@@ -7,11 +7,11 @@ import (
 
 func TestParametersLoadSave(t *testing.T) {
 	for key, p := range ParameterSets {
-		p.Save(key + ".param.tmp")
+		p.Save("tmp/" + key + ".param")
 	}
 	for key, _ := range ParameterSets {
 		pnew := &Parameters{}
-		pnew.Load(key + ".param.tmp")
+		pnew.Load("tmp/" + key + ".param")
 		log.Printf("Load %s got %#v", key, pnew)
 	}
 }

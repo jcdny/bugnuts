@@ -2,29 +2,6 @@ include $(GOROOT)/src/Make.inc
 
 TARG=bot
 GOFILES=\
-	BotV0.go\
-	BotV3.go\
-	BotV4.go\
-	BotV5.go\
-	bot6.go\
-	viz.go\
-	direction.go\
-	pallettes.go\
-	parameters.go\
-	images.go\
-	debugging.go\
-	queue.go\
-	fill.go\
-	mask.go\
-	util.go\
-	tables.go\
-	state.go\
-	targets.go\
-	map.go\
-	movement.go\
-	sym.go\
-	watcher.go\
-	MyBot.go\
 	main.go
 
 

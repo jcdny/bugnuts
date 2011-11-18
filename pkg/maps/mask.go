@@ -112,7 +112,7 @@ func maskChange(r2 int, v []Point) (add, remove [][]Point, union []Point) {
 // steps in any directions plus a union of the 1step move There is
 // also the move mask which includes probabilities of a cell falling
 // within the mask given available moves.
-func makeMask(r2, rows, cols int) *Mask {
+func MakeMask(r2, rows, cols int) *Mask {
 	p := maskCircle(r2)
 	add, rem, union := maskChange(r2, p)
 
@@ -128,13 +128,13 @@ func makeMask(r2, rows, cols int) *Mask {
 		Loc:      ToOffsets(p, cols),
 		UnionLoc: ToOffsets(union, cols),
 
-		MM: makeMoveMask(r2, cols),
+		MM: MakeMoveMask(r2, cols),
 	}
 
 	return m
 }
 
-func makeMoveMask(r2 int, cols int) []*MoveMask {
+func MakeMoveMask(r2 int, cols int) []*MoveMask {
 	if r2 < 0 {
 		log.Panic("Radius must be > 0")
 	}

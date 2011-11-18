@@ -16,7 +16,7 @@ type Map struct {
 	Grid    []Item // The actual map data
 
 	// internal cache data
-	borderDist []uint8       // border distance
+	BorderDist []uint8       // border distance
 	LocStep    [][4]Location // adjecent tile pointer
 }
 
@@ -33,7 +33,7 @@ func NewMap(rows, cols, players int) *Map {
 		Players: players,
 		Grid:    make([]Item, rows*cols),
 		// cache data
-		borderDist: borderDistance(rows, cols),
+		BorderDist: borderDistance(rows, cols),
 		LocStep:    locationStep(rows, cols),
 	}
 
@@ -216,4 +216,18 @@ func (m *Map) Hills(player int) []Location {
 
 func (m *Map) Item(l Location) Item {
 	return m.Grid[l]
+}
+
+func (m *Map) DumpMap() string {
+	mout := make([]byte, len(m.Grid))
+	for i, o := range m.Grid {
+		mout[i] = o.ToSymbol()
+	}
+
+	str := ""
+	for r := 0; r < m.Rows; r++ {
+		str += string(mout[r*m.Cols : (r+1)*m.Cols-1])
+		str += "\n"
+	}
+	return str
 }

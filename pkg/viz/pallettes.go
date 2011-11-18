@@ -1,7 +1,8 @@
-package main
+package viz
 
 import (
 	"image"
+	. "bugnuts/maps"
 )
 
 type ImageLayer struct {
@@ -12,7 +13,7 @@ type ImageLayer struct {
 	color image.ColorImage
 }
 
-func (o Item) Color() image.NRGBAColor {
+func Color(o Item) image.NRGBAColor {
 	switch o {
 	case UNKNOWN:
 		return image.NRGBAColor{0xb0, 0xb0, 0xb0, 0xff}

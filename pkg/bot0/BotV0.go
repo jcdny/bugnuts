@@ -1,10 +1,12 @@
 package main
 // The v0 - The NOOP Bot.
-//   Useful for testing forcast data from replays 
+//
+// Useful for testing forcast data from replays 
 
 
 import (
 	"os"
+	. "bugnuts/state"
 )
 
 type BotV0 struct {
@@ -25,6 +27,5 @@ func (bot *BotV0) Priority(i Item) int {
 }
 
 func (bot *BotV0) DoTurn(s *State) os.Error {
-
 	return nil
 }
