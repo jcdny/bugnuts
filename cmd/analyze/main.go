@@ -5,7 +5,6 @@ import (
 	"log"
 	"fmt"
 	"os"
-	"time"
 )
 
 func init() {
@@ -32,10 +31,10 @@ func main() {
 		usage()
 	}
 
-	files, replays := NewDispatch()
+	results := Process(args)
 
-	go Stage(files, replays)
-	go mapper(replays)
-	Walk(args, files)
-	time.Sleep(int64(100000000))
+	for _, r := range results {
+		log.Print(r)
+	}
+
 }
