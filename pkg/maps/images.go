@@ -7,7 +7,6 @@ import (
 	"os"
 	"image"
 	"image/png"
-	. "bugnuts/viz"
 )
 
 type ImageHelper struct {
@@ -39,7 +38,7 @@ func (m *Map) Bounds() image.Rectangle {
 
 func (m *Map) At(x, y int) image.NRGBAColor {
 	loc := m.ToLocation(Point{y, x})
-	return ItemColor(uint8(m.Grid[loc]))
+	return ItemColor(m.Grid[loc])
 }
 
 func (m *Map) WriteDebugImage(Desc string, seq int, At func(row, col int) image.NRGBAColor) {
@@ -66,4 +65,37 @@ func (m *Map) WriteDebugImage(Desc string, seq int, At func(row, col int) image.
 	if err != nil {
 		log.Panicf("Couldn't encode png (%s)", err)
 	}
+}
+func ItemColor(o Item) image.NRGBAColor {
+	switch o {
+	case UNKNOWN:
+		return image.NRGBAColor{0xb0, 0xb0, 0xb0, 0xff}
+	case WATER:
+		return image.NRGBAColor{0x10, 0x10, 0x50, 0xff}
+	case FOOD:
+		return image.NRGBAColor{0xe0, 0xe0, 0xc0, 0xff}
+	case LAND:
+		return image.NRGBAColor{0x8b, 0x45, 0x13, 0xff}
+	case MY_ANT:
+		return image.NRGBAColor{0xf0, 0x00, 0x00, 0xff}
+	case PLAYER1:
+		return image.NRGBAColor{0xf0, 0xf0, 0x00, 0xff}
+	case PLAYER2:
+		return image.NRGBAColor{0x00, 0xf0, 0x00, 0xff}
+	case PLAYER3:
+		return image.NRGBAColor{0x00, 0x00, 0xf0, 0xff}
+	case PLAYER4:
+		return image.NRGBAColor{0xf0, 0x00, 0xf0, 0xff}
+	case PLAYER5:
+		return image.NRGBAColor{0xf0, 0xf0, 0xf0, 0xff}
+	case PLAYER6:
+		return image.NRGBAColor{0x80, 0x80, 0x00, 0xff}
+	case PLAYER7:
+		return image.NRGBAColor{0x00, 0x80, 0x80, 0xff}
+	case PLAYER8:
+		return image.NRGBAColor{0x80, 0x00, 0x80, 0xff}
+	case PLAYER9:
+		return image.NRGBAColor{0x80, 0x00, 0xf0, 0xff}
+	}
+	return image.NRGBAColor{0xff, 0xff, 0xff, 0xff}
 }
