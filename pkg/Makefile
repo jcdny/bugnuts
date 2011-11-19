@@ -14,6 +14,9 @@ include $(GOROOT)/src/Make.inc
 all: install
 
 DIRS=\
+	MyBot\
+	bot6\
+	debug\
 	maps\
 	parameters\
 	pathing\

@@ -13,7 +13,7 @@ type ABot struct {
 	NewBot func(*State, *Parameters) Bot
 }
 
-var botList map[string]ABot
+var botList = make(map[string]ABot)
 
 func RegisterABot(bot ABot) {
 	botList[bot.Key] = bot

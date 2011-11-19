@@ -435,15 +435,15 @@ func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
 // Build list of locations ordered by depth from closest to furthest
 // TODO see if perm on the per depth list helps
 type Segment struct {
-	src   Location
-	end   Location
-	steps int
+	Src   Location
+	End   Location
+	Steps int
 }
 type SegSlice []Segment
 
 func (p SegSlice) Len() int { return len(p) }
 // Metric is Manhattan distance from origin.
-func (p SegSlice) Less(i, j int) bool { return p[i].steps < p[j].steps }
+func (p SegSlice) Less(i, j int) bool { return p[i].Steps < p[j].Steps }
 func (p SegSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // Return true if any segments were found.
@@ -455,9 +455,9 @@ func (f *Fill) ClosestStep(seg []Segment) bool {
 
 	any := false
 	for i, _ := range seg {
-		seg[i].end = f.Seed[seg[i].src]
-		seg[i].steps += Abs(int(f.Depth[seg[i].src]) - int(f.Depth[seg[i].end]))
-		if seg[i].end != 0 || f.Depth[seg[i].end] != 0 {
+		seg[i].End = f.Seed[seg[i].Src]
+		seg[i].Steps += Abs(int(f.Depth[seg[i].Src]) - int(f.Depth[seg[i].End]))
+		if seg[i].End != 0 || f.Depth[seg[i].End] != 0 {
 			any = true
 		}
 	}

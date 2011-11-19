@@ -49,8 +49,8 @@ type State struct {
 	PlayerSeed    int64 //random player seed
 	Turn          int   //current turn number
 
-	attackMask *Mask
-	viewMask   *Mask
+	AttackMask *Mask
+	ViewMask   *Mask
 
 	Ants         []map[Location]int // Ant lists List by playerid value is turn seen
 	Food         map[Location]int   // Food Seen
@@ -138,12 +138,12 @@ func (s *State) Start(reader *bufio.Reader) os.Error {
 	s.Met = NewMetrics(s.Map)
 
 	// Mask Cache
-	s.viewMask = MakeMask(s.ViewRadius2, s.Rows, s.Cols)
-	s.attackMask = MakeMask(s.AttackRadius2, s.Rows, s.Cols)
+	s.ViewMask = MakeMask(s.ViewRadius2, s.Rows, s.Cols)
+	s.AttackMask = MakeMask(s.AttackRadius2, s.Rows, s.Cols)
 
 	// From every point on the map we know nothing.
 	for i := range s.Met.Unknown {
-		s.Met.Unknown[i] = len(s.viewMask.P)
+		s.Met.Unknown[i] = len(s.ViewMask.P)
 	}
 
 	// Food and Ant things
@@ -202,10 +202,12 @@ func (s *State) PointAdd(p1, p2 Point) Point {
 func (s *State) ResetGrid() {
 	// Rotate threat maps and clear first.
 	n := len(s.Met.Threat)
+
 	if n > 1 {
 		s.Met.Threat = append(s.Met.Threat[1:n], s.Met.Threat[0])
 		s.Met.PThreat = append(s.Met.PThreat[1:n], s.Met.PThreat[0])
 	}
+
 	for i := range s.Met.Threat[0] {
 		s.Met.Threat[0][i] = 0
 		s.Met.PThreat[0][i] = 0
@@ -399,9 +401,9 @@ func (s *State) AddHill(loc Location, player int) {
 // Obvious optimizations: watch Adjacent Seen cells and do incremental updating.
 func (s *State) UpdateLand(player int, loc Location) {
 	nland := 0
-	if s.Map.BorderDist[loc] > s.viewMask.R {
+	if s.Map.BorderDist[loc] > s.ViewMask.R {
 		// In interior of map so use loc offsets
-		for _, offset := range s.viewMask.Loc {
+		for _, offset := range s.ViewMask.Loc {
 			if s.Map.Grid[loc+offset] == UNKNOWN {
 				s.Map.Grid[loc+offset] = LAND
 			}
@@ -412,7 +414,7 @@ func (s *State) UpdateLand(player int, loc Location) {
 	} else {
 		// non interior point lets go slow
 		p := s.Map.ToPoint(loc)
-		for _, op := range s.viewMask.P {
+		for _, op := range s.ViewMask.P {
 			l := s.ToLocation(s.PointAdd(p, op))
 			if s.Map.Grid[l] == UNKNOWN {
 				s.Map.Grid[l] = LAND
@@ -428,28 +430,28 @@ func (s *State) UpdateLand(player int, loc Location) {
 
 func (s *State) UpdateSeen(player int, loc Location) {
 	s.Met.Unknown[loc] = 0
-	if s.Map.BorderDist[loc] > s.viewMask.R {
+	if s.Map.BorderDist[loc] > s.ViewMask.R {
 		// In interior of map so use loc offsets
-		for _, offset := range s.viewMask.Loc {
+		for _, offset := range s.ViewMask.Loc {
 			s.Met.Seen[loc+offset] = s.Turn
 		}
 	} else {
 		p := s.Map.ToPoint(loc)
-		for _, op := range s.viewMask.P {
+		for _, op := range s.ViewMask.P {
 			s.Met.Seen[s.ToLocation(s.PointAdd(p, op))] = s.Turn
 		}
 	}
 }
 
 func (s *State) UpdateVisCount(player int, loc Location) {
-	if s.Map.BorderDist[loc] > s.viewMask.R {
+	if s.Map.BorderDist[loc] > s.ViewMask.R {
 		// In interior of map so use loc offsets
-		for _, offset := range s.viewMask.Loc {
+		for _, offset := range s.ViewMask.Loc {
 			s.Met.VisCount[loc+offset]++
 		}
 	} else {
 		p := s.Map.ToPoint(loc)
-		for _, op := range s.viewMask.P {
+		for _, op := range s.ViewMask.P {
 			s.Met.VisCount[s.ToLocation(s.PointAdd(p, op))]++
 		}
 	}
@@ -550,11 +552,11 @@ func (s *State) ProcessState() {
 
 	for loc, _ := range s.Ants[0] {
 		// Update the one step land count and unseen count for my ants
-		s.Met.SumVisCount(loc, s.viewMask)
+		s.Met.SumVisCount(loc, s.ViewMask)
 		for _, nloc := range s.Map.LocStep[loc] {
-			s.Met.SumVisCount(nloc, s.viewMask)
+			s.Met.SumVisCount(nloc, s.ViewMask)
 			if s.Met.Unknown[nloc] > 0 {
-				s.Met.UpdateCounts(nloc, s.viewMask)
+				s.Met.UpdateCounts(nloc, s.ViewMask)
 			}
 		}
 	}
@@ -565,7 +567,7 @@ func (s *State) ProcessState() {
 
 	s.MonteCarloDensity()
 
-	s.ComputeThreat(1, 0, s.attackMask.MM, s.Met.Threat[len(s.Met.Threat)-1], s.Met.PThreat[len(s.Met.PThreat)-1])
+	s.ComputeThreat(1, 0, s.AttackMask.MM, s.Met.Threat[len(s.Met.Threat)-1], s.Met.PThreat[len(s.Met.PThreat)-1])
 }
 
 func (s *State) UpdateHillMaps() {

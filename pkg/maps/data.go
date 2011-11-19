@@ -1,7 +1,5 @@
 package maps
 
-import ()
-
 var AllMaps = []string{
 	"maze_02p_01",
 	"maze_02p_02",

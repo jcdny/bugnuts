@@ -7,6 +7,8 @@ import (
 	. "bugnuts/util"
 )
 
+const NTHREAT = 10
+
 type Metrics struct {
 	*Map
 	Seen     []int      // Turn on which cell was last visible.
@@ -31,7 +33,23 @@ type Metrics struct {
 }
 
 func NewMetrics(m *Map) *Metrics {
-	return &Metrics{Map: m}
+	size := m.Rows * m.Cols
+	met := Metrics{
+		Map:      m,
+		Seen:     make([]int, size),
+		VisCount: make([]int, size),
+		Land:     make([]int, size),
+		PrFood:   make([]int, size),
+		Unknown:  make([]int, size),
+		VisSum:   make([]int, size),
+		Horizon:  make([]bool, size),
+		HBorder:  make([]Location, 0, 1000),
+	}
+	for i := 0; i < NTHREAT; i++ {
+		met.Threat = append(met.Threat, make([]int8, size))
+		met.PThreat = append(met.PThreat, make([]uint16, size))
+	}
+	return &met
 }
 
 func (m *Metrics) UpdateCounts(loc Location, mask *Mask) {

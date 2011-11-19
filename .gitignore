@@ -4,13 +4,11 @@ _*
 \#*
 .\#*
 TAGS
-MyBot
 *.tmp
 tmp/
 6.out
 *.err
 *.log
-*.replaygz
-replay/data
 *.png
+replay/data
 nohup.out

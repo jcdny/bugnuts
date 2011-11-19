@@ -26,7 +26,7 @@ import (
 
 type BotV6 struct {
 	P          *Parameters
-	PriMap     [256]int // array mapping Item to priority
+	PriMap     *[256]int // array mapping Item to priority
 	Explore    *TargetSet
 	IdleAnts   []int
 	StaticAnts []int
@@ -43,6 +43,7 @@ func NewBotV6(s *State, pset *Parameters) Bot {
 		IdleAnts:   make([]int, 0, s.Turns+2),
 		StaticAnts: make([]int, s.Turns+2),
 	}
+	log.Printf("**************************************************%v", pset)
 
 	mb.PriMap = mb.P.MakePriMap()
 
@@ -88,8 +89,8 @@ func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
 	}
 
 	if s.NHills[0] < 3 {
-		for _, loc := range s.Map.HBorder {
-			depth := s.Map.FHill.Depth[loc]
+		for _, loc := range s.Met.HBorder {
+			depth := s.Met.FHill.Depth[loc]
 			if depth > 2 && depth < uint16(bot.P.MinHorizon) {
 				// Just add these as transients.
 				tset.Add(WAYPOINT, loc, 1, bot.PriMap[WAYPOINT])
@@ -118,7 +119,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	segs := make([]Segment, 0, len(ants))
 
 	if Viz["targets"] {
-		s.VizTargets(tset)
+		VizTargets(s, tset)
 	}
 
 	iter := -1
@@ -136,7 +137,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 
 		segs = segs[0:0]
 		for loc, _ := range ants {
-			segs = append(segs, Segment{src: loc, steps: ants[loc].steptot})
+			segs = append(segs, Segment{Src: loc, Steps: ants[loc].Steptot})
 		}
 
 		if !f.ClosestStep(segs) {
@@ -154,53 +155,53 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 		}
 
 		for _, seg := range segs {
-			ant := ants[seg.src]
-			tgt, ok := (*tset)[seg.end]
-			if !ok && seg.end != 0 {
+			ant := ants[seg.Src]
+			tgt, ok := (*tset)[seg.End]
+			if !ok && seg.End != 0 {
 				if Debug[DBG_MoveErrors] {
 					log.Printf("Move from %v(%d) to %v(%d) no target ant: %#v",
-						s.ToPoint(seg.src), seg.src, s.ToPoint(seg.end), seg.end, ant)
-					log.Printf("Source item \"%v\", pending=%d", s.Map.Grid[seg.src], tset.Pending())
+						s.ToPoint(seg.Src), seg.Src, s.ToPoint(seg.End), seg.End, ant)
+					log.Printf("Source item \"%v\", pending=%d", s.Map.Grid[seg.Src], tset.Pending())
 				}
 				if Viz["error"] {
-					p := s.ToPoint(seg.src)
-					VizLine(s.Map, p, s.ToPoint(seg.end), false)
-					fmt.Fprintf(os.Stdout, "v tileBorder %d %d MM\n", p.r, p.c)
+					p := s.ToPoint(seg.Src)
+					VizLine(s.Map, p, s.ToPoint(seg.End), false)
+					fmt.Fprintf(os.Stdout, "v tileBorder %d %d MM\n", p.R, p.C)
 				}
 			} else if ok && tgt.Count > 0 {
 				// We have a target - make sure we can step in the direction of the target.
 				good := true
-				if ant.steptot == 0 {
+				if ant.Steptot == 0 {
 					// if it's a real step make sure there is something we would do
 					good = false
-					ant.N[4].goal = 0
-					dh := int(s.Map.FHill.Depth[seg.src])
+					ant.N[4].Goal = 0
+					dh := int(s.Met.FHill.Depth[seg.Src])
 					for i := 0; i < 4; i++ {
-						nloc := s.Map.LocStep[seg.src][i]
+						nloc := s.Map.LocStep[seg.Src][i]
 						// Don't mark target as taken unless its a valid step and risk = 0
 						// TODO not sure this is how I should be doing this.
-						goal := f.Distance(seg.src, nloc) * 10
+						goal := f.Distance(seg.Src, nloc) * 10
 
 						// Prefer steps which are downhill from the hill if we are close.
 						if dh > 0 && dh < 40 {
-							goal += s.Map.FDownhill.Distance(seg.src, nloc)
+							goal += s.Met.FDownhill.Distance(seg.Src, nloc)
 						}
 
-						ant.N[i].goal = goal
+						ant.N[i].Goal = goal
 						// Check for a valid move towards the goal
-						if WS.Watched(ant.source, s.Turn, 0) {
+						if WS.Watched(int(ant.Source), s.Turn, 0) {
 							log.Printf("TURN %d: %v->%v : %v goal:%d DHill:%d \"%s\" %d: %#v",
-								s.Turn, s.ToPoint(ant.source), s.ToPoint(nloc), s.Stepable(nloc),
-								goal, dh, tgt.Item, seg.steps, ant.N[i])
+								s.Turn, s.ToPoint(ant.Source), s.ToPoint(nloc), s.Stepable(nloc),
+								goal, dh, tgt.Item, seg.Steps, ant.N[i])
 						}
 						if s.Stepable(nloc) && goal > 0 {
 							// and it needs to be a step we can take
-							if ant.N[i].safest {
+							if ant.N[i].Safest {
 								good = true
-							} else if ant.N[i].threat < 2 && seg.steps < 20 &&
+							} else if ant.N[i].Threat < 2 && seg.Steps < 20 &&
 								(tgt.Item == DEFEND || tgt.Item.IsHill()) {
 								good = true
-								ant.N[i].threat = 0 // TODO HACK!
+								ant.N[i].Threat = 0 // TODO HACK!
 							}
 						}
 					}
@@ -209,21 +210,21 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 				if good {
 					// A good move exists so assume we step to the target
 					if Viz["path"] {
-						VizLine(s.Map, s.ToPoint(seg.src), s.ToPoint(seg.end), false)
+						VizLine(s.Map, s.ToPoint(seg.Src), s.ToPoint(seg.End), false)
 					}
 					tgt.Count--
 					nMove++
-					ant.goalp = true
-					ant.steps = append(ant.steps, seg.steps-ant.steptot)
-					ant.dest = append(ant.dest, seg.end)
-					ant.steptot = seg.steps
+					ant.Goalp = true
+					ant.Steps = append(ant.Steps, seg.Steps-ant.Steptot)
+					ant.Dest = append(ant.Dest, seg.End)
+					ant.Steptot = seg.Steps
 
 					if tgt.Terminal {
 						endants = append(endants, ant)
 					} else {
-						ants[seg.end] = ant
+						ants[seg.End] = ant
 					}
-					ants[seg.src] = &AntStep{}, false
+					ants[seg.Src] = &AntStep{}, false
 				}
 			}
 		}
@@ -233,7 +234,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 			// See if we have more ants than targets
 			idle := 0
 			for _, ant := range ants {
-				if !ant.goalp && ant.steptot < 20 {
+				if !ant.Goalp && ant.Steptot < 20 {
 					idle++
 				}
 			}
@@ -276,10 +277,10 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	// also set outbound as goal for goalless ants near hill
 	tp := make(map[Location]int, len(endants))
 	for _, ant := range endants {
-		if ant.goalp {
-			tp[ant.source] = 5 // TODO more magic
+		if ant.Goalp {
+			tp[ant.Source] = 5 // TODO more magic
 		} else {
-			tp[ant.source] = 1
+			tp[ant.Source] = 1
 		}
 	}
 
@@ -288,19 +289,19 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	if s.NHills[0] < 3 {
 		fa, _, _ := MapFillSeed(s.Map, tp, 0)
 		for _, ant := range endants {
-			ant.N[4].prfood = s.Map.ComputePrFood(ant.source, ant.source, s.Turn, s.viewMask, fa)
+			ant.N[4].PrFood = s.Met.ComputePrFood(ant.Source, ant.Source, s.Turn, s.ViewMask, fa)
 			for d := 0; d < 4; d++ {
-				ant.N[d].prfood = s.Map.ComputePrFood(s.Map.LocStep[ant.source][d], ant.source, s.Turn, s.viewMask, fa)
+				ant.N[d].PrFood = s.Met.ComputePrFood(s.Map.LocStep[ant.Source][d], ant.Source, s.Turn, s.ViewMask, fa)
 			}
-			if !ant.goalp && s.Map.FDownhill.Depth[ant.source] > 1 {
-				dh := int(s.Map.FHill.Depth[ant.source])
-				ant.goalp = true
-				ant.N[4].goal = 0
+			if !ant.Goalp && s.Met.FDownhill.Depth[ant.Source] > 1 {
+				dh := int(s.Met.FHill.Depth[ant.Source])
+				ant.Goalp = true
+				ant.N[4].Goal = 0
 				// TODO May need to set a dest as well
-				ant.steps = append(ant.steps, dh)
+				ant.Steps = append(ant.Steps, dh)
 				for d := Direction(0); d < 4; d++ {
-					ant.N[d].goal = s.Map.FDownhill.DistanceStep(ant.source, d)
-					//log.Printf("DOWNHILL: %v %s %#v", s.ToPoint(ant.source), d, ant.N[d])
+					ant.N[d].Goal = s.Met.FDownhill.DistanceStep(ant.Source, d)
+					//log.Printf("DOWNHILL: %v %s %#v", s.ToPoint(ant.Source), d, ant.N[d])
 				}
 			}
 
@@ -309,12 +310,12 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 
 	s.GenerateMoves(endants)
 	for _, ant := range endants {
-		if ant.move > 3 || ant.move < 0 {
+		if ant.Move > 3 || ant.Move < 0 {
 			bot.StaticAnts[s.Turn]++
 		}
 	}
 	s.EmitMoves(endants)
-	s.Viz()
+	Visualize(s)
 	fmt.Fprintf(os.Stdout, "go\n") // TODO Flush ??
 
 	return nil

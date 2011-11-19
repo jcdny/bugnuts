@@ -1,8 +1,11 @@
-maps.install:
-parameters.install:
-pathing.install:
+MyBot.install: parameters.install state.install
+bot6.install: MyBot.install debug.install maps.install parameters.install pathing.install state.install viz.install
+debug.install: watcher.install
+maps.install: util.install
+parameters.install: maps.install
+pathing.install: debug.install maps.install util.install
 replay.install:
-state.install:
+state.install: debug.install maps.install pathing.install util.install
 util.install:
-viz.install:
-watcher.install:
+viz.install: maps.install pathing.install state.install util.install
+watcher.install: util.install

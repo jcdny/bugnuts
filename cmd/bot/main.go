@@ -9,11 +9,14 @@ import (
 	"time"
 	"runtime"
 	"strings"
-	. "bugnuts/watcher"
+	. "bugnuts/maps"
 	. "bugnuts/viz"
+	. "bugnuts/watcher"
 	. "bugnuts/debug"
 	. "bugnuts/state"
+	. "bugnuts/MyBot"
 	. "bugnuts/bot6"
+	. "bugnuts/parameters"
 )
 
 var runBot string
@@ -21,8 +24,6 @@ var mapFile string
 var paramKey string
 var watchPoints string
 var debugLevel int
-
-var WS *Watches
 
 func init() {
 	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Lshortfile)
@@ -36,7 +37,7 @@ func init() {
 	flag.StringVar(&vizList, "V", "", vizHelp)
 
 	flag.IntVar(&debugLevel, "d", 0, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
-	flag.StringVar(&runBot, "b", "CUR", "Which bot to run")
+	flag.StringVar(&runBot, "b", "V6", "Which bot to run")
 	flag.StringVar(&mapFile, "m", "", "Map file, used to validate generated map, hill guessing etc.")
 	flag.StringVar(&paramKey, "p", "", "Parameter set, defaults to default.BOT")
 	flag.StringVar(&watchPoints, "w", "", "Watch points \"T1:T2@R,C,N[;T1:T2...]\", \":\" will watch all")
@@ -68,6 +69,9 @@ func main() {
 		log.Printf("State:\n%v\n", &s)
 	}
 
+	if paramKey == "" {
+		paramKey = runBot
+	}
 	// Set up bot
 	switch runBot {
 	/* 
@@ -82,8 +86,8 @@ func main() {
 	*/
 	case "CUR":
 		fallthrough // no flag given run latest defined bot...
-	case "v6":
-		bot = NewBotV6(&s)
+	case "V6":
+		bot = NewBotV6(&s, ParameterSets[paramKey])
 	default:
 		log.Printf("Unkown bot %s", runBot)
 		return

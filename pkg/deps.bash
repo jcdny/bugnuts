@@ -23,13 +23,14 @@ dirpat=$(echo $dirs C | awk '{
 	}
 }')
 
+echo $dirpat
 for dir in $dirs; do (
-        echo $dir >&2
 	cd $dir || exit 1
 
 	sources=$(sed -n 's/^[ 	]*\([^ 	]*\.go\)[ 	]*\\*[ 	]*$/\1/p' Makefile)
 	sources=$(echo $sources | sed 's/\$(GOOS)/'$GOOS'/g')
 	sources=$(echo $sources | sed 's/\$(GOARCH)/'$GOARCH'/g')
+
 	# /dev/null here means we get an empty dependency list if $sources is empty
 	# instead of listing every file in the directory.
 	sources=$(ls $sources /dev/null 2> /dev/null)  # remove .s, .c, etc.
@@ -37,13 +38,15 @@ for dir in $dirs; do (
 	deps=$(
 		sed -n '/^import.*"/p; /^import[ \t]*(/,/^)/p' $sources /dev/null |
 		cut -d '"' -f2 |
-		awk "$dirpat" |
+		grep bugnuts | 
+                sed 's:bugnuts/::' |
 		grep -v "^$dir\$" |
 		sed 's/$/.install/' |
 		sed 's;^C\.install;runtime/cgo.install;' |
 		sort -u
 	)
 
+	echo $dir.install: $deps >&2
 	echo $dir.install: $deps
 ) done > $TMP
 

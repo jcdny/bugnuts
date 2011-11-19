@@ -12,30 +12,30 @@ import (
 
 type Neighborhood struct {
 	//TODO add hill distance step
-	valid   bool
-	threat  int
-	pthreat int
-	goal    int
-	prfood  int
-	//vis     int
-	//unknown int
-	//land    int
-	perm   int // permuter
-	d      Direction
-	safest bool
+	Valid   bool
+	Threat  int
+	PThreat int
+	Goal    int
+	PrFood  int
+	//Vis     int
+	//Unknown int
+	//Land    int
+	Perm   int // permuter
+	D      Direction
+	Safest bool
 }
 
 type AntStep struct {
-	source  Location   // our original location
-	move    Direction  // the next step
-	dest    []Location // track routing
-	steps   []int      // and distance
-	steptot int        // and sum total distance
+	Source  Location   // our original location
+	Move    Direction  // the next step
+	Dest    []Location // track routing
+	Steps   []int      // and distance
+	Steptot int        // and sum total distance
 	N       []*Neighborhood
-	foodp   bool
-	goalp   bool
-	perm    int // to randomize ants when sorting
-	nfree   int
+	Foodp   bool
+	Goalp   bool
+	Perm    int // to randomize ants when sorting
+	NFree   int
 }
 
 func (s *State) GenerateAnts(tset *TargetSet, risk int) (ants map[Location]*AntStep) {
@@ -59,7 +59,7 @@ func (s *State) GenerateAnts(tset *TargetSet, risk int) (ants map[Location]*AntS
 
 		// Handle the special case of adjacent food, pause a step unless
 		// someone already paused for this food.
-		if ants[loc].foodp && ants[loc].steptot == 0 {
+		if ants[loc].Foodp && ants[loc].Steptot == 0 {
 			for _, nloc := range s.Map.LocStep[loc] {
 				if s.Map.Item(nloc) == FOOD && (*tset)[nloc].Count > 0 {
 					(*tset)[nloc].Count = 0
@@ -70,12 +70,12 @@ func (s *State) GenerateAnts(tset *TargetSet, risk int) (ants map[Location]*AntS
 		}
 
 		if fixed {
-			ants[loc].steptot = 1
-			ants[loc].dest = append(ants[loc].dest, loc) // staying for now.
-			ants[loc].steps = append(ants[loc].steps, 1)
-			ants[loc].move = NoMovement
-			ants[loc].nfree = 0
-			ants[loc].goalp = true
+			ants[loc].Steptot = 1
+			ants[loc].Dest = append(ants[loc].Dest, loc) // staying for now.
+			ants[loc].Steps = append(ants[loc].Steps, 1)
+			ants[loc].Move = NoMovement
+			ants[loc].NFree = 0
+			ants[loc].Goalp = true
 		}
 	}
 	return ants
@@ -83,25 +83,25 @@ func (s *State) GenerateAnts(tset *TargetSet, risk int) (ants map[Location]*AntS
 
 // Stores the neighborhood of the ant.
 func (s *State) Neighborhood(loc Location, nh *Neighborhood, d Direction) {
-	nh.threat = int(s.Threat(s.Turn, loc))
-	nh.pthreat = int(s.PThreat(s.Turn, loc))
-	//nh.vis = s.Map.VisSum[loc]
-	//nh.unknown = s.Met.Unknown[loc]
-	//nh.land = s.Met.Land[loc]
-	nh.prfood = s.Met.PrFood[loc]
-	nh.d = d
+	nh.Threat = int(s.Threat(s.Turn, loc))
+	nh.PThreat = int(s.PThreat(s.Turn, loc))
+	//nh.Vis = s.Map.VisSum[loc]
+	//nh.Unknown = s.Met.Unknown[loc]
+	//nh.Land = s.Met.Land[loc]
+	nh.PrFood = s.Met.PrFood[loc]
+	nh.D = d
 }
 
 func (s *State) AntStep(loc Location, risk int) *AntStep {
 	as := &AntStep{
-		source:  loc,
-		steptot: 0,
-		move:    6,
-		dest:    make([]Location, 0, 4),
-		steps:   make([]int, 0, 4),
+		Source:  loc,
+		Steptot: 0,
+		Move:    InvalidMove,
+		Dest:    make([]Location, 0, 4),
+		Steps:   make([]int, 0, 4),
 		N:       make([]*Neighborhood, 5),
-		nfree:   1,
-		perm:    rand.Int(),
+		NFree:   1,
+		Perm:    rand.Int(),
 	}
 	nh := new([5]Neighborhood)
 	for i, _ := range as.N {
@@ -113,39 +113,39 @@ func (s *State) AntStep(loc Location, risk int) *AntStep {
 	for d := 0; d < 4; d++ {
 		nloc := s.Map.LocStep[loc][d]
 		s.Neighborhood(nloc, as.N[d], Direction(d))
-		as.N[d].perm = int(permute[d])
+		as.N[d].Perm = int(permute[d])
 
 		if s.Map.Item(nloc) == FOOD {
-			as.foodp = true
+			as.Foodp = true
 		}
 		if s.ValidStep(nloc) {
-			as.N[d].valid = true
-			as.nfree++
+			as.N[d].Valid = true
+			as.NFree++
 		}
 	}
 	s.Neighborhood(loc, as.N[4], Direction(4))
-	as.N[4].perm = int(permute[4])
-	as.N[4].valid = true
+	as.N[4].Perm = int(permute[4])
+	as.N[4].Valid = true
 
 	// Compute the min threat moves.
 	if risk > 0 {
 		for i := 0; i < 5; i++ {
-			as.N[i].threat -= 4
-			if as.N[i].threat <= 0 {
-				as.N[i].threat = 0
-				as.N[i].pthreat = 0
+			as.N[i].Threat -= 4
+			if as.N[i].Threat <= 0 {
+				as.N[i].Threat = 0
+				as.N[i].PThreat = 0
 			}
 		}
 	}
-	minthreat := as.N[4].threat*100 + as.N[4].pthreat
+	minthreat := as.N[4].Threat*100 + as.N[4].PThreat
 	for i := 0; i < 4; i++ {
-		nt := as.N[i].threat*100 + as.N[i].pthreat
+		nt := as.N[i].Threat*100 + as.N[i].PThreat
 		if nt < minthreat {
 			minthreat = nt
 		}
 	}
 	for i := 0; i < 5; i++ {
-		as.N[i].safest = (as.N[i].threat == minthreat)
+		as.N[i].Safest = (as.N[i].Threat == minthreat)
 	}
 
 	return as
@@ -153,12 +153,12 @@ func (s *State) AntStep(loc Location, risk int) *AntStep {
 
 func (s *State) EmitMoves(ants []*AntStep) {
 	for _, ant := range ants {
-		if ant.move >= 0 && ant.move < NoMovement {
-			p := s.ToPoint(ant.source)
-			fmt.Fprintf(os.Stdout, "o %d %d %s\n", p.R, p.C, DirectionChar[ant.move])
-		} else if ant.move != NoMovement {
-			p := s.ToPoint(ant.source)
-			log.Printf("Invalid move %d %d\n", p.R, p.C)
+		if ant.Move >= 0 && ant.Move < NoMovement {
+			p := s.ToPoint(ant.Source)
+			fmt.Fprintf(os.Stdout, "o %d %d %s\n", p.R, p.C, DirectionChar[ant.Move])
+		} else if ant.Move != NoMovement {
+			p := s.ToPoint(ant.Source)
+			log.Printf("Invalid move %d %d %d\n", p.R, p.C, int(ant.Move))
 		}
 	}
 }
@@ -197,11 +197,11 @@ func (s *State) GenerateMoves(antsIn []*AntStep) {
 		perm := Permute5()
 		for _, ant := range ants {
 			for i, N := range ant.N {
-				N.perm = int(perm[i])
-				if N.d == NoMovement {
-					N.valid = true
+				N.Perm = int(perm[i])
+				if N.D == NoMovement {
+					N.Valid = true
 				} else {
-					N.valid = s.ValidStep(s.Map.LocStep[ant.source][N.d])
+					N.Valid = s.ValidStep(s.Map.LocStep[ant.Source][N.D])
 				}
 			}
 		}
@@ -209,18 +209,18 @@ func (s *State) GenerateMoves(antsIn []*AntStep) {
 }
 
 func (s *State) Step(ant *AntStep) bool {
-	if ant.move < 0 {
+	if ant.Move == InvalidMove {
 		sort.Sort(ENSlice(ant.N))
 		if Debug[DBG_Movement] {
 			for i, N := range ant.N {
 				log.Printf("STEP %d %#v", i, N)
 			}
 		}
-		ant.move = ant.N[0].d
-		if ant.move == NoMovement || s.MoveAnt(ant.source, s.Map.LocStep[ant.source][ant.N[0].d]) {
+		ant.Move = ant.N[0].D
+		if ant.Move == NoMovement || s.MoveAnt(ant.Source, s.Map.LocStep[ant.Source][ant.N[0].D]) {
 			return true
 		}
-		ant.move = InvalidMove
+		ant.Move = InvalidMove
 	}
 	return false
 }
@@ -231,17 +231,17 @@ type AntSlice []*AntStep
 func (p AntSlice) Len() int      { return len(p) }
 func (p AntSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func (p AntSlice) Less(i, j int) bool {
-	if p[i].goalp != p[j].goalp {
-		return p[i].goalp
+	if p[i].Goalp != p[j].Goalp {
+		return p[i].Goalp
 	}
-	if p[i].goalp && p[i].steps[0] != p[j].steps[0] {
-		return p[i].steps[0] < p[j].steps[0]
+	if p[i].Goalp && p[i].Steps[0] != p[j].Steps[0] {
+		return p[i].Steps[0] < p[j].Steps[0]
 	}
-	if p[i].nfree != p[j].nfree {
-		return p[i].nfree > p[j].nfree
+	if p[i].NFree != p[j].NFree {
+		return p[i].NFree > p[j].NFree
 	}
 
-	return p[i].perm > p[j].perm
+	return p[i].Perm > p[j].Perm
 }
 
 // For ordering perspective moves...
@@ -250,20 +250,20 @@ type ENSlice []*Neighborhood
 func (p ENSlice) Len() int      { return len(p) }
 func (p ENSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func (p ENSlice) Less(i, j int) bool {
-	if p[i].valid != p[j].valid {
-		return p[i].valid
+	if p[i].Valid != p[j].Valid {
+		return p[i].Valid
 	}
-	if p[i].threat != p[j].threat {
-		return p[i].threat < p[j].threat
+	if p[i].Threat != p[j].Threat {
+		return p[i].Threat < p[j].Threat
 	}
-	if p[i].pthreat != p[j].pthreat {
-		return p[i].pthreat < p[j].pthreat
+	if p[i].PThreat != p[j].PThreat {
+		return p[i].PThreat < p[j].PThreat
 	}
-	if p[i].goal != p[j].goal {
-		return p[i].goal > p[j].goal
+	if p[i].Goal != p[j].Goal {
+		return p[i].Goal > p[j].Goal
 	}
-	if p[i].prfood != p[j].prfood {
-		return p[i].prfood > p[j].prfood
+	if p[i].PrFood != p[j].PrFood {
+		return p[i].PrFood > p[j].PrFood
 	}
-	return p[i].perm < p[j].perm
+	return p[i].Perm < p[j].Perm
 }
