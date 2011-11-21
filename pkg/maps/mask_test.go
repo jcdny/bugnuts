@@ -37,7 +37,7 @@ func TestMaskCircle(t *testing.T) {
 }
 
 func TestMakeMask(t *testing.T) {
-	m := makeMask(5, 10, 100)
+	m := MakeMask(5, 10, 100)
 	o, err := json.Marshal(m)
 	if err != nil {
 		t.Errorf("Err %v\nMask: %s", err, o)
@@ -48,8 +48,11 @@ func TestMaskChange(t *testing.T) {
 	for _, r2 := range []int{0, 1, 5, 55, 100} {
 		v := maskCircle(r2)
 		add, remove, union := maskChange(r2, v)
-		if r2 == 5 {
-			log.Printf("%d v %d len=%d\n add: %v\nremove: %v\nunion: %v\n", r2, len(v), len(union), add, remove, union)
+		if false {
+			// Output the combat circle and variants.
+			if r2 == 5 {
+				log.Printf("%d v %d len=%d\n add: %v\nremove: %v\nunion: %v\n", r2, len(v), len(union), add, remove, union)
+			}
 		}
 
 		if len(add) != 4 || len(remove) != 4 {
@@ -72,11 +75,14 @@ func TestMaskChange(t *testing.T) {
 }
 
 func TestMoveMask(t *testing.T) {
-	mm := makeMoveMask(5, 100)
+	mm := MakeMoveMask(5, 100)
 	if len(mm) != 16 {
 		t.Errorf("MoveMask size wrong")
 	}
-	for i := 0; i < 16; i++ {
-		log.Printf("%v", mm[i])
+	if false {
+		// dump masks
+		for i := 0; i < 16; i++ {
+			log.Printf("%v", mm[i])
+		}
 	}
 }

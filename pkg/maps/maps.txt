@@ -1,0 +1,71 @@
+maze_02p_01.map
+    translation {30, 48}
+maze_02p_02.map
+?? diagonal across {0,16}/{16,0}
+maze_03p_01.map
+    translation {32, -32}
+maze_04p_01.map
+    mirror RC, origin {21, 36}
+maze_04p_02.map
+    mirror RC, origin {15, 33}
+maze_05p_01.map
+    translate {24, -48}
+maze_06p_01.map
+    translate {24, 24}
+maze_07p_01.map
+    translate {36, 18}
+maze_08p_01.map
+    Mirror RC origin {37, 24}
+mmaze_02p_01.map
+    Mirror C {0, 65}
+mmaze_02p_02.map
+    Mirror C {0, 51}
+mmaze_03p_01.map
+    translate {36, -48}
+mmaze_04p_01.map
+    translate {16, 24}
+mmaze_04p_02.map
+    Mirror RC origin {26, 25}
+mmaze_05p_01.map
+    translate {30, -30}
+mmaze_07p_01.map
+    translate {24, 12}
+mmaze_08p_01.map
+    Mirror RC {17, 17}
+random_walk_02p_01.map
+    Translate {32, 32}
+random_walk_02p_02.map
+    Translate {46, 32}
+random_walk_03p_01.map
+    Translate {}
+random_walk_03p_02.map
+    Translate {}
+random_walk_04p_01.map
+    Translate {}
+random_walk_04p_02.map
+    Translate {}
+random_walk_05p_01.map
+    Translate {}
+random_walk_05p_02.map
+    Translate {}
+random_walk_06p_01.map
+    Translate {}
+random_walk_06p_02.map
+    Translate {}
+random_walk_07p_01.map
+    Translate {}
+random_walk_07p_02.map
+    Translate {}
+    Very sparse though and a lot of false positives.
+random_walk_08p_01.map
+    Translate {}
+random_walk_08p_02.map
+    Translate {}
+random_walk_09p_01.map
+    Translate {}
+random_walk_09p_02.map
+    Translate {}
+random_walk_10p_01.map
+    Translate {}
+random_walk_10p_02.map
+    Translate {}
