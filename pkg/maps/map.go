@@ -11,9 +11,11 @@ import (
 )
 
 type Map struct {
-	Torus          // Defines the geometry of the map
-	Players int    // This is stored in the map file
-	Grid    []Item // The actual map data
+	Torus                 // Defines the geometry of the map
+	Players int           // This is stored in the map file
+	Grid    []Item        // The map data possibly run through the symmetry mapper
+	SymMap  []*[]Location // Symmetry map
+	TGrid   []Item        // The true map data - updated via ProcessTurn
 
 	// internal cache data
 	BorderDist []uint8       // border distance
@@ -216,6 +218,12 @@ func (m *Map) Hills(player int) []Location {
 
 func (m *Map) Item(l Location) Item {
 	return m.Grid[l]
+}
+
+func (m *Map) TSet(locs []Location, i Item) {
+	for _, loc := range locs {
+		m.TGrid[loc] = i
+	}
 }
 
 func (m *Map) DumpMap() string {

@@ -1,7 +1,7 @@
 package state
 
 import (
-	"strconv"
+	"log"
 	. "bugnuts/pathing"
 	. "bugnuts/maps"
 	. "bugnuts/util"
@@ -22,9 +22,10 @@ type Metrics struct {
 	Unknown  []int      // Count of Unknown
 	VisSum   []int      // sum of count of visibles for overlap.
 	// Fills
-	FDownhill *Fill
-	FHill     *Fill
-	FAll      *Fill
+	FDownhill *Fill // Downhill from my own hills
+	FHill     *Fill // Distance to my hills
+	FViewHill *Fill // Distance to visibility boundary for my hills
+	FAll      *Fill // All hill fill
 	// MC distributions
 	MCDist    []int
 	MCFlow    [][4]int
@@ -112,16 +113,68 @@ func (m *Metrics) ComputePrFood(loc, sloc Location, turn int, mask *Mask, f *Fil
 
 	return prfood
 }
-func (m *Metrics) DumpSeen() string {
-	max := Max(m.Seen)
-	str := ""
 
-	for r := 0; r < m.Rows; r++ {
-		for c := 0; c < m.Cols; c++ {
-			str += strconv.Itoa(m.Seen[r*m.Cols+c] * 10 / (max + 1))
-		}
-		str += "\n"
+// Compute the threat for N turns out (currently only n = 0 or 1)
+// if player > -1 then sum players not including player
+func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8, pthreat []uint16) {
+	if turn > 1 || turn < 0 {
+		log.Panicf("Illegal turns out = %d", turn)
 	}
 
-	return str
+	if len(threat) != s.Rows*s.Cols || len(threat) != len(pthreat) {
+		log.Panic("ComputeThreat slice size mismatch")
+	}
+
+	m := mask[0]
+	for i, _ := range s.Ants {
+		if i != player {
+			for loc, _ := range s.Ants[i] {
+				p := s.Map.ToPoint(loc)
+				if turn > 0 {
+					m = mask[s.Map.FreedomKey(loc)]
+				}
+				for i, op := range m.Point {
+					threat[s.ToLocation(s.PointAdd(p, op))]++
+					pthreat[s.ToLocation(s.PointAdd(p, op))] += m.MaxPr[i]
+				}
+			}
+		}
+	}
+
+	return
+}
+
+func (s *State) StepHorizon(hlist []Location) []Location {
+	m := s.Met
+	hlist = hlist[0:0]
+
+	// Remove now visible cells; dont bother with water here.
+	for loc, Seen := range m.Seen {
+		if Seen >= s.Turn {
+			m.Horizon[loc] = true
+		}
+	}
+
+	// generate list of cells on border; exclude water cells here
+	for loc, h := range m.Horizon {
+		if !h && m.Grid[loc] != WATER {
+			for _, nloc := range m.LocStep[loc] {
+				if m.Horizon[nloc] && m.Grid[nloc] != WATER {
+					// if the point has an adjacent non horizon point which is not water 
+					// then add it to the border list.
+					hlist = append(hlist, Location(loc))
+					break
+				}
+			}
+		}
+	}
+
+	// step one from all cells on border
+	for _, loc := range hlist {
+		for d := 0; d < 4; d++ {
+			m.Horizon[m.LocStep[loc][d]] = false
+		}
+	}
+
+	return hlist
 }

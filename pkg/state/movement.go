@@ -38,6 +38,17 @@ type AntStep struct {
 	NFree   int
 }
 
+func (s *State) MoveAnt(from, to Location) bool {
+	if from == to {
+		return true
+	}
+	if s.ValidStep(to) {
+		s.Map.Grid[from], s.Map.Grid[to] = LAND, OCCUPIED
+		return true
+	}
+	return false
+}
+
 func (s *State) GenerateAnts(tset *TargetSet, risk int) (ants map[Location]*AntStep) {
 	ants = make(map[Location]*AntStep, len(s.Ants[0]))
 

@@ -111,7 +111,7 @@ func BenchmarkTile8(b *testing.B) {
 func TestSym(t *testing.T) {
 	//AllMaps := []string{"random_walk_10p_02"}
 	//AllMaps := []string{"maze_04p_02"}
-	AllMaps := []string{"random_walk_07p_02"}
+	//AllMaps := []string{"random_walk_07p_02"}
 	for _, name := range AllMaps {
 		log.Printf("***************************  %s ***************************************************", name)
 		m := mapMeBaby("testdata/maps/" + name + ".map")
@@ -132,7 +132,7 @@ func TestSym(t *testing.T) {
 					done++
 					sf, p1, p2 := sym.SymAnalyze(minhash)
 					log.Printf("Analyze: %v %v %v", sf, p1, p2)
-					//sym.symdump(tile, m)
+					//sym.symdump(minhash, m)
 				}
 			}
 		}
@@ -140,7 +140,7 @@ func TestSym(t *testing.T) {
 }
 
 // Fancy dump of Symmetry information including reduced translation 
-// offsets, matching symmetry, 
+// offsets, matching symmetry,
 func (sym *SymData) symdump(tile SymHash, m *Map) {
 	llist := sym.Tiles[tile].Locs
 	redlist := make([]Point, 0, 8)

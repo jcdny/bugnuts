@@ -126,21 +126,32 @@ func (m *Map) NewSymData(minBits uint8) *SymData {
 		Hashes:  make([]*[8]SymHash, m.Size()),
 		Tiles:   make(map[SymHash]*SymTile, m.Size()/4),
 	}
-	s.NLen[0] = m.Size()
+	s.NLen[0] = s.Size()
 
 	return &s
 }
 
+// Tiles an entire map.
 func (m *Map) Tile(minBits uint8) *SymData {
 	s := m.NewSymData(minBits)
 
 	for loc, _ := range m.Grid {
-		bits, minhash, hashes := m.SymCompute(Location(loc))
+		s.Update(Location(loc))
+	}
 
-		s.MinHash[loc] = minhash
-		s.Hashes[loc] = hashes
-		_, ok := s.Tiles[minhash]
-		if !ok {
+	return s
+}
+
+// Returns the minhash, true if there is a potential new symmetry
+func (s *SymData) Update(loc Location) (SymHash, bool) {
+	var found bool
+
+	bits, minhash, hashes := s.SymCompute(Location(loc))
+	s.MinHash[loc] = minhash
+	s.Hashes[loc] = hashes
+	if hashes != nil {
+		_, found := s.Tiles[minhash]
+		if !found {
 			// first time we have seen this minhash
 			s.Tiles[minhash] = &SymTile{
 				Hash: minhash,
@@ -164,13 +175,13 @@ func (m *Map) Tile(minBits uint8) *SymData {
 		s.Tiles[minhash].Locs = append(s.Tiles[minhash].Locs, Location(loc))
 	}
 
-	return s
+	return minhash, found
 }
 
 // Compute the minhash for a given location, returning the bits of data, the minHash and all
 // 8 hashes.  It returns (0, -1, nil) in the event it encounters an unknown tile...
-func (m *Map) SymCompute(loc Location) (uint8, SymHash, *[8]SymHash) {
-	p := m.ToPoint(loc)
+func (s *SymData) SymCompute(loc Location) (uint8, SymHash, *[8]SymHash) {
+	p := s.ToPoint(loc)
 	id := [8]SymHash{}
 
 	i := 0
@@ -181,17 +192,17 @@ func (m *Map) SymCompute(loc Location) (uint8, SymHash, *[8]SymHash) {
 	// TODO also might be worth discarding all land tiles quickly
 	for r := -N; r < N+1; r++ {
 		for c := -N; c < N+1; c++ {
-			if p.R < N || p.R > m.Rows-N-1 || p.C < N || p.C > m.Cols-N-1 {
-				nl = m.ToLocation(m.PointAdd(p, Point{R: r, C: c}))
+			if p.R < N || p.R > s.Rows-N-1 || p.C < N || p.C > s.Cols-N-1 {
+				nl = s.ToLocation(s.PointAdd(p, Point{R: r, C: c}))
 			} else {
-				nl = loc + Location(r*m.Cols+c)
+				nl = loc + Location(r*s.Cols+c)
 			}
 
-			if m.Grid[nl] == UNKNOWN {
+			if s.Grid[nl] == UNKNOWN {
 				return SYMNONE, -1, nil
 			}
 
-			if m.Grid[nl] == WATER {
+			if s.Grid[nl] == WATER {
 				bits++
 				for rot, mask := range symMask[i] {
 					id[rot] ^= mask
@@ -219,10 +230,10 @@ func minSymHash(id *[8]SymHash) SymHash {
 	return min
 }
 
-func (s *SymData) SymAnalyze(h SymHash) ([]uint8, Point, Point) {
-	// test for Translation symmetry
-	llist := s.Tiles[h].Locs
+func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point) {
+	llist := s.Tiles[minhash].Locs
 
+	// test for Translation symmetry
 	redlist := make([]Point, 0, 0)
 	bad := 0
 	for i, l1 := range llist {
@@ -247,9 +258,8 @@ func (s *SymData) SymAnalyze(h SymHash) ([]uint8, Point, Point) {
 		}
 	}
 
-	// test for mirroring
+	// Test for mirroring
 	found := make([]uint8, 0, 3)
-
 	orig := Point{0, 0}
 	for i, l1 := range llist {
 		for _, l2 := range llist[i+1:] {
@@ -269,13 +279,14 @@ func (s *SymData) SymAnalyze(h SymHash) ([]uint8, Point, Point) {
 
 		}
 	}
-
 	if len(found) > 1 {
 		return []uint8{SYMMIRRORC, SYMMIRRORR, SYMROT180}, orig, Point{0, 0}
 	} else {
 		return found, orig, Point{0, 0}
 	}
 
+	// Test for rotations
+	// TODO
 	return []uint8{}, Point{0, 0}, Point{0, 0}
 }
 
@@ -333,6 +344,34 @@ func (t *Torus) SymDiff(l1, l2 Location) Point {
 		c = -c
 	}
 	return Point{R: r, C: c}
+}
+
+// Given a point and a translation compute the list of locations
+// If N > 0 then size the list appropriately
+func (t *Torus) Translations(l1 Location, o Point, N int) []Location {
+	if N < 2 {
+		N = 8
+	}
+	ll := make([]Location, 0, N)
+
+	p1 := t.ToPoint(l1)
+	p := Point{}
+	for i := 1; i < SYMCELLMAX+1; i++ {
+		p.C = (p1.C + i*o.C) % t.Cols
+		p.R = (p1.R + i*o.R) % t.Rows
+		if p.C < 0 {
+			p.C += t.Cols
+		}
+		if p.R < 0 {
+			p.R += t.Rows
+		}
+		if p.R == p1.R && p.C == p1.C {
+			return ll
+		}
+		ll = append(ll, Location(p.R*t.Cols+p.C))
+	}
+
+	return []Location{}
 }
 
 // Reduce a translation to its minumum length offset

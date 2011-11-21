@@ -3,8 +3,12 @@ include $(GOROOT)/src/Make.inc
 TARG=bugnuts/state
 GOFILES=\
 	metrics.go\
+	montecarlo.go\
 	movement.go\
+	parse.go\
+	query.go\
 	state.go\
+	turn.go\
 	targets.go\
 
 

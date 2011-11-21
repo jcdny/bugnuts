@@ -51,39 +51,38 @@ func init() {
 var Times = make(map[string]int64, 30)
 
 func main() {
-	var s State
-	var bot Bot
+	var refmap *Map
+	if mapFile != "" {
+		refmap, _ = MapLoadFile("testdata/maps/" + mapFile)
+	}
 
 	in := bufio.NewReader(os.Stdin)
 
-	err := s.Start(in)
+	// Load game definition
+	g, err := GameScan(in)
+	if err != nil {
+		log.Panicf("Start(in) failed (%s)", err)
+	} else if Debug[DBG_Start] {
+		log.Printf("Game Info:\n%v\n", g)
+	}
+
+	s := g.NewState()
+	turns := make([]*Turn, 1, s.Turns+2)
+
+	// Create watch points
 	WS = NewWatches(s.Rows, s.Cols, s.Turns)
 	if len(watchPoints) > 0 {
 		wlist := strings.Split(watchPoints, ";")
 		WS.Load(wlist)
 	}
 
-	if err != nil {
-		log.Panicf("Start(in) failed (%s)", err)
-	} else if Debug[DBG_Start] {
-		log.Printf("State:\n%v\n", &s)
-	}
-
+	// Set up bot
 	if paramKey == "" {
 		paramKey = runBot
 	}
-	// Set up bot
+
+	var bot Bot
 	switch runBot {
-	/* 
-		case "v0":
-			bot = NewBotV0(&s)
-		case "v3":
-			bot = NewBotV3(&s)
-		case "v4":
-			bot = NewBotV4(&s)
-		case "v5":
-			bot = NewBotV5(&s)
-	*/
 	case "CUR":
 		fallthrough // no flag given run latest defined bot...
 	case "V6":
@@ -92,43 +91,21 @@ func main() {
 		log.Printf("Unkown bot %s", runBot)
 		return
 	}
-
-	// some of the state updating like treatment of non-visible food 
-	// depends on the bot parameters.
-	//s.bot = &bot
-
-	var refmap *Map
-	if mapFile != "" {
-		refmap, _ = MapLoadFile("testdata/maps/" + mapFile)
-	}
-
-	// TODO Time from load to measure other bots calc time in preload.
 	// Send go to tell server we are ready to process turns
 	fmt.Fprintf(os.Stdout, "go\n")
-
-	stime := time.Nanoseconds()
-	ntime := stime
-	ptime := stime
-	ngctime := runtime.MemStats.PauseTotalNs
-	ngc := runtime.MemStats.NumGC
-	pgc := ngc
-	pgctime := ngctime
+	ttime := time.Nanoseconds()
+	etime := time.Nanoseconds()
+	egc := runtime.MemStats.PauseTotalNs
 	for {
+		// READ TURN INFO FROM SERVER]
+		var t *Turn
 
-		ptime, ntime = ntime, time.Nanoseconds()
-		pgctime, ngctime = ngctime, runtime.MemStats.PauseTotalNs
-		pgc, ngc = ngc, runtime.MemStats.NumGC
-		runtime.GC()
-		if Debug[DBG_TurnTime] || Debug[DBG_AllTime] {
-			log.Printf("TURN %d TOOK %.2fms gc %.3fms Ngc %d", s.Turn,
-				float64(ntime-ptime)/1000000,
-				float64(ngctime-pgctime)/1000000, ngc-pgc)
+		t, _ = s.TurnScan(in, t)
+		if t.Turn != s.Turn+1 {
+			log.Printf("Turns out of order new is %d expected %d", t.Turn, s.Turn+1)
 		}
-
-		// READ TURN INFO FROM SERVER
-		Times["preparse"] = time.Nanoseconds()
-		turn, err := s.ParseTurn()
-		Times["postparse"] = time.Nanoseconds()
+		turns = append(turns, t)
+		s.ProcessTurn(t)
 
 		if refmap != nil {
 			count, out := MapValidate(refmap, s.Map)
@@ -137,40 +114,23 @@ func main() {
 			}
 		}
 
-		if err == os.EOF || turn == "end" {
-			break
-		}
-
-		if Debug[DBG_Turns] {
-			log.Printf("TURN %d Generating orders turn", s.Turn)
-		}
 		// Generate order list
-		Times["preturn"] = time.Nanoseconds()
 		bot.DoTurn(&s)
-		Times["postturn"] = time.Nanoseconds()
 
-		// additional thinking til near timeout
-		if Debug[DBG_AllTime] {
-			log.Printf("%d Parse %.2fms, Turn %.2fms", s.Turn,
-				float64(Times["postparse"]-Times["preparse"])/1000000,
-				float64(Times["postturn"]-Times["preturn"])/1000000)
+		// Timing hohah
+		stime, etime := etime, time.Nanoseconds()
+		sgc, egc := egc, runtime.MemStats.PauseTotalNs
+		if Debug[DBG_TurnTime] {
+			log.Printf("TURN %d %.2fms %.2fms GC",
+				s.Turn,
+				float64(etime-stime)/1000000,
+				float64(egc-sgc)/1000000)
 		}
-
 	}
-
-	// Read end of game data.
-
-	// Do end of game diagnostics
-
-	//s.DumpSeen()
-	//s.DumpMap()
 
 	if Debug[DBG_TurnTime] {
 		ntime = time.Nanoseconds()
 		log.Printf("TOTAL TIME %.2fms/turn for %d Turns",
-			float64(ntime-stime)/1000000/float64(s.Turn), s.Turn)
-	}
-	if Debug[DBG_Results] {
-		log.Printf("Bot Result %v", bot)
+			float64(etime-ttime)/1000000/float64(s.Turn), s.Turn)
 	}
 }
