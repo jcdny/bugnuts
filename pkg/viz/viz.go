@@ -19,6 +19,7 @@ var Viz = map[string]bool{
 	"error":   false,
 	"targets": false,
 	"monte":   false,
+	"sym":     false,
 }
 
 func SetViz(vizList string, Viz map[string]bool) {
@@ -50,6 +51,7 @@ func SetViz(vizList string, Viz map[string]bool) {
 		}
 	}
 }
+
 func VizLine(m *Map, p1, p2 Point, arrow bool) {
 	ltype := "line"
 	if arrow {
@@ -118,6 +120,25 @@ func Visualize(s *State) {
 
 	if Viz["monte"] {
 		VizMCPaths(s)
+	}
+	if Viz["sym"] {
+		log.Printf("Visalizing symmetry")
+		m := s.Map
+		if len(m.SMap) > 0 {
+			for _, item := range []Item{WATER, LAND} {
+				if item == WATER {
+					fmt.Fprintf(os.Stdout, "v setFillColor 0 0 128 .3\n")
+				} else {
+					fmt.Fprintf(os.Stdout, "v setFillColor 0 128 0 .3\n")
+				}
+				for i, gitem := range m.Grid {
+					if item == gitem && m.TGrid[i] != gitem {
+						p := s.ToPoint(Location(i))
+						fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.R, p.C)
+					}
+				}
+			}
+		}
 	}
 }
 

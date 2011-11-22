@@ -50,6 +50,10 @@ func NewMetrics(m *Map) *Metrics {
 		met.Threat = append(met.Threat, make([]int8, size))
 		met.PThreat = append(met.PThreat, make([]uint16, size))
 	}
+	for i, _ := range met.Unknown {
+		met.Unknown[i] = 999
+	}
+
 	return &met
 }
 
@@ -59,7 +63,7 @@ func (m *Metrics) UpdateCounts(loc Location, mask *Mask) {
 	p := m.ToPoint(loc)
 	for _, op := range mask.P {
 		nloc := m.ToLocation(m.PointAdd(p, op))
-		if m.Grid[nloc] == UNKNOWN {
+		if m.TGrid[nloc] == UNKNOWN {
 			nunknown++
 		}
 		if m.Grid[nloc] != WATER {

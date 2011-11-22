@@ -225,19 +225,36 @@ func (m *Map) Item(l Location) Item {
 	return m.Grid[l]
 }
 
+func (m *Map) TApply() {
+	// Takes the current TGrid and SMap and updates Grid
+	for i := 0; i < m.Size(); i++ {
+		m.Grid[i] = UNKNOWN
+	}
+	for i := 0; i < m.Size(); i++ {
+		if m.TGrid[i] != UNKNOWN {
+			for _, loc := range m.SMap[i] {
+				if m.Grid[loc] != UNKNOWN {
+					break
+				}
+				m.Grid[loc] = m.TGrid[i]
+			}
+		}
+	}
+}
+
 // Return false if the symmetry mapping gives a result inconsistent with TGrid
 func (m *Map) TSet(i Item, locs ...Location) bool {
+	valid := len(m.SMap) > 0
 	for _, loc := range locs {
 		if m.TGrid[loc] != i {
 			m.TGrid[loc] = i
-			// Apply symmetry to map to Grid.
-			if len(m.SMap) == 0 {
+			if valid && m.Grid[loc] != UNKNOWN && m.Grid[loc] != i {
+				valid = false
+			}
+			if !valid {
+				// with no sym map or and invalid one
+				// just copy to Grid
 				m.Grid[loc] = i
-			} else if m.Grid[loc] != UNKNOWN && m.Grid[loc] != i {
-				m.Grid[loc] = i
-				// Invalidate Symmetry if the new point does not match sym applied
-				log.Printf("Invalid symmetry at %d", loc)
-				return false
 			} else {
 				for _, lsym := range m.SMap[loc] {
 					m.Grid[lsym] = i
@@ -246,7 +263,8 @@ func (m *Map) TSet(i Item, locs ...Location) bool {
 		}
 
 	}
-	return true
+	// ending smap is valid or we never had one
+	return valid || len(m.SMap) == 0
 }
 
 func (m *Map) DumpMap() string {

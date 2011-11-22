@@ -135,6 +135,6 @@ func main() {
 	if Debug[DBG_TurnTime] {
 		etime = time.Nanoseconds()
 		log.Printf("TOTAL TIME %.2fms/turn for %d Turns",
-			float64(btime-etime)/1000000/float64(s.Turn), s.Turn)
+			float64(etime-btime)/1000000/float64(s.Turn), s.Turn)
 	}
 }

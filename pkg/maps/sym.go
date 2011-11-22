@@ -22,7 +22,7 @@ type SymTile struct {
 	Symmetry []uint8    // The list symmetries present
 	Origin   Point      // Origin for the currently accepted Symmetry, {0,0} for translation
 	Offset   Point      // The offset for translation symmetry {0,0} for non translation
-	EquivSet []Location // the location imputed to
+	EquivSet []Location // the location list for the identified symmetry of this tile.
 }
 
 type SymData struct {
@@ -144,45 +144,84 @@ func (m *Map) Tile(minBits uint8) *SymData {
 }
 
 func (s *SymData) UpdateSymmetryData() {
+
+	TPush("UpdateSymmetryData")
+	defer TPop()
+
 	check := make(map[SymHash]bool, 100)
 	for l, item := range s.TGrid {
 		loc := Location(l)
 		if item != UNKNOWN && s.Hashes[loc] == nil {
-			hash, found := s.Update(loc)
-			if found {
+			hash, newsym := s.Update(loc)
+			if newsym {
 				check[hash] = true
 			}
 		}
 	}
+
+	maxlen := 0
+	updated := false
+	if len(s.Map.SMap) > 0 {
+		maxlen = len(s.Map.SMap)
+	}
+
+	TMark("hashed")
+
 	for minhash, _ := range check {
-		symset, origin, offset := s.SymAnalyze(minhash)
-		s.Tiles[minhash].Symmetry = symset
-		s.Tiles[minhash].Origin = origin
-		s.Tiles[minhash].Offset = offset
+		tile := s.Tiles[minhash]
+		symset, origin, offset, equiv := s.SymAnalyze(minhash)
+		tile.Symmetry = symset
+		tile.Origin = origin
+		tile.Offset = offset
+		tile.EquivSet = equiv
+		if !tile.Ignore && len(equiv) > maxlen {
+			// TODO fix to handle other symmetries.
+			smap, valid := s.TransMapValidate(tile.Offset)
+			if valid {
+				maxlen = len(equiv)
+				s.Map.SMap = smap
+				updated = true
+			} else {
+				tile.Ignore = true
+			}
+		}
+	}
+
+	if updated {
+		s.SID++
+		s.TApply()
 	}
 }
 
 // Returns the minhash, true if there is a potential new symmetry
 func (s *SymData) Update(loc Location) (SymHash, bool) {
-	var found bool
+	newsym := false
 
 	minhash, hashes, bits, self := s.SymCompute(Location(loc))
-	s.MinHash[loc] = minhash
-	s.Hashes[loc] = hashes
 	if hashes != nil {
-		_, found := s.Tiles[minhash]
+		s.MinHash[loc] = minhash
+		s.Hashes[loc] = hashes
+
+		tile, found := s.Tiles[minhash]
 		if !found {
 			// first time we have seen this minhash
-			s.Tiles[minhash] = &SymTile{
+			tile = &SymTile{
 				Hash: minhash,
 				Locs: make([]Location, 0, 4),
 				Bits: bits,
 				Self: self,
 			}
+			s.Tiles[minhash] = tile
+			//log.Printf("New hash set")
+		} else {
+			var i int
+			for i = 0; i < len(tile.EquivSet) && loc != tile.EquivSet[i]; i++ {
+			}
+			newsym = i < len(tile.EquivSet) || i == 0
 		}
 
 		// Keep track of number of equiv classes
-		N := len(s.Tiles[minhash].Locs)
+		N := len(tile.Locs)
 		s.NLen[0]--
 		if N > 0 && N < len(s.NLen) {
 			s.NLen[N]--
@@ -193,10 +232,10 @@ func (s *SymData) Update(loc Location) (SymHash, bool) {
 			s.NLen[N-1]++
 		}
 
-		s.Tiles[minhash].Locs = append(s.Tiles[minhash].Locs, Location(loc))
+		tile.Locs = append(tile.Locs, Location(loc))
 	}
 
-	return minhash, found
+	return minhash, newsym
 }
 
 // Compute the minhash for a given location, returning the bits of data, the minHash and all
@@ -258,9 +297,12 @@ func minSymHash(id *[8]SymHash) SymHash {
 	return min
 }
 
-func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point) {
+func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point, []Location) {
+	// Mark("SymAnalyze in")
 	llist := s.Tiles[minhash].Locs
-
+	if len(llist) < 2 {
+		return []uint8{}, Point{0, 0}, Point{0, 0}, []Location{}
+	}
 	// test for Translation symmetry
 	redlist := make([]Point, 0, 0)
 	bad := 0
@@ -269,22 +311,30 @@ func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point) {
 			if s.Hashes[l1][0] == s.Hashes[l2][SYMTRANS] {
 				pd, good := s.ShiftReduce(l1, l2)
 				if !good {
-					bad++
+					s.Tiles[minhash].Ignore = true
+					return []uint8{}, Point{}, Point{}, []Location{}
 				} else {
 					redlist = append(redlist, pd)
 				}
 			} else {
 				bad++
+				break
 			}
 		}
 	}
+
+	// if Mark("SymAnalyze tr") > 100 { log.Printf("Long Shiftreduce: %v\n%#v", s.ToPoints(llist), s.Tiles[minhash]) }
+
 	if bad == 0 && len(redlist) > 0 {
 		redlist = s.ReduceReduce(redlist)
 		if len(redlist) == 1 {
 			// Yay we got unambiguous translation...
-			return []uint8{SYMTRANS}, Point{0, 0}, redlist[0]
+			equiv := s.Translations(llist[0], redlist[0], []Location{})
+			// Mark("SymAnalyze tr done")
+			return []uint8{SYMTRANS}, Point{0, 0}, redlist[0], equiv
 		}
 	}
+	// Mark("SymAnalyze tr fail")
 
 	// Test for mirroring
 	found := make([]uint8, 0, 3)
@@ -307,15 +357,16 @@ func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point) {
 
 		}
 	}
+	// Mark("SymaAnalyze Mirror")
 	if len(found) > 1 {
-		return []uint8{SYMMIRRORC, SYMMIRRORR, SYMROT180}, orig, Point{0, 0}
+		return []uint8{SYMMIRRORC, SYMMIRRORR, SYMROT180}, orig, Point{0, 0}, []Location{}
 	} else {
-		return found, orig, Point{0, 0}
+		return found, orig, Point{}, []Location{}
 	}
 
 	// Test for rotations
 	// TODO
-	return []uint8{}, Point{0, 0}, Point{0, 0}
+	return []uint8{}, Point{}, Point{}, []Location{}
 }
 
 func (t *Torus) Mirror(l1, l2 Location, axis int) int {
@@ -490,6 +541,37 @@ func (t *Torus) Translations(l1 Location, o Point, ll []Location) []Location {
 		ll = append(ll, Location(p.R*t.Cols+p.C))
 	}
 	return []Location{}
+}
+
+func (s *SymData) TransMapValidate(p Point) ([][]Location, bool) {
+	size := s.Size()
+	smap := make([][]Location, size)
+	marr := make([]Location, 0, size)
+
+	n := 0
+	for i, _ := range smap {
+		if smap[i] == nil {
+			marr = s.Translations(Location(i), p, marr)
+			if len(marr) == 0 || len(marr) > size {
+				return nil, false
+			}
+			item := UNKNOWN
+			for _, loc := range marr[n:] {
+				// Validate the equiv set only contains either land or water.
+				if item != s.TGrid[loc] {
+					if item == UNKNOWN {
+						item = s.TGrid[loc]
+					} else if s.TGrid[loc] != UNKNOWN {
+						return nil, false
+					}
+				}
+				smap[loc] = marr[n:]
+			}
+			n = len(marr)
+		}
+	}
+
+	return smap, true
 }
 
 func (t *Torus) TransMap(p Point) [][]Location {

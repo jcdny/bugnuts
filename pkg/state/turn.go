@@ -15,18 +15,23 @@ func (s *State) ProcessFood(food []Location, turn int) {
 	// Update food, possibly creating unseen food from symmetry stuff.
 	for _, loc := range food {
 		if _, ok := s.Food[loc]; !ok {
-			// new food - also add via symmetry
-			s.Food[loc] = turn
-		} else {
-			s.Food[loc] = turn
+			// add newly seen food via symmetry
+			if len(s.Map.SMap) > 0 {
+				for _, sloc := range s.Map.SMap[loc] {
+					if s.Met.Seen[sloc] < turn {
+						s.Food[sloc] = turn
+					}
+				}
+			}
 		}
+		s.Food[loc] = turn
 	}
 
 	// Better would be to compute expected pickup time give neighbors
 	// in the pathing step and only revert to this when there were no
 	// visible neighbors.
 	//
-	// Should track that anyway since does not make sense to run for 
+	// Should track that anyway since does not make sense to run for
 	// food another bot will certainly get unless its to enter combat.
 	for loc, seen := range s.Food {
 		if s.Met.Seen[loc] > seen || seen < turn-MAGICAGE {
@@ -40,9 +45,14 @@ func (s *State) ProcessFood(food []Location, turn int) {
 
 func (s *State) ProcessTurn(t *Turn) {
 	s.Turn++
+	s.SSID = s.Map.SID
+
 	s.ResetGrid()
 
-	s.TSet(WATER, t.W...)
+	if !s.TSet(WATER, t.W...) {
+		s.Map.SMap = [][]Location{}
+	}
+
 	s.ProcessVisible(t.A, 0, s.Turn)
 
 	s.UpdateSymmetryData()
@@ -94,16 +104,15 @@ func (s *State) ProcessTurn(t *Turn) {
 	}
 
 	s.Met.HBorder = s.StepHorizon(s.Met.HBorder)
-
 	s.UpdateHillMaps()
-
 	s.MonteCarloDensity()
-
 	s.ComputeThreat(1, 0, s.AttackMask.MM, s.Met.Threat[len(s.Met.Threat)-1], s.Met.PThreat[len(s.Met.PThreat)-1])
 }
 
 // Given list of player/location update Land visible
 // Also updates: Met.Unknown, Met.Land, Met.Seen, and Met.VisCount.
+
+
 func (s *State) ProcessVisible(antloc []PlayerLoc, player, turn int) {
 	for _, pl := range antloc {
 		if pl.Player != player {
@@ -111,7 +120,8 @@ func (s *State) ProcessVisible(antloc []PlayerLoc, player, turn int) {
 		}
 
 		loc := pl.Loc
-		unk := s.Met.Unknown[loc] != 0
+
+		unk := s.Met.Unknown[loc] > 0
 		nland := 0
 
 		if s.BorderDist[loc] > s.ViewMask.R {
@@ -123,7 +133,7 @@ func (s *State) ProcessVisible(antloc []PlayerLoc, player, turn int) {
 					if s.TGrid[loc+offset] == UNKNOWN {
 						s.TSet(LAND, loc+offset)
 						nland++
-					} else if s.Map.TGrid[loc+offset] != WATER {
+					} else if s.TGrid[loc+offset] != WATER {
 						nland++
 					}
 				}
@@ -155,6 +165,14 @@ func (s *State) ProcessVisible(antloc []PlayerLoc, player, turn int) {
 
 func (s *State) ProcessHills(hl []PlayerLoc, player int, turn int) {
 	nhills := 0
+
+	// invalidate hills from old SID
+	for loc, hill := range s.Hills {
+		if hill.ssid > 0 && hill.ssid < s.Map.SID && hill.guess {
+			s.Hills[loc] = &Hill{}, false
+		}
+	}
+
 	for _, pl := range hl {
 		if turn == 1 && pl.Player == player {
 			nhills++
@@ -178,6 +196,30 @@ func (s *State) ProcessHills(hl []PlayerLoc, player int, turn int) {
 
 	if turn == 1 {
 		s.InitialHills = nhills
+	}
+
+	// We have a new symmetry -- guess hills
+	if s.SSID < s.Map.SID && len(s.Map.SMap) > 0 {
+		for loc, hill := range s.Hills {
+			if hill.Player == 0 {
+				for _, nloc := range s.Map.SMap[loc] {
+					_, found := s.Hills[nloc]
+					// Add a hill guess for not found hills in places we have not seen
+					if !found && s.Met.Seen[nloc] == 0 {
+						s.Hills[nloc] = &Hill{
+							Location: nloc,
+							Player:   9,
+							Found:    turn,
+							Seen:     turn,
+							Killed:   0,
+							Killer:   -1,
+							guess:    true,
+							ssid:     s.Map.SID,
+						}
+					}
+				}
+			}
+		}
 	}
 
 	// Update hill data in map.
@@ -251,7 +293,7 @@ func (s *State) ProcessDeadAnts(deadants []PlayerLoc, player, turn int) {
 }
 
 func (s *State) UpdateHillMaps() {
-	log.Printf("Updating hills for player 0: %d hills", s.NHills[0])
+	log.Printf("Updating hill maps for player 0: %d hills", s.NHills[0])
 	// Generate the fill for all my hills.
 	if s.NHills[0] == 0 {
 		return
@@ -262,11 +304,13 @@ func (s *State) UpdateHillMaps() {
 		lend[hill] = 1
 	}
 
+	log.Printf("Updating hill fill for player 0 %#v", lend)
 	s.Met.FHill, _, _ = MapFillSeed(s.Map, lend, 1)
 
 	outbound := make(map[Location]int)
 	R := MaxV(MinV(s.Rows, s.Cols)/s.NHills[0]/2, 8)
 	samples, _ := s.Met.FHill.Sample(0, R, R)
+	log.Printf("Outboung R %d samples: %d", R, len(samples))
 
 	for _, loc := range samples {
 		outbound[loc] = 1

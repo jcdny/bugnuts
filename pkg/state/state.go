@@ -24,13 +24,14 @@ type Hill struct {
 	Killed int  // First Turn we no longer saw it
 	Killer int  // Who we think killed it, may be a guess
 	guess  bool // Are we guessing location
+	ssid   int  // was it a sym guess...
 }
 
 type State struct {
 	// Game parameter set
 	*GameInfo
 	*Map
-
+	SSID int // The sym id at turn start
 	Turn int //current turn number
 
 	AttackMask *Mask
