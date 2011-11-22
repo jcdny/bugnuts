@@ -1,6 +1,8 @@
 package state
 
 import (
+	"log"
+	"rand"
 	. "bugnuts/maps"
 )
 
@@ -78,7 +80,7 @@ func (g *GameInfo) NewState() *State {
 func (s *State) Turn1() {
 	s.InitialHills = len(s.HillLocations(0))
 	seed := s.hillHash(s.PlayerSeed)
-	log.Printf("TURN 1 Seeding with %v given %v and hillHash", seed, s.PlayerSeed)
+	log.Printf("TURN 1 Seed %v (Player Seed %v and hillHash)", seed, s.PlayerSeed)
 	rand.Seed(seed)
 }
 

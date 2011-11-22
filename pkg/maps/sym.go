@@ -142,6 +142,25 @@ func (m *Map) Tile(minBits uint8) *SymData {
 	return s
 }
 
+func (s *SymData) UpdateSymmetryData() {
+	check := make(map[SymHash]bool, 100)
+	for l, item := range s.TGrid {
+		loc := Location(l)
+		if item != UNKNOWN && s.Hashes[loc] == nil {
+			hash, found := s.Update(loc)
+			if found {
+				check[hash] = true
+			}
+		}
+	}
+	for minhash, _ := range check {
+		symset, origin, offset := s.SymAnalyze(minhash)
+		s.Tiles[minhash].Symmetry = symset
+		s.Tiles[minhash].Origin = origin
+		s.Tiles[minhash].Offset = offset
+	}
+}
+
 // Returns the minhash, true if there is a potential new symmetry
 func (s *SymData) Update(loc Location) (SymHash, bool) {
 	var found bool

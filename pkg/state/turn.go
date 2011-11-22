@@ -2,11 +2,40 @@ package state
 
 import (
 	"log"
-	"rand"
 	. "bugnuts/maps"
 	. "bugnuts/util"
 	. "bugnuts/pathing"
 )
+
+const (
+	MAGICAGE = 10
+)
+
+func (s *State) ProcessFood(food []Location, turn int) {
+	// Update food, possibly creating unseen food from symmetry stuff.
+	for _, loc := range food {
+		if _, ok := s.Food[loc]; !ok {
+			// new food - also add via symmetry
+		} else {
+			s.Food[loc] = turn
+		}
+	}
+
+	// Better would be to compute expected pickup time give neighbors
+	// in the pathing step and only revert to this when there were no
+	// visible neighbors.
+	//
+	// Should track that anyway since does not make sense to run for 
+	// food another bot will certainly get unless its to enter combat.
+	for loc, seen := range s.Food {
+		if s.Met.Seen[loc] > seen || seen < turn-MAGICAGE {
+			s.Food[loc] = 0, false
+			if s.Map.Grid[loc] == FOOD {
+				s.Map.Grid[loc] = LAND
+			}
+		}
+	}
+}
 
 func (s *State) ProcessTurn(t *Turn) {
 	s.Turn++
@@ -14,7 +43,7 @@ func (s *State) ProcessTurn(t *Turn) {
 	s.TSet(t.W, WATER)
 	s.ProcessVisible(t.A, 0, s.Turn)
 
-	s.UpdateSymmetry()
+	s.UpdateSymmetryData()
 
 	s.ProcessFood(t.F, s.Turn)
 	s.ProcessAnts(t.A, 0, s.Turn)
@@ -73,7 +102,7 @@ func (s *State) ProcessTurn(t *Turn) {
 
 // Given list of player/location update Land visible
 // Also updates: Met.Unknown, Met.Land, Met.Seen, and Met.VisCount.
-func (s *State) ProcessVisible(antloc PlayerLoc, player, turn int) {
+func (s *State) ProcessVisible(antloc []PlayerLoc, player, turn int) {
 	for _, pl := range antloc {
 		if pl.Player != player {
 			continue
@@ -122,42 +151,63 @@ func (s *State) ProcessVisible(antloc PlayerLoc, player, turn int) {
 	}
 }
 
-func ProcessHills() {
-	// TODO move this all to the inference step, should not be here!
+func (s *State) ProcessHills(hl []PlayerLoc, player int, turn int) {
 
-	// Handle tracking Razes
-	hill, found := s.Hills[loc]
-	if found && !hill.guess {
-		// for guesses we will update those when we validate
-		// visibles - the guess location is by definition visible
-		// since we got an ant in our location
-
-		if hill.Seen == s.Turn {
-			if hill.Player != player {
-				// TODO work out how to infer raze - do we get the hill
-				// sent with the player on the round after raze?
-				// I assume not but need to check.
-				//
-				// If not this state should be treated as an error
-				log.Printf("Error? player %d on hill player %d hill at %v",
-					player, hill.Player, s.Map.ToPoint(loc))
+	for _, pl := range hl {
+		if hill, found := s.Hills[pl.Loc]; found {
+			hill.Player = pl.Player
+			hill.Seen = turn
+			hill.guess = false
+		} else {
+			s.Hills[pl.Loc] = &Hill{
+				Location: pl.Loc,
+				Player:   pl.Player,
+				Found:    turn,
+				Seen:     turn,
+				Killed:   0,
+				Killer:   -1,
+				guess:    false,
 			}
-		} else if hill.Killed <= 0 {
-			// we found a hill in the hash but its not marked killed
-			// Mark it killed by the ant we found standing on it.
-			// could be wrong ofc.
-			hill.Killed = s.Turn
-			hill.Killer = player
+		}
+
+	}
+
+	// Update hill data in map.
+	for i, _ := range s.NHills {
+		s.NHills[i] = s.InitialHills
+	}
+
+	for loc, hill := range s.Hills {
+		if hill.Killed == 0 && s.Met.Seen[loc] > hill.Seen {
+			if hill.guess {
+				// We just guessed at a location anyway, just remove it
+				s.Hills[loc] = &Hill{}, false
+			} else {
+				hill.Killed = turn
+			}
+		}
+
+		if hill.Killed > 0 {
+			s.NHills[hill.Player]--
+		} else if hill.Killed == 0 {
+			if s.Met.Seen[loc] < turn {
+				// If the hill is not visible then set Horizon false
+				// since it could be a source of ant.
+				s.Met.Horizon[loc] = false
+			}
 		}
 	}
+
 }
 
-func (s *State) ProcessAnts() {
-	if s.Ants[player] == nil {
-		s.Ants[player] = make(map[Location]int)
-		// TODO New ant seen - start guessing hill loc
+func (s *State) ProcessAnts(antloc []PlayerLoc, player, turn int) {
+	for _, pl := range antloc {
+		if s.Ants[pl.Player] == nil {
+			s.Ants[pl.Player] = make(map[Location]int)
+			// TODO New ant seen - start guessing hill loc
+		}
+		s.Ants[pl.Player][pl.Loc] = turn
 	}
-	s.Ants[player][loc] = s.Turn
 }
 
 func (s *State) ResetGrid() {
@@ -183,64 +233,15 @@ func (s *State) ResetGrid() {
 	}
 }
 
-func (s *State) AddDeadAnt(loc Location, player int) {
-	if s.Stats.Dead[player] == nil {
-		s.Stats.Dead[player] = make(map[Location]int)
+func (s *State) ProcessDeadAnts(deadants []PlayerLoc, player, turn int) {
+	for _, pl := range deadants {
+		if s.Stats.Dead[pl.Player] == nil {
+			s.Stats.Dead[pl.Player] = make(map[Location]int)
+		}
+		s.Stats.Dead[pl.Player][pl.Loc]++
+		s.Stats.Died[pl.Player]++
 	}
-	s.Stats.Dead[player][loc]++
-	s.Stats.Died[player]++
-
 	// TODO track suicides/sacrifices and who the killer was.
-}
-
-func (s *State) AddHill(loc Location, player int) {
-	if hill, found := s.Hills[loc]; found {
-		hill.Seen = s.Turn
-		hill.guess = false
-	} else {
-		s.Hills[loc] = &Hill{
-			Location: loc,
-			Player:   player,
-			Found:    s.Turn,
-			Seen:     s.Turn,
-			Killed:   0,
-			Killer:   -1,
-			guess:    false,
-		}
-	}
-}
-
-func (s *State) ProcessHills(hl []PlayerLoc, player int, turn int) {
-	for loc, hill := range s.Hills {
-		if hill.Killed == 0 && s.Met.Seen[loc] > hill.Seen {
-			if hill.guess {
-				// We just guessed at a location anyway, just remove it
-				s.Hills[loc] = &Hill{}, false
-			} else {
-				hill.Killed = s.Turn
-			}
-		}
-
-		if hill.Killed == 0 {
-			if s.Met.Seen[loc] < s.Turn {
-				// If the hill is not visible then set Horizon false
-				// since it could be a source of ant.
-				s.Met.Horizon[loc] = false
-			}
-		}
-	}
-
-	// Update hill data in map.
-	for i, _ := range s.NHills {
-		s.NHills[i] = s.InitialHills
-	}
-
-	for _, hill := range s.Hills {
-		if hill.Killed > 0 {
-			s.NHills[hill.Player]--
-		}
-	}
-
 }
 
 func (s *State) UpdateHillMaps() {
@@ -272,26 +273,6 @@ func (s *State) UpdateHillMaps() {
 			if int(d) > R {
 				s.Met.FDownhill.Depth[i] = 0
 				s.Met.FDownhill.Seed[i] = 0
-			}
-		}
-	}
-}
-
-func (s *State) FoodUpdate(age int) {
-	// Nuke all stale food
-
-	for loc, seen := range s.Food {
-		// Better would be to compute expected pickup time give neighbors
-		// in the pathing step and only revert to this when there were no
-		// visible neighbors.
-		//
-		// Should track that anyway since does not make sense to run for 
-		// food another bot will certainly get unless its to enter combat.
-
-		if s.Met.Seen[loc] > seen || seen < s.Turn-age {
-			s.Food[loc] = 0, false
-			if s.Map.Grid[loc] == FOOD {
-				s.Map.Grid[loc] = LAND
 			}
 		}
 	}

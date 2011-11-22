@@ -11,11 +11,13 @@ import (
 )
 
 type Map struct {
-	Torus                 // Defines the geometry of the map
-	Players int           // This is stored in the map file
-	Grid    []Item        // The map data possibly run through the symmetry mapper
-	SymMap  []*[]Location // Symmetry map
-	TGrid   []Item        // The true map data - updated via ProcessTurn
+	Torus                  // Defines the geometry of the map
+	Players  int           // This is stored in the map file
+	Grid     []Item        // The map data possibly run through the symmetry mapper
+	TGrid    []Item        // The true map data - updated via ProcessTurn
+	*SymData               // Symmetry data
+	SID      int           // The integer id for symmetry so we can invalidate hill guesses etc.
+	SMap     []*[]Location // Symmetry map
 
 	// internal cache data
 	BorderDist []uint8       // border distance
@@ -34,10 +36,13 @@ func NewMap(rows, cols, players int) *Map {
 		},
 		Players: players,
 		Grid:    make([]Item, rows*cols),
+		TGrid:   make([]Item, rows*cols),
 		// cache data
 		BorderDist: borderDistance(rows, cols),
 		LocStep:    locationStep(rows, cols),
+		SMap:       make([]*[]Location, 0, rows*cols),
 	}
+	m.SymData = m.NewSymData(4)
 
 	return m
 }

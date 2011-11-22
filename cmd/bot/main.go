@@ -86,21 +86,20 @@ func main() {
 	case "CUR":
 		fallthrough // no flag given run latest defined bot...
 	case "V6":
-		bot = NewBotV6(&s, ParameterSets[paramKey])
+		bot = NewBotV6(s, ParameterSets[paramKey])
 	default:
 		log.Printf("Unkown bot %s", runBot)
 		return
 	}
 	// Send go to tell server we are ready to process turns
 	fmt.Fprintf(os.Stdout, "go\n")
-	ttime := time.Nanoseconds()
 	etime := time.Nanoseconds()
 	egc := runtime.MemStats.PauseTotalNs
 	for {
 		// READ TURN INFO FROM SERVER]
 		var t *Turn
 
-		t, _ = s.TurnScan(in, t)
+		t = s.TurnScan(in, t)
 		if t.Turn != s.Turn+1 {
 			log.Printf("Turns out of order new is %d expected %d", t.Turn, s.Turn+1)
 		}
@@ -115,7 +114,7 @@ func main() {
 		}
 
 		// Generate order list
-		bot.DoTurn(&s)
+		bot.DoTurn(s)
 
 		// Timing hohah
 		stime, etime := etime, time.Nanoseconds()
@@ -129,7 +128,7 @@ func main() {
 	}
 
 	if Debug[DBG_TurnTime] {
-		ntime = time.Nanoseconds()
+		ttime := time.Nanoseconds()
 		log.Printf("TOTAL TIME %.2fms/turn for %d Turns",
 			float64(etime-ttime)/1000000/float64(s.Turn), s.Turn)
 	}

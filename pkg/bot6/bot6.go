@@ -102,8 +102,6 @@ func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
 }
 
 func (bot *BotV6) DoTurn(s *State) os.Error {
-	// TODO this still seems clunky.  need to figure where this belongs.
-	s.FoodUpdate(bot.P.ExpireFood)
 	bot.Explore.UpdateSeen(s, 1)
 
 	tset := bot.GenerateTargets(s)
