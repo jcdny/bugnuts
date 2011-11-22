@@ -3,6 +3,7 @@ package util
 import (
 	"testing"
 	"math"
+	"rand"
 )
 
 type Lists struct {
@@ -25,5 +26,29 @@ func TestMinMax(t *testing.T) {
 		if amax := Max(l.list); amax != l.emax {
 			t.Errorf("For max(%v) got %d expected %d", l.list, amax, l.emax)
 		}
+	}
+}
+
+func BenchmarkMinV(b *testing.B) {
+	L := make([]int, 49)
+
+	for i, _ := range L {
+		L[i] = rand.Intn(20)
+	}
+
+	for i := 0; i < b.N; i++ {
+		MinV(1, L...)
+	}
+}
+
+func BenchmarkMin(b *testing.B) {
+	L := make([]int, 50)
+
+	for i, _ := range L {
+		L[i] = rand.Intn(20)
+	}
+
+	for i := 0; i < b.N; i++ {
+		Min(L)
 	}
 }

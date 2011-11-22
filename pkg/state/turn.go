@@ -16,6 +16,7 @@ func (s *State) ProcessFood(food []Location, turn int) {
 	for _, loc := range food {
 		if _, ok := s.Food[loc]; !ok {
 			// new food - also add via symmetry
+			s.Food[loc] = turn
 		} else {
 			s.Food[loc] = turn
 		}
@@ -39,8 +40,9 @@ func (s *State) ProcessFood(food []Location, turn int) {
 
 func (s *State) ProcessTurn(t *Turn) {
 	s.Turn++
+	s.ResetGrid()
 
-	s.TSet(t.W, WATER)
+	s.TSet(WATER, t.W...)
 	s.ProcessVisible(t.A, 0, s.Turn)
 
 	s.UpdateSymmetryData()
@@ -119,7 +121,7 @@ func (s *State) ProcessVisible(antloc []PlayerLoc, player, turn int) {
 				s.Met.VisCount[loc+offset]++
 				if unk {
 					if s.TGrid[loc+offset] == UNKNOWN {
-						s.Map.TGrid[loc+offset] = LAND
+						s.TSet(LAND, loc+offset)
 						nland++
 					} else if s.Map.TGrid[loc+offset] != WATER {
 						nland++
@@ -135,7 +137,7 @@ func (s *State) ProcessVisible(antloc []PlayerLoc, player, turn int) {
 				s.Met.Seen[l] = turn
 				if unk {
 					if s.TGrid[l] == UNKNOWN {
-						s.Map.TGrid[l] = LAND
+						s.TSet(LAND, l)
 						nland++
 					} else if s.TGrid[l] != WATER {
 						nland++
@@ -152,8 +154,11 @@ func (s *State) ProcessVisible(antloc []PlayerLoc, player, turn int) {
 }
 
 func (s *State) ProcessHills(hl []PlayerLoc, player int, turn int) {
-
+	nhills := 0
 	for _, pl := range hl {
+		if turn == 1 && pl.Player == player {
+			nhills++
+		}
 		if hill, found := s.Hills[pl.Loc]; found {
 			hill.Player = pl.Player
 			hill.Seen = turn
@@ -169,7 +174,10 @@ func (s *State) ProcessHills(hl []PlayerLoc, player int, turn int) {
 				guess:    false,
 			}
 		}
+	}
 
+	if turn == 1 {
+		s.InitialHills = nhills
 	}
 
 	// Update hill data in map.
@@ -213,12 +221,10 @@ func (s *State) ProcessAnts(antloc []PlayerLoc, player, turn int) {
 func (s *State) ResetGrid() {
 	// Rotate threat maps and clear first.
 	n := len(s.Met.Threat)
-
 	if n > 1 {
 		s.Met.Threat = append(s.Met.Threat[1:n], s.Met.Threat[0])
 		s.Met.PThreat = append(s.Met.PThreat[1:n], s.Met.PThreat[0])
 	}
-
 	for i := range s.Met.Threat[0] {
 		s.Met.Threat[0][i] = 0
 		s.Met.PThreat[0][i] = 0
@@ -245,6 +251,7 @@ func (s *State) ProcessDeadAnts(deadants []PlayerLoc, player, turn int) {
 }
 
 func (s *State) UpdateHillMaps() {
+	log.Printf("Updating hills for player 0: %d hills", s.NHills[0])
 	// Generate the fill for all my hills.
 	if s.NHills[0] == 0 {
 		return

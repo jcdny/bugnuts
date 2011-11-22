@@ -1,2 +1,3 @@
 #!/bin/sh
-./bot -b v6 -m "$MAP" -d 2 -V none
+ROOT=~/src/ai/bot
+$ROOT/cmd/bot/bot -b V6 -m "$MAP" -d 1 -V useful

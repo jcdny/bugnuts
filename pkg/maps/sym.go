@@ -17,7 +17,8 @@ type SymTile struct {
 	Hash     SymHash    // the minhash
 	Locs     []Location // encountered tiles with this minhash
 	Bits     uint8      // bits of info Min(SYMN*SYMN - N*Water, N*Water)
-	Rejected bool       // Ignore this tile for symmetry stuff.
+	Self     uint8      // number of matching self rotations
+	Ignore   bool       // Ignore this tile for symmetry stuff.
 	Symmetry []uint8    // The list symmetries present
 	Origin   Point      // Origin for the currently accepted Symmetry, {0,0} for translation
 	Offset   Point      // The offset for translation symmetry {0,0} for non translation
@@ -165,7 +166,7 @@ func (s *SymData) UpdateSymmetryData() {
 func (s *SymData) Update(loc Location) (SymHash, bool) {
 	var found bool
 
-	bits, minhash, hashes := s.SymCompute(Location(loc))
+	minhash, hashes, bits, self := s.SymCompute(Location(loc))
 	s.MinHash[loc] = minhash
 	s.Hashes[loc] = hashes
 	if hashes != nil {
@@ -176,6 +177,7 @@ func (s *SymData) Update(loc Location) (SymHash, bool) {
 				Hash: minhash,
 				Locs: make([]Location, 0, 4),
 				Bits: bits,
+				Self: self,
 			}
 		}
 
@@ -199,7 +201,7 @@ func (s *SymData) Update(loc Location) (SymHash, bool) {
 
 // Compute the minhash for a given location, returning the bits of data, the minHash and all
 // 8 hashes.  It returns (0, -1, nil) in the event it encounters an unknown tile...
-func (s *SymData) SymCompute(loc Location) (uint8, SymHash, *[8]SymHash) {
+func (s *SymData) SymCompute(loc Location) (SymHash, *[8]SymHash, uint8, uint8) {
 	p := s.ToPoint(loc)
 	id := [8]SymHash{}
 
@@ -218,7 +220,7 @@ func (s *SymData) SymCompute(loc Location) (uint8, SymHash, *[8]SymHash) {
 			}
 
 			if s.Grid[nl] == UNKNOWN {
-				return SYMNONE, -1, nil
+				return -1, nil, SYMNONE, 0
 			}
 
 			if s.Grid[nl] == WATER {
@@ -234,7 +236,14 @@ func (s *SymData) SymCompute(loc Location) (uint8, SymHash, *[8]SymHash) {
 		bits = SYMN*SYMN - bits
 	}
 
-	return uint8(bits), minSymHash(&id), &id
+	self := 0
+	for i := 1; i < 8; i++ {
+		if id[0] == id[i] {
+			self++
+		}
+	}
+
+	return minSymHash(&id), &id, uint8(bits), uint8(self)
 }
 
 // annoying utility func.
@@ -365,34 +374,6 @@ func (t *Torus) SymDiff(l1, l2 Location) Point {
 	return Point{R: r, C: c}
 }
 
-// Given a point and a translation compute the list of locations
-// If N > 0 then size the list appropriately
-func (t *Torus) Translations(l1 Location, o Point, N int) []Location {
-	if N < 2 {
-		N = 8
-	}
-	ll := make([]Location, 0, N)
-
-	p1 := t.ToPoint(l1)
-	p := Point{}
-	for i := 1; i < SYMCELLMAX+1; i++ {
-		p.C = (p1.C + i*o.C) % t.Cols
-		p.R = (p1.R + i*o.R) % t.Rows
-		if p.C < 0 {
-			p.C += t.Cols
-		}
-		if p.R < 0 {
-			p.R += t.Rows
-		}
-		if p.R == p1.R && p.C == p1.C {
-			return ll
-		}
-		ll = append(ll, Location(p.R*t.Cols+p.C))
-	}
-
-	return []Location{}
-}
-
 // Reduce a translation to its minumum length offset
 // I should just do this with math but my head hurts.
 func (t *Torus) ShiftReduce(l1, l2 Location) (Point, bool) {
@@ -476,15 +457,59 @@ func (t *Torus) ReduceReduce(in []Point) []Point {
 }
 
 func (t *Torus) EquivT(pm, p Point) bool {
-	if Abs(pm.R) < Abs(p.R) && Abs(p.R)%Abs(pm.R) == 0 {
+	if pm.R != 0 && Abs(pm.R) < Abs(p.R) && Abs(p.R)%Abs(pm.R) == 0 {
 		if p.C == pm.C*(p.R/pm.R) || p.C == pm.C*(p.R/pm.R)-t.Cols {
 			return true
 		}
 	}
-	if Abs(pm.C) < Abs(p.C) && Abs(p.C)%Abs(pm.C) == 0 {
+	if pm.C != 0 && Abs(pm.C) < Abs(p.C) && Abs(p.C)%Abs(pm.C) == 0 {
 		if p.R == pm.R*(p.C/pm.C) || p.R == pm.R*(p.C/pm.C)-t.Rows {
 			return true
 		}
 	}
 	return false
+}
+
+// Given a point and a translation compute the list of locations
+func (t *Torus) Translations(l1 Location, o Point, ll []Location) []Location {
+	ll = append(ll, l1)
+	p1 := t.ToPoint(l1)
+	p := Point{}
+	for i := 1; i < SYMCELLMAX+1; i++ {
+		p.C = (p1.C + i*o.C) % t.Cols
+		p.R = (p1.R + i*o.R) % t.Rows
+		if p.C < 0 {
+			p.C += t.Cols
+		}
+		if p.R < 0 {
+			p.R += t.Rows
+		}
+		if p.R == p1.R && p.C == p1.C {
+			return ll
+		}
+		ll = append(ll, Location(p.R*t.Cols+p.C))
+	}
+	return []Location{}
+}
+
+func (t *Torus) TransMap(p Point) [][]Location {
+	size := t.Size()
+	smap := make([][]Location, size)
+	marr := make([]Location, 0, size)
+
+	n := 0
+	for i, _ := range smap {
+		if smap[i] == nil {
+			marr = t.Translations(Location(i), p, marr)
+			if len(marr) == 0 || len(marr) > size {
+				return nil
+			}
+			for _, loc := range marr[n:] {
+				smap[loc] = marr[n:]
+			}
+			n = len(marr)
+		}
+	}
+
+	return smap
 }

@@ -1,27 +1,31 @@
 #!/usr/bin/env sh
-ROOT=../tools
+ROOT=~/src/ai
+EXE=$ROOT/bot/bin/bot.sh
+TOOLS=$ROOT/tools
+MAPS=$ROOT/bot/pkg/maps/testdata/maps
 ARCH="`uname -s`"
 
-export MAP1="testdata/maps/random_walk_04p_02.map" # translation  symmetry
-export MAP2="testdata/maps/maze_04p_02.map" # annoying map
-export MAP3="testdata/maps/maze_04p_01.map" # straight across from another hill.
-export MAP4="testdata/maps/mmaze_04p_01.map" # 6 hills per player - insane.
-export MAP5="testdata/maps/random_walk_04p_01.map" # empty
-export MAP6="testdata/maps/mmaze_04p_02.map"  # 2 hills each
+export MAP1="random_walk_04p_02.map" # translation  symmetry
+export MAP2="maze_04p_02.map" # annoying map
+export MAP3="maze_04p_01.map" # straight across from another hill.
+export MAP4="mmaze_04p_01.map" # 6 hills per player - insane.
+export MAP5="random_walk_04p_01.map" # empty
+export MAP6="mmaze_04p_02.map"  # 2 hills each
 
-export MAP=$MAP2
+export MAP="$MAPS/$MAP1"
+echo $MAP
 
 #    --nolaunch \
 
-../tools/playgame.py \
+$TOOLS/playgame.py \
     --fill \
     -I -E -e -O -R \
     --player_seed 41 \
     --engine_seed 41 \
     --end_wait=0.25 \
     --verbose \
-    --log_dir log \
-    --turns 1000 \
+    --log_dir $ROOT/bot/log \
+    --turns 400 \
     --map_file $MAP \
     --food_rate 5 11 \
     --food_turn 19 37 \
@@ -30,9 +34,9 @@ export MAP=$MAP2
     --cutoff_turn 150 \
     --cutoff_percent 0.85 \
     "$@" \
-    "./bot.sh" \
-    "./bin/$ARCH/bugnutsv5" \
-    "python $ROOT/sample_bots/python/GreedyBot.py" "python $ROOT/sample_bots/python/HunterBot.py" \
+    "$EXE" \
+    "$ROOT/bot/bin/$ARCH/bugnutsv5" \
+    "python $TOOLS/sample_bots/python/GreedyBot.py" "python $TOOLS/sample_bots/python/HunterBot.py" \
 
 
 

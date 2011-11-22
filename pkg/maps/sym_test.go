@@ -7,14 +7,16 @@ import (
 	"os"
 )
 
-func TestSR(t *testing.T) {
+func TestShiftReduce(t *testing.T) {
 	T := Torus{Rows: 7, Cols: 7}
 
 	l1 := Location(0)
 	p2 := Point{-1, 3}
 	l2 := T.ToLocation(p2)
 	p, good := T.ShiftReduce(l1, l2)
-	log.Printf("SR: %v %v", good, p)
+	if !good || p.R != 2 || p.C != 1 {
+		t.Errorf("ShiftReduce: expected {2 1} got %v", good, p)
+	}
 }
 
 func TestMirror(t *testing.T) {
@@ -23,7 +25,26 @@ func TestMirror(t *testing.T) {
 	l1 := T.ToLocation(p1)
 	p2 := Point{43, 65}
 	l2 := T.ToLocation(p2)
-	log.Printf("%v %v: %d", p1, p2, T.Mirror(l1, l2, 1))
+	m := T.Mirror(l1, l2, 1)
+	if m != 33 {
+		t.Errorf("Mirror: %v %v: %d", p1, p2, m)
+	}
+}
+
+func TestTransMap(t *testing.T) {
+	T := Torus{Rows: 7, Cols: 7}
+	p := Point{-1, 3}
+	m := T.TransMap(p)
+	log.Printf("TransMap %v", m)
+}
+
+func BenchmarkTransMap(b *testing.B) {
+	// random_walk_07p_02
+	T := Torus{Rows: 119, Cols: 147}
+	p := Point{34, -21}
+	for i := 0; i < b.N; i++ {
+		T.TransMap(p)
+	}
 }
 
 func TestTile(t *testing.T) {
@@ -104,42 +125,44 @@ func BenchmarkTile4(b *testing.B) {
 func BenchmarkTile8(b *testing.B) {
 	m := mapMeBaby("testdata/maps/mmaze_05p_01.map")
 	for i := 0; i < b.N; i++ {
-		m.Tile(4)
+		m.Tile(8)
 	}
 }
 
 func TestSym(t *testing.T) {
 	//AllMaps := []string{"random_walk_10p_02"}
 	//AllMaps := []string{"maze_04p_02"}
-	//AllMaps := []string{"random_walk_07p_02"}
+	//AllMaps := []string{"../crazy"}
 	for _, name := range AllMaps {
 		log.Printf("***************************  %s ***************************************************", name)
 		m := mapMeBaby("testdata/maps/" + name + ".map")
 		if m == nil {
 			t.Error("Map nil")
 		}
-		sym := m.Tile(4)
+		sym := m.Tile(0)
 		if sym == nil {
 			t.Error("Sym nil")
 		}
 
-		log.Printf("MAP %s Tiles: %d entries", name, len(sym.Tiles))
+		log.Printf("MAP %s Tiles: %d entries rows %d cols %d", name, len(sym.Tiles), m.Rows, m.Cols)
 		log.Printf("NLen: %v", sym.NLen)
 		if len(sym.Tiles) > 0 {
 			done := 0
 			for minhash, tile := range sym.Tiles {
-				if done < 5 && len(tile.Locs) < 20 {
-					done++
+				if done < 10 && len(tile.Locs) < 20 {
 					sf, p1, p2 := sym.SymAnalyze(minhash)
-					log.Printf("Analyze: %v %v %v", sf, p1, p2)
-					//sym.symdump(minhash, m)
+					if true {
+						done++
+						log.Printf("Analyze: %v %v %v bits %d self %d: len %d, ex: %v", sf, p1, p2, tile.Bits, tile.Self, len(tile.Locs), m.ToPoints(tile.Locs)[0])
+						//sym.symdump(minhash, m)
+					}
 				}
 			}
 		}
 	}
 }
 
-// Fancy dump of Symmetry information including reduced translation 
+// Fancy dump of Symmetry information including reduced translation
 // offsets, matching symmetry,
 func (sym *SymData) symdump(tile SymHash, m *Map) {
 	llist := sym.Tiles[tile].Locs

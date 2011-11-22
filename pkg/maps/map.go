@@ -11,13 +11,13 @@ import (
 )
 
 type Map struct {
-	Torus                  // Defines the geometry of the map
-	Players  int           // This is stored in the map file
-	Grid     []Item        // The map data possibly run through the symmetry mapper
-	TGrid    []Item        // The true map data - updated via ProcessTurn
-	*SymData               // Symmetry data
-	SID      int           // The integer id for symmetry so we can invalidate hill guesses etc.
-	SMap     []*[]Location // Symmetry map
+	Torus                 // Defines the geometry of the map
+	Players  int          // This is stored in the map file
+	Grid     []Item       // The map data possibly run through the symmetry mapper
+	TGrid    []Item       // The true map data - updated via ProcessTurn
+	*SymData              // Symmetry data
+	SID      int          // The integer id for symmetry so we can invalidate hill guesses etc.
+	SMap     [][]Location // Symmetry map
 
 	// internal cache data
 	BorderDist []uint8       // border distance
@@ -40,7 +40,7 @@ func NewMap(rows, cols, players int) *Map {
 		// cache data
 		BorderDist: borderDistance(rows, cols),
 		LocStep:    locationStep(rows, cols),
-		SMap:       make([]*[]Location, 0, rows*cols),
+		SMap:       make([][]Location, 0, rows*cols),
 	}
 	m.SymData = m.NewSymData(4)
 
@@ -225,10 +225,28 @@ func (m *Map) Item(l Location) Item {
 	return m.Grid[l]
 }
 
-func (m *Map) TSet(locs []Location, i Item) {
+// Return false if the symmetry mapping gives a result inconsistent with TGrid
+func (m *Map) TSet(i Item, locs ...Location) bool {
 	for _, loc := range locs {
-		m.TGrid[loc] = i
+		if m.TGrid[loc] != i {
+			m.TGrid[loc] = i
+			// Apply symmetry to map to Grid.
+			if len(m.SMap) == 0 {
+				m.Grid[loc] = i
+			} else if m.Grid[loc] != UNKNOWN && m.Grid[loc] != i {
+				m.Grid[loc] = i
+				// Invalidate Symmetry if the new point does not match sym applied
+				log.Printf("Invalid symmetry at %d", loc)
+				return false
+			} else {
+				for _, lsym := range m.SMap[loc] {
+					m.Grid[lsym] = i
+				}
+			}
+		}
+
 	}
+	return true
 }
 
 func (m *Map) DumpMap() string {

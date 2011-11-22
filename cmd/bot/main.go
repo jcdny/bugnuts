@@ -93,17 +93,22 @@ func main() {
 	}
 	// Send go to tell server we are ready to process turns
 	fmt.Fprintf(os.Stdout, "go\n")
-	etime := time.Nanoseconds()
+	btime := time.Nanoseconds()
+	etime, stime := btime, btime
 	egc := runtime.MemStats.PauseTotalNs
+	sgc := egc
 	for {
 		// READ TURN INFO FROM SERVER]
 		var t *Turn
-
 		t = s.TurnScan(in, t)
+		if t.End {
+			break
+		}
 		if t.Turn != s.Turn+1 {
 			log.Printf("Turns out of order new is %d expected %d", t.Turn, s.Turn+1)
 		}
 		turns = append(turns, t)
+
 		s.ProcessTurn(t)
 
 		if refmap != nil {
@@ -117,8 +122,8 @@ func main() {
 		bot.DoTurn(s)
 
 		// Timing hohah
-		stime, etime := etime, time.Nanoseconds()
-		sgc, egc := egc, runtime.MemStats.PauseTotalNs
+		stime, etime = etime, time.Nanoseconds()
+		sgc, egc = egc, runtime.MemStats.PauseTotalNs
 		if Debug[DBG_TurnTime] {
 			log.Printf("TURN %d %.2fms %.2fms GC",
 				s.Turn,
@@ -128,8 +133,8 @@ func main() {
 	}
 
 	if Debug[DBG_TurnTime] {
-		ttime := time.Nanoseconds()
+		etime = time.Nanoseconds()
 		log.Printf("TOTAL TIME %.2fms/turn for %d Turns",
-			float64(etime-ttime)/1000000/float64(s.Turn), s.Turn)
+			float64(btime-etime)/1000000/float64(s.Turn), s.Turn)
 	}
 }
