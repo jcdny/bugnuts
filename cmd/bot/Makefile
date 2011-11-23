@@ -4,10 +4,9 @@ TARG=bot
 GOFILES=\
 	main.go
 
-
 include $(GOROOT)/src/Make.cmd
 
-.PHONY: gofmt test dist
+.PHONY: gofmt test dist packages
 gofmt:
 	gofmt -w $(GOFILES)
 
@@ -16,3 +15,9 @@ dist:
 
 test: $(TARG)
 	./bot -V none -d=1 < testdata/test.input
+
+$(GOFILES): packages
+
+packages:
+	+@echo Making packages
+	+@$(MAKE) -C ../../pkg install || (echo FAILED; exit 1)
