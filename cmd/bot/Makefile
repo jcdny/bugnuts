@@ -6,7 +6,7 @@ GOFILES=\
 
 include $(GOROOT)/src/Make.cmd
 
-.PHONY: gofmt test dist packages
+.PHONY: gofmt test dist packages $(TARG)
 gofmt:
 	gofmt -w $(GOFILES)
 
@@ -14,7 +14,7 @@ dist:
 	zip dist/dist.$(shell date +%Y%m%d-%H%M).zip $(GOFILES)
 
 test: $(TARG)
-	./bot -V none -d=1 < testdata/test.input
+	./bot -V none -d=1 < testdata/test.input 2>&1 > /dev/null
 
 $(GOFILES): packages
 

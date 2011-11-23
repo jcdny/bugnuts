@@ -293,7 +293,9 @@ func (s *State) ProcessDeadAnts(deadants []PlayerLoc, player, turn int) {
 }
 
 func (s *State) UpdateHillMaps() {
-	log.Printf("Updating hill maps for player 0: %d hills", s.NHills[0])
+	// TODO this does not really need to be done every turn esp late
+	// in the game
+
 	// Generate the fill for all my hills.
 	if s.NHills[0] == 0 {
 		return
@@ -308,10 +310,9 @@ func (s *State) UpdateHillMaps() {
 	s.Met.FHill, _, _ = MapFillSeed(s.Map, lend, 1)
 
 	outbound := make(map[Location]int)
-	R := MaxV(MinV(s.Rows, s.Cols)/s.NHills[0]/2, 8)
+	R := MinV(MaxV(MinV(s.Rows, s.Cols)/s.NHills[0]/2, 8), 16)
 	samples, _ := s.Met.FHill.Sample(0, R, R)
-	log.Printf("Outboung R %d samples: %d", R, len(samples))
-
+	log.Printf("Outbound Radius %d samples: %d", R, len(samples))
 	for _, loc := range samples {
 		outbound[loc] = 1
 	}

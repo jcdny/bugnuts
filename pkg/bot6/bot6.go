@@ -43,7 +43,6 @@ func NewBotV6(s *State, pset *Parameters) Bot {
 		IdleAnts:   make([]int, 0, s.Turns+2),
 		StaticAnts: make([]int, s.Turns+2),
 	}
-	log.Printf("**************************************************%v", pset)
 
 	mb.PriMap = mb.P.MakePriMap()
 

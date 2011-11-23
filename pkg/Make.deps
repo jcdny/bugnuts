@@ -1,7 +1,7 @@
 MyBot.install: parameters.install state.install
 bot6.install: MyBot.install debug.install maps.install parameters.install pathing.install state.install viz.install
 debug.install: watcher.install
-maps.install: util.install
+maps.install: debug.install util.install
 parameters.install: maps.install
 pathing.install: debug.install maps.install util.install
 replay.install:

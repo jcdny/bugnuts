@@ -1,17 +1,17 @@
 package maps
 
 import (
+	"log"
 	. "bugnuts/util"
+	. "bugnuts/debug"
 )
 
-// Neighboorhood size, if > 5 then SymHash needs to be int64
-// Also the tests are all coded to expect 5x5
 const (
-	SYMN       = 7
+	SYMN       = 7  // Neighboorhood size.  needs to be odd and < 8
 	SYMCELLMAX = 32 // maximum number of cells for tranlations...
 )
 
-type SymHash int64
+type SymHash int64 // SymHash needs to be int64 if SYMN = 7, int32 otherwise.
 
 type SymTile struct {
 	Hash     SymHash    // the minhash
@@ -39,10 +39,7 @@ var symMask [SYMN * SYMN][8]SymHash
 
 // Map {r, c} -> {r*rr + c*cr, c*cc+ r*rc}
 type symOffsets struct {
-	RR int
-	CR int
-	RC int
-	CC int
+	RR, CR, RC, CC int
 }
 
 var symOffsetMap = [8]symOffsets{
@@ -70,12 +67,10 @@ const (
 
 // Number of symmetry axes
 type symAxes struct {
-	Name string
-	Id   uint8
-	N    int
-	R    bool
-	C    bool
-	D    bool
+	Name    string
+	Id      uint8
+	N       int
+	R, C, D bool
 }
 
 var symAxesMap = [8]symAxes{
@@ -92,25 +87,26 @@ var symAxesMap = [8]symAxes{
 func init() {
 	// Generate the shuffle masks for the symmetries as defined by symOffsetMap
 
-	// first the stepping arrays so the logic is clearer below 
 	steps := [3][SYMN]int{}
 	for i := 0; i < SYMN; i++ {
-		steps[0][i] = SYMN - i - 1
-		steps[2][i] = i
+		steps[0][i] = SYMN - i - 1 // negative steps
+		steps[2][i] = i            // positive steps
 	}
 
-	for sym, om := range symOffsetMap {
+	for sym, omap := range symOffsetMap {
 		bit := uint8(0)
-		if om.RR != 0 {
-			for _, r := range steps[om.RR+1] {
-				for _, c := range steps[om.CC+1] {
+		if omap.RR != 0 {
+			// columns first
+			for _, r := range steps[omap.RR+1] {
+				for _, c := range steps[omap.CC+1] {
 					symMask[r*SYMN+c][sym] ^= 1 << bit
 					bit++
 				}
 			}
 		} else {
-			for _, c := range steps[om.CR+1] {
-				for _, r := range steps[om.RC+1] {
+			// rows first
+			for _, c := range steps[omap.CR+1] {
+				for _, r := range steps[omap.RC+1] {
 					symMask[r*SYMN+c][sym] ^= 1 << bit
 					bit++
 				}
@@ -178,6 +174,9 @@ func (s *SymData) UpdateSymmetryData() {
 			// TODO fix to handle other symmetries.
 			smap, valid := s.TransMapValidate(tile.Offset)
 			if valid {
+				if Debug[DBG_Symmetry] {
+					log.Printf("Valid symmetry map len %d found", len(s.Map.SMap[0]))
+				}
 				maxlen = len(equiv)
 				s.Map.SMap = smap
 				updated = true
@@ -188,6 +187,9 @@ func (s *SymData) UpdateSymmetryData() {
 	}
 
 	if updated {
+		if Debug[DBG_Symmetry] {
+			log.Printf("Applying new symmetry map for sym len %d", len(s.Map.SMap[0]))
+		}
 		s.SID++
 		s.TApply()
 	}
@@ -298,7 +300,6 @@ func minSymHash(id *[8]SymHash) SymHash {
 }
 
 func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point, []Location) {
-	// Mark("SymAnalyze in")
 	llist := s.Tiles[minhash].Locs
 	if len(llist) < 2 {
 		return []uint8{}, Point{0, 0}, Point{0, 0}, []Location{}
@@ -309,9 +310,14 @@ func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point, []Location
 	for i, l1 := range llist {
 		for _, l2 := range llist[i+1:] {
 			if s.Hashes[l1][0] == s.Hashes[l2][SYMTRANS] {
+				// TODO rectangular tilings need to be handled properly
+				// Should add a test for that.
 				pd, good := s.ShiftReduce(l1, l2)
 				if !good {
 					s.Tiles[minhash].Ignore = true
+					// TODO most of the false positives happen with a mix of translate and
+					// various rotations so currently I punt if I encounter a translation
+					// which is not valid for tiling the torus.  Maybe wrong answer.
 					return []uint8{}, Point{}, Point{}, []Location{}
 				} else {
 					redlist = append(redlist, pd)
@@ -323,18 +329,14 @@ func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point, []Location
 		}
 	}
 
-	// if Mark("SymAnalyze tr") > 100 { log.Printf("Long Shiftreduce: %v\n%#v", s.ToPoints(llist), s.Tiles[minhash]) }
-
 	if bad == 0 && len(redlist) > 0 {
 		redlist = s.ReduceReduce(redlist)
 		if len(redlist) == 1 {
 			// Yay we got unambiguous translation...
 			equiv := s.Translations(llist[0], redlist[0], []Location{})
-			// Mark("SymAnalyze tr done")
 			return []uint8{SYMTRANS}, Point{0, 0}, redlist[0], equiv
 		}
 	}
-	// Mark("SymAnalyze tr fail")
 
 	// Test for mirroring
 	found := make([]uint8, 0, 3)
@@ -357,15 +359,14 @@ func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point, []Location
 
 		}
 	}
-	// Mark("SymaAnalyze Mirror")
 	if len(found) > 1 {
 		return []uint8{SYMMIRRORC, SYMMIRRORR, SYMROT180}, orig, Point{0, 0}, []Location{}
 	} else {
 		return found, orig, Point{}, []Location{}
 	}
 
-	// Test for rotations
-	// TODO
+	// TODO Test for rotations
+	// For rotations and diagonal mirrorings the map needs to be square...
 	return []uint8{}, Point{}, Point{}, []Location{}
 }
 

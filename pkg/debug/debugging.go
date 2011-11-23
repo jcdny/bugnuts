@@ -7,22 +7,18 @@ import (
 
 const (
 	DBG_TurnTime = iota + 1
-	DBG_AllTime
 	DBG_Iterations
+	DBG_Start
 	DBG_Threat
-	DBG_Targets
+	DBG_Movement
 	DBG_MoveErrors
-	DBG_Stepping
-	DBG_Targeting
 	DBG_Combat
 	DBG_PathIn
-	DBG_Movement
+	DBG_PathInDefense
+	DBG_Targets
 	DBG_Sample
 	DBG_BorderTargets
-	DBG_PathInDefense
-	DBG_Start
-	DBG_Turns
-	DBG_Results
+	DBG_Symmetry
 	maxDBG
 )
 
@@ -33,8 +29,8 @@ var WS *Watches
 var debugLevels = [][]int{
 	0: []int{0},
 	1: []int{DBG_TurnTime},
-	2: []int{DBG_AllTime, DBG_Iterations},
-	3: []int{DBG_Stepping},
+	2: []int{DBG_Iterations, DBG_Symmetry},
+	3: []int{DBG_Targets},
 }
 
 func SetDebugLevel(dlev int) {

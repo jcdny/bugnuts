@@ -26,7 +26,8 @@ var watchPoints string
 var debugLevel int
 
 func init() {
-	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Lshortfile)
+	//	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Lshortfile)
+	log.SetFlags(log.Lshortfile)
 
 	vizList := ""
 	vizHelp := "Visualize: all,none,useful,"
