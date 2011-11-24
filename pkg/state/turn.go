@@ -208,7 +208,7 @@ func (s *State) ProcessHills(hl []PlayerLoc, player int, turn int) {
 					if !found && s.Met.Seen[nloc] == 0 {
 						s.Hills[nloc] = &Hill{
 							Location: nloc,
-							Player:   9,
+							Player:   int(PLAYERGUESS - MY_ANT),
 							Found:    turn,
 							Seen:     turn,
 							Killed:   0,

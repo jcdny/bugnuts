@@ -12,3 +12,9 @@ tmp/
 *.png
 replay/data
 nohup.out
+bin/Darwin
+bin/Linux
+cmd/bot/bot
+cmd/analyze/mapper
+cmd/analyze/analyze
+

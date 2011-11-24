@@ -31,7 +31,7 @@ type PlayerResult struct {
 	ChallengeSkill *float64
 }
 
-func (r *Match) ExtractMetaData() (g *GameResult, p []*PlayerResult) {
+func (r *Match) ExtractMetadata() (g *GameResult, p []*PlayerResult) {
 
 	g = &GameResult{
 		GameId:     r.GameId,

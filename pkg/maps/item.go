@@ -20,6 +20,7 @@ const (
 	PLAYER7
 	PLAYER8
 	PLAYER9
+	PLAYERGUESS
 	MY_HILL
 	HILL1
 	HILL2
@@ -30,7 +31,7 @@ const (
 	HILL7
 	HILL8
 	HILL9
-	HILL_GUESS // Not a real hill - our guess
+	HILLGUESS // Not a real hill - our guess
 	MY_DEAD
 	DEAD1
 	DEAD2
@@ -62,7 +63,7 @@ const (
 )
 
 var itemToSym = [256]byte{' ', '%', '*', '.',
-	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j',
+	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', '!', // ! is a player guess
 	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '?', // ? is guess hill
 	'!', 'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r',
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
@@ -87,7 +88,7 @@ func init() {
 	for _, item := range []Item{EXPLORE, DEFEND, RALLY} {
 		TerminalItem[item] = true
 	}
-	for item := Item(HILL1); item <= HILL_GUESS; item++ {
+	for item := Item(HILL1); item <= HILLGUESS; item++ {
 		TerminalItem[item] = true
 	}
 	for item := Item(HILLANT1); item <= HILLANT9; item++ {
@@ -119,7 +120,7 @@ func ToItem(c byte) Item {
 }
 
 func (o Item) IsHill() bool {
-	if (o >= MY_HILL && o <= HILL_GUESS) || (o >= MY_HILLANT && o <= HILLANT9) {
+	if (o >= MY_HILL && o <= HILLGUESS) || (o >= MY_HILLANT && o <= HILLANT9) {
 		return true
 	}
 
@@ -130,7 +131,7 @@ func (o Item) IsEnemyHill(player int) bool {
 	if o == LAND || o == WATER {
 		return false
 	}
-	if o >= MY_HILL && o <= HILL_GUESS {
+	if o >= MY_HILL && o <= HILLGUESS {
 		return player != int(o-MY_HILL)
 	}
 	if o >= MY_HILLANT && o <= HILLANT9 {
@@ -144,7 +145,7 @@ func (o Item) IsEnemyAnt(player int) bool {
 	if o == LAND || o == WATER {
 		return false
 	}
-	if o >= MY_ANT && o <= PLAYER9 {
+	if o >= MY_ANT && o <= PLAYERGUESS {
 		return player != int(o-MY_ANT)
 	}
 	if o >= MY_HILLANT && o <= HILLANT9 {

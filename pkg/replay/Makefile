@@ -2,8 +2,9 @@ include $(GOROOT)/src/Make.inc
 
 TARG=bugnuts/replay
 GOFILES=\
+	load.go\
 	metadata.go\
-	replay.go
+	replay.go\
 
 
 include $(GOROOT)/src/Make.pkg
