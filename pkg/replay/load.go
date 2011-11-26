@@ -11,7 +11,7 @@ import (
 	"regexp"
 )
 
-var htmlReplayRe *regexp.Regexp = regexp.MustCompile("loadReplayData\\([:space]*'[:space:]*(.+)'[:space:]*\\)[:space:]*;")
+var htmlReplayRe *regexp.Regexp = regexp.MustCompile("loadReplayData\\([:space]*'[:space:]*({.+})[:space:]*'[:space:]*\\)[:space:]*;")
 
 // Take a job and load the required data
 func Load(file string) (*Match, os.Error) {

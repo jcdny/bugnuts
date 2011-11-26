@@ -11,15 +11,15 @@ import (
 
 // Game definition
 type GameInfo struct {
+	Rows          int
+	Cols          int
 	LoadTime      int   //in milliseconds
 	TurnTime      int   //in milliseconds
-	Rows          int   //number of rows in the map
-	Cols          int   //number of columns in the map
 	Turns         int   //maximum number of turns in the game
 	ViewRadius2   int   //view radius squared
 	AttackRadius2 int   //battle radius squared
 	SpawnRadius2  int   //spawn radius squared
-	PlayerSeed    int64 //random player seed
+	PlayerSeed    int64 `json:"player_seed"` //random player seed
 }
 
 type PlayerLoc struct {
@@ -35,7 +35,7 @@ type Turn struct {
 	H    []PlayerLoc
 	D    []PlayerLoc
 	End  bool
-	Err  os.Error
+	*Map
 }
 
 func gameDefaults() *GameInfo {
@@ -136,25 +136,61 @@ func (g *GameInfo) String() string {
 	return str
 }
 
-// Providing tl allows for better sizing of turn slices.
-func (s *State) TurnScan(in *bufio.Reader, tl *Turn) *Turn {
-	var T *Turn
+func stringPlayerLoc(t *Turn, pl *PlayerLoc) string {
+	str := ""
+	p := t.ToPoint(pl.Loc)
+	str += strconv.Itoa(p.R) + " " + strconv.Itoa(p.C) + " " + strconv.Itoa(pl.Player)
+	return str
+}
 
+func (t *Turn) String() string {
+	str := ""
+	for i := range t.W {
+		p := t.ToPoint(t.W[i])
+		str += "\nw " + strconv.Itoa(p.R) + " " + strconv.Itoa(p.C)
+	}
+	for i := range t.F {
+		p := t.ToPoint(t.F[i])
+		str += "\nf " + strconv.Itoa(p.R) + " " + strconv.Itoa(p.C)
+	}
+	for _, pl := range t.H {
+		str += "\nh " + stringPlayerLoc(t, &pl)
+	}
+	for _, pl := range t.A {
+		str += "\na " + stringPlayerLoc(t, &pl)
+	}
+	for _, pl := range t.D {
+		str += "\nd " + stringPlayerLoc(t, &pl)
+	}
+
+	// we just chop first \n here
+	if str != "" {
+		str = str[1:]
+	}
+
+	return str
+}
+
+// Providing tl allows for better sizing of turn slices.
+func (s *State) TurnScan(in *bufio.Reader, tl *Turn) (*Turn, os.Error) {
+	var t *Turn
 	if tl == nil {
-		T = &Turn{
-			W: make([]Location, 0, 200),
-			F: make([]Location, 0, 10),
-			A: make([]PlayerLoc, 0, 10),
-			H: make([]PlayerLoc, 0, 10),
-			D: make([]PlayerLoc, 0, 10),
+		t = &Turn{
+			Map: s.Map,
+			W:   make([]Location, 0, 200),
+			F:   make([]Location, 0, 10),
+			A:   make([]PlayerLoc, 0, 10),
+			H:   make([]PlayerLoc, 0, 10),
+			D:   make([]PlayerLoc, 0, 10),
 		}
 	} else {
-		T = &Turn{
-			W: make([]Location, 0, len(tl.W)*2),
-			F: make([]Location, 0, len(tl.F)*3/2),
-			A: make([]PlayerLoc, 0, len(tl.A)*3/2),
-			H: make([]PlayerLoc, 0, len(tl.H)*3/2),
-			D: make([]PlayerLoc, 0, len(tl.D)*2),
+		t = &Turn{
+			Map: s.Map,
+			W:   make([]Location, 0, len(tl.W)*2),
+			F:   make([]Location, 0, len(tl.F)*3/2),
+			A:   make([]PlayerLoc, 0, len(tl.A)*3/2),
+			H:   make([]PlayerLoc, 0, len(tl.H)*3/2),
+			D:   make([]PlayerLoc, 0, len(tl.D)*2),
 		}
 	}
 
@@ -163,7 +199,6 @@ func (s *State) TurnScan(in *bufio.Reader, tl *Turn) *Turn {
 	for {
 		line, err = in.ReadString('\n')
 		if err != nil {
-			T.Err = err
 			break
 		}
 
@@ -178,7 +213,7 @@ func (s *State) TurnScan(in *bufio.Reader, tl *Turn) *Turn {
 		}
 
 		if line == "end" {
-			T.End = true
+			t.End = true
 			break
 		}
 
@@ -187,7 +222,7 @@ func (s *State) TurnScan(in *bufio.Reader, tl *Turn) *Turn {
 			if len(words) != 2 {
 				log.Printf("Invalid command format: \"%s\"", line)
 			}
-			T.Turn, err = strconv.Atoi(words[1])
+			t.Turn, err = strconv.Atoi(words[1])
 			if err != nil {
 				log.Printf("Atoi error %s \"%v\"", line, err)
 			}
@@ -227,19 +262,24 @@ func (s *State) TurnScan(in *bufio.Reader, tl *Turn) *Turn {
 
 		switch words[0] {
 		case "f":
-			T.F = append(T.F, loc)
+			t.F = append(t.F, loc)
 		case "w":
-			T.W = append(T.W, loc)
+			t.W = append(t.W, loc)
 		case "a":
-			T.A = append(T.A, PlayerLoc{Player: Player, Loc: loc})
+			t.A = append(t.A, PlayerLoc{Player: Player, Loc: loc})
 		case "h":
-			T.H = append(T.H, PlayerLoc{Player: Player, Loc: loc})
+			t.H = append(t.H, PlayerLoc{Player: Player, Loc: loc})
 		case "d":
-			T.D = append(T.D, PlayerLoc{Player: Player, Loc: loc})
+			t.D = append(t.D, PlayerLoc{Player: Player, Loc: loc})
 		default:
 			log.Printf("Unknown turn data \"%s\"", line)
 		}
 	}
 
-	return T
+	if err == os.EOF {
+		t.End = true
+		err = nil
+	}
+
+	return t, err
 }

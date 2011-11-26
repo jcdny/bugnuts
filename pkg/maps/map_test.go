@@ -2,7 +2,6 @@ package maps
 
 import (
 	"testing"
-	"os"
 )
 
 func TestMapNew(t *testing.T) {
@@ -32,7 +31,7 @@ func TestMapLoad(t *testing.T) {
 	file := "testdata/big.map"
 	m, err := MapLoadFile(file)
 
-	if err != os.EOF {
+	if err != nil {
 		t.Errorf("Invalid load of map error os.Error == %v", err)
 	}
 	if m == nil {

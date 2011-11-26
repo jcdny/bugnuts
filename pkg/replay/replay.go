@@ -3,10 +3,11 @@ package replay
 import (
 	"json"
 	"os"
+	"bugnuts/state"
 )
 
 // [57, 61, 246, 250, 2, "esss"]
-// spawn at 57/61 turn 246
+// player 2 spawn at {57 61} on turn 246, killed turn 250
 type AntHistory struct {
 	Row    int
 	Col    int
@@ -38,29 +39,23 @@ type FoodHistory struct {
 	Player *int
 }
 
-type ReplayData struct {
-	Ants          []AntHistory
-	AttackRadius2 int
-	Bonus         []int
-	Cutoff        string
-	Food          []FoodHistory
-	FoodRate      int `json:"food_rate"`
-	FoodStart     int `json:"food_start"`
-	FoodTurn      int `json:"food_turn"`
-	Hills         []HillData
-	HiveHistory   [][]int `json:"hive_history"`
-	LoadTime      int
-	Map           MapData
-	PlayerSeed    int64 `json:"player_seed"`
-	Players       int
-	RankingTurn   int `json:"ranking_turn"`
-	Revision      int
-	Scores        [][]int
-	SpawnRadius2  int
-	Turns         int
-	TurnTime      int
-	ViewRadius2   int
-	WinningTurn   int `json:"winning_turn"`
+type Replay struct {
+	state.GameInfo
+	Ants        []*AntHistory
+	Bonus       []int
+	Cutoff      string
+	Food        []FoodHistory
+	FoodRate    int `json:"food_rate"`
+	FoodStart   int `json:"food_start"`
+	FoodTurn    int `json:"food_turn"`
+	Hills       []HillData
+	HiveHistory [][]int `json:"hive_history"`
+	Map         MapData
+	Players     int
+	RankingTurn int `json:"ranking_turn"`
+	Revision    int
+	Scores      [][]int
+	WinningTurn int `json:"winning_turn"`
 }
 
 type Match struct {
@@ -87,13 +82,7 @@ type Match struct {
 	ChallengeSkill []string `json:"challenge_skill"`
 	// Game replay
 	ReplayFormat string
-	Replay       *ReplayData `json:"replaydata"`
-}
-
-func (m *Match) Unmarshal(b []byte) os.Error {
-	err := json.Unmarshal(b, m)
-
-	return err
+	*Replay      `json:"replaydata"`
 }
 
 func (a *AntHistory) UnmarshalJSON(b []byte) os.Error {

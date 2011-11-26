@@ -343,6 +343,7 @@ func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point, []Location
 	orig := Point{0, 0}
 	for i, l1 := range llist {
 		for _, l2 := range llist[i+1:] {
+			//log.Printf("\n%#v\n%#v", s.Hashes[l1], s.Hashes[l2])
 			if s.Hashes[l1][0] == s.Hashes[l2][SYMMIRRORC] {
 				orig.C = s.Mirror(l1, l2, 1)
 				found = append(found, SYMMIRRORC)

@@ -132,6 +132,9 @@ func MapLoadFile(file string) (m *Map, err os.Error) {
 
 		in := bufio.NewReader(f)
 		m, err = MapLoad(in)
+		if err == os.EOF {
+			err = nil
+		}
 	}
 
 	return

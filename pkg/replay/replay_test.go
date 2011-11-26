@@ -5,6 +5,7 @@ import (
 	"json"
 	"log"
 	"io/ioutil"
+	"bugnuts/maps"
 )
 
 func TestExtractMetadata(t *testing.T) {
@@ -37,6 +38,38 @@ func TestExtractMetadata(t *testing.T) {
 	}
 }
 
+func TestGetMap(t *testing.T) {
+
+	files := []string{
+		"testdata/replay.0.json",
+		"testdata/replay.1.json",
+	}
+	mapfiles := []string{
+		"testdata/replay.0.map",
+		"testdata/replay.1.map",
+	}
+
+	for i, file := range files {
+		match, err := Load(file)
+		if err != nil {
+			t.Errorf("Load of %s failed %v", file, err)
+		}
+		m := match.Replay.GetMap()
+
+		m2, err := maps.MapLoadFile(mapfiles[i])
+		if err != nil {
+			t.Errorf("Load of %s failed %v", mapfiles[i], err)
+		}
+		if m.Players != m2.Players {
+			t.Errorf("Player count mismatch for %s, %d and %d", file, m.Players, m2.Players)
+		}
+		for j, item := range m2.Grid {
+			if item != m.Grid[j] {
+				t.Errorf("Map data mismatch %v", m2.ToPoint(maps.Location(j)))
+			}
+		}
+	}
+}
 func BenchmarkReplayUnmarshall(b *testing.B) {
 
 	buf, err := ioutil.ReadFile("testdata/replay.1.json")

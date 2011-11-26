@@ -3,6 +3,8 @@ package replay
 import (
 	"os"
 	"strconv"
+	"bugnuts/maps"
+	"bugnuts/state"
 )
 
 type GameResult struct {
@@ -29,6 +31,71 @@ type PlayerResult struct {
 	Status         string
 	ChallengeRank  *int
 	ChallengeSkill *float64
+}
+
+func (r *Replay) GetMap() *maps.Map {
+	m := maps.NewMap(r.Map.Rows, r.Map.Cols, r.Players)
+	for r, rdat := range r.Map.Data {
+		for c, item := range rdat {
+			if maps.ToItem(byte(item)) == maps.WATER {
+				m.Grid[r*m.Cols+c] = maps.WATER
+			} else {
+				m.Grid[r*m.Cols+c] = maps.LAND
+			}
+		}
+	}
+	for _, h := range r.Hills {
+		loc := m.ToLocation(maps.Point{h.Row, h.Col})
+		m.Grid[loc] = maps.MY_HILL + maps.Item(h.Player)
+	}
+
+	return m
+}
+
+func (r *Replay) GetGameInfo() *state.GameInfo {
+	return &r.GameInfo
+}
+
+// Return ant locations l[turn][player][ant]
+func (r *Replay) AntLocations(m *maps.Map, turns int) [][][]maps.Location {
+	// count the ants per turn
+	nants := make([][]int, r.Players)
+	for _, a := range r.Ants {
+		if len(nants[a.Player]) == 0 {
+			nants[a.Player] = make([]int, turns+1)
+		}
+		for i := a.Start; i < a.End; i++ {
+			nants[a.Player][i]++
+		}
+	}
+	// Allocate the slices 
+	al := make([][][]maps.Location, turns+1)
+	for turn := 0; turn <= turns; turn++ {
+		al[turn] = make([][]maps.Location, r.Players)
+		for np := 0; np < r.Players; np++ {
+			if nants[np][turn] > 0 {
+				al[turn][np] = make([]maps.Location, 0, nants[np][turn])
+			}
+		}
+	}
+	// Populate the array
+	for _, a := range r.Ants {
+		turn := a.Start
+		loc := m.ToLocation(maps.Point{a.Row, a.Col})
+		for _, move := range a.Moves {
+			al[turn][a.Player] = append(al[turn][a.Player], loc)
+			turn++
+			d := maps.ByteToDirection[move]
+			switch d {
+			case maps.NoMovement:
+			case maps.InvalidMove:
+			default:
+				loc = m.LocStep[loc][d]
+			}
+		}
+		al[turn][a.Player] = append(al[turn][a.Player], loc)
+	}
+	return al
 }
 
 func (r *Match) ExtractMetadata() (g *GameResult, p []*PlayerResult) {

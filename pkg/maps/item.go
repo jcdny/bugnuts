@@ -63,11 +63,11 @@ const (
 )
 
 var itemToSym = [256]byte{' ', '%', '*', '.',
-	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', '!', // ! is a player guess
-	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '?', // ? is guess hill
-	'!', 'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r',
-	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J',
-	'X', '+', '@', '=', '|', '&',
+	'a', 'b', 'c', 'd', 'e', 'f', 'g', 'h', 'i', 'j', '~', // Player, ~ is a player guess
+	'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '?', // Hill ? is guess hill
+	'!', 'z', 'y', 'x', 'w', 'v', 'u', 't', 's', 'r', // Dead ant
+	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', // Ant on hill
+	'X', '+', '@', '=', '|', '&', // Operational things
 }
 
 var symToItem [256]Item

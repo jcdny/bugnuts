@@ -11,7 +11,7 @@ func TestItemMap(t *testing.T) {
 		}
 	}
 
-	if ToItem('~') != INVALID_ITEM {
-		t.Errorf("Map from '~' returns %v, should be INVALID_ITEM %v", ToItem('~'), INVALID_ITEM)
+	if ToItem('}') != INVALID_ITEM {
+		t.Errorf("Map from '}' returns %v, should be INVALID_ITEM %v", ToItem('}'), INVALID_ITEM)
 	}
 }

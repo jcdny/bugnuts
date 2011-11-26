@@ -16,6 +16,25 @@ const (
 	InvalidMove
 )
 
+var ByteToDirection [256]Direction
+
+var DirectionMap = map[string]Point{"n": {-1, 0}, "e": {0, -1}, "s": {1, 0}, "w": {0, 1}, "-": {0, 0}}
+var DirectionOffset = [5]Point{North: {-1, 0}, East: {0, 1}, South: {1, 0}, West: {0, -1}, NoMovement: {0, 0}}
+var Steps = [4]Point{North: {-1, 0}, East: {0, 1}, South: {1, 0}, West: {0, -1}} // exclude no move
+var DirectionChar = [5]string{"n", "e", "s", "w", "-"}
+
+func init() {
+	for i := range ByteToDirection {
+		ByteToDirection[i] = InvalidMove
+	}
+	for i, char := range "nesw-" {
+		ByteToDirection[char] = Direction(i)
+	}
+	for i, char := range "NESW" {
+		ByteToDirection[char] = Direction(i)
+	}
+}
+
 func (d Direction) String() string {
 	switch d {
 	case North:
@@ -33,11 +52,6 @@ func (d Direction) String() string {
 	log.Printf("%v : invalid direction", d)
 	return "-"
 }
-
-var DirectionMap = map[string]Point{"n": {-1, 0}, "e": {0, -1}, "s": {1, 0}, "w": {0, 1}, "-": {0, 0}}
-var DirectionOffset = [5]Point{North: {-1, 0}, East: {0, 1}, South: {1, 0}, West: {0, -1}, NoMovement: {0, 0}}
-var Steps = [4]Point{North: {-1, 0}, East: {0, 1}, South: {1, 0}, West: {0, -1}} // exclude no move
-var DirectionChar = [5]string{"n", "e", "s", "w", "-"}
 
 type Path struct {
 	steps []Location
