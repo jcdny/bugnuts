@@ -2,6 +2,7 @@ package maps
 
 import (
 	"log"
+	. "bugnuts/torus"
 )
 
 //Direction represents the direction concept for issuing orders.

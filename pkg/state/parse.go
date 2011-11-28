@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	. "bugnuts/maps"
+	. "bugnuts/torus"
 )
 
 // Game definition

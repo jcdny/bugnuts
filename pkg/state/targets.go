@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	. "bugnuts/maps"
+	. "bugnuts/torus"
 	. "bugnuts/debug"
 	. "bugnuts/pathing"
 	. "bugnuts/util"
@@ -111,12 +112,12 @@ func MakeExplorers(s *State, scale float64, count, pri int) *TargetSet {
 		scale = 1.0
 	}
 
-	stride := int(math.Sqrt(float64(s.ViewRadius2)) * scale)
+	rstride := int(math.Sqrt(float64(s.ViewRadius2)) * 3 / 2)
+	cstride := int(math.Sqrt(float64(s.ViewRadius2) * 3))
 
-	tset := make(TargetSet, (s.Rows * s.Cols / (stride * stride)))
-
-	for r := 5; r < s.Rows; r += stride {
-		for c := 5; c < s.Cols; c += stride {
+	tset := make(TargetSet, (s.Rows * s.Cols / (rstride * cstride)))
+	for r := 0; r < s.Rows; r += rstride {
+		for c := cstride / 2 * (r / rstride % 2); c < s.Cols; c += cstride {
 			loc := s.ToLocation(Point{R: r, C: c})
 			tset.Add(EXPLORE, loc, count, pri)
 		}

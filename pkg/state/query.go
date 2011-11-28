@@ -4,6 +4,7 @@ import (
 	"log"
 	"strconv"
 	. "bugnuts/maps"
+	. "bugnuts/torus"
 	. "bugnuts/util"
 )
 

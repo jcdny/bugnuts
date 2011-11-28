@@ -4,6 +4,7 @@ import (
 	"log"
 	"rand"
 	. "bugnuts/maps"
+	. "bugnuts/torus"
 )
 
 const (

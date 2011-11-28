@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"sort"
 	"os"
+	. "bugnuts/torus"
 	. "bugnuts/maps"
 	. "bugnuts/debug"
 )
@@ -182,12 +183,12 @@ func (s *State) GenerateMoves(antsIn []*AntStep) {
 
 	// loop until we move all the ants.
 	for {
+		sort.Sort(AntSlice(ants))
 		if Debug[DBG_Movement] {
 			log.Printf("ants: %d: %v", len(ants), ants)
 			for i, ant := range ants {
 				log.Printf("ants #%d: %v", i, ant)
 			}
-			sort.Sort(AntSlice(ants))
 		}
 		stuck := 0
 		for _, ant := range ants {
@@ -249,7 +250,8 @@ func (p AntSlice) Less(i, j int) bool {
 		return p[i].Steps[0] < p[j].Steps[0]
 	}
 	if p[i].NFree != p[j].NFree {
-		return p[i].NFree > p[j].NFree
+		// order by min degree of freedom but 0 degree last.
+		return p[i].NFree < p[j].NFree && p[i].NFree != 0
 	}
 
 	return p[i].Perm > p[j].Perm

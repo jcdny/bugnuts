@@ -8,6 +8,7 @@ import (
 	"strings"
 	"fmt"
 	. "bugnuts/util"
+	. "bugnuts/torus"
 )
 
 type Map struct {

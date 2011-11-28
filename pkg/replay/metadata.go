@@ -3,6 +3,7 @@ package replay
 import (
 	"strconv"
 	"bugnuts/maps"
+	"bugnuts/torus"
 	"bugnuts/state"
 )
 
@@ -44,7 +45,7 @@ func (r *Replay) GetMap() *maps.Map {
 		}
 	}
 	for _, h := range r.Hills {
-		loc := m.ToLocation(maps.Point{h.Row, h.Col})
+		loc := m.ToLocation(torus.Point{h.Row, h.Col})
 		m.Grid[loc] = maps.MY_HILL + maps.Item(h.Player)
 	}
 
@@ -71,23 +72,23 @@ func (r *Replay) AntCount(turns int) [][]int {
 }
 
 // Return ant locations l[turn][player][ant]
-func (r *Replay) AntLocations(m *maps.Map, turns int) [][][]maps.Location {
+func (r *Replay) AntLocations(m *maps.Map, turns int) [][][]torus.Location {
 	nants := r.AntCount(turns)
 
 	// Allocate the slices
-	al := make([][][]maps.Location, turns+1)
+	al := make([][][]torus.Location, turns+1)
 	for turn := 0; turn <= turns; turn++ {
-		al[turn] = make([][]maps.Location, r.Players)
+		al[turn] = make([][]torus.Location, r.Players)
 		for np := 0; np < r.Players; np++ {
 			if nants[np][turn] > 0 {
-				al[turn][np] = make([]maps.Location, 0, nants[np][turn])
+				al[turn][np] = make([]torus.Location, 0, nants[np][turn])
 			}
 		}
 	}
 	// Populate the array
 	for _, a := range r.Ants {
 		turn := a.Start
-		loc := m.ToLocation(maps.Point{a.Row, a.Col})
+		loc := m.ToLocation(torus.Point{a.Row, a.Col})
 		for _, move := range a.Moves {
 			al[turn][a.Player] = append(al[turn][a.Player], loc)
 			turn++

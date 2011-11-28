@@ -2,7 +2,7 @@ package pathing
 
 import (
 	"log"
-	. "bugnuts/maps"
+	. "bugnuts/torus"
 )
 
 type Queue struct {

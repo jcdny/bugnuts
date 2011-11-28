@@ -16,6 +16,7 @@ import (
 	"fmt"
 	"log"
 	. "bugnuts/maps"
+	. "bugnuts/torus"
 	. "bugnuts/state"
 	. "bugnuts/MyBot"
 	. "bugnuts/parameters"
@@ -186,7 +187,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 
 						ant.N[i].Goal = goal
 						// Check for a valid move towards the goal
-						if WS.Watched(int(ant.Source), s.Turn, 0) {
+						if WS.Watched(ant.Source, s.Turn, 0) {
 							log.Printf("TURN %d: %v->%v : %v goal:%d DHill:%d \"%s\" %d: %#v",
 								s.Turn, s.ToPoint(ant.Source), s.ToPoint(nloc), s.Stepable(nloc),
 								goal, dh, tgt.Item, seg.Steps, ant.N[i])
@@ -298,7 +299,9 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 				ant.Steps = append(ant.Steps, dh)
 				for d := Direction(0); d < 4; d++ {
 					ant.N[d].Goal = s.Met.FDownhill.DistanceStep(ant.Source, d)
-					//log.Printf("DOWNHILL: %v %s %#v", s.ToPoint(ant.Source), d, ant.N[d])
+					if WS.Watched(ant.Source, s.Turn, 0) {
+						log.Printf("DOWNHILL: %v %s %#v", s.ToPoint(ant.Source), d, ant.N[d])
+					}
 				}
 			}
 
@@ -307,6 +310,11 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 
 	s.GenerateMoves(endants)
 	for _, ant := range endants {
+		if WS.Watched(ant.Source, s.Turn, 0) {
+			for d := Direction(0); d < 4; d++ {
+				log.Printf("MOVE: %v %s d:%s :: %#v", s.ToPoint(ant.Source), ant.Move, d, ant.N[d])
+			}
+		}
 		if ant.Move > 3 || ant.Move < 0 {
 			bot.StaticAnts[s.Turn]++
 		}

@@ -8,8 +8,6 @@ GOFILES=\
 	images.go\
 	map.go\
 	mask.go\
-	point.go\
-	torus.go\
 	sym.go\
 	util.go\
 

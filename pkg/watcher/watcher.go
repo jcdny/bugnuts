@@ -7,6 +7,7 @@ import (
 	"math"
 	"log"
 	. "bugnuts/util"
+	. "bugnuts/torus"
 )
 
 type Watch struct {
@@ -20,9 +21,8 @@ type Watch struct {
 }
 
 type Watches struct {
+	Torus
 	W     []*Watch
-	Rows  int // the game characteristics
-	Cols  int
 	Turns int
 	dirty bool
 	// the cache of watches reduced to:
@@ -32,7 +32,7 @@ type Watches struct {
 }
 
 func NewWatches(rows, cols, turns int) *Watches {
-	ws := Watches{Rows: rows, Cols: cols, Turns: turns}
+	ws := Watches{Torus: Torus{Rows: rows, Cols: cols}, Turns: turns}
 	return &ws
 }
 
@@ -47,7 +47,7 @@ func (ws *Watches) Load(wlist []string) {
 	}
 }
 
-func (ws *Watches) Watched(l, turn, player int) bool {
+func (ws *Watches) Watched(l Location, turn, player int) bool {
 	if len(ws.W) == 0 {
 		return false
 	}

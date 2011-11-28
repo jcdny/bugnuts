@@ -6,6 +6,7 @@ import (
 	"strings"
 	"log"
 	. "bugnuts/maps"
+	. "bugnuts/torus"
 	. "bugnuts/util"
 	. "bugnuts/state"
 	. "bugnuts/pathing"

@@ -2,6 +2,7 @@ package maps
 
 import (
 	"rand"
+	. "bugnuts/torus"
 	. "bugnuts/util"
 )
 

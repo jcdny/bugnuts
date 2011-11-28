@@ -3,6 +3,7 @@ package state
 import (
 	"log"
 	. "bugnuts/maps"
+	. "bugnuts/torus"
 	. "bugnuts/util"
 	. "bugnuts/pathing"
 )

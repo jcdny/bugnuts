@@ -3,12 +3,13 @@ package maps
 import (
 	"log"
 	. "bugnuts/util"
+	. "bugnuts/torus"
 	. "bugnuts/debug"
 )
 
 const (
-	SYMN       = 7  // Neighboorhood size.  needs to be odd and < 8
-	SYMCELLMAX = 32 // maximum number of cells for tranlations...
+	SYMN        = 7  // Neighboorhood size.  needs to be odd and < 8
+	SYMMAXCELLS = 32 // maximum number of cells for tranlations...
 )
 
 type SymHash int64 // SymHash needs to be int64 if SYMN = 7, int32 otherwise.
@@ -312,7 +313,7 @@ func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point, []Location
 			if s.Hashes[l1][0] == s.Hashes[l2][SYMTRANS] {
 				// TODO rectangular tilings need to be handled properly
 				// Should add a test for that.
-				pd, good := s.ShiftReduce(l1, l2)
+				pd, good := s.ShiftReduce(l1, l2, SYMMAXCELLS)
 				if !good {
 					s.Tiles[minhash].Ignore = true
 					// TODO most of the false positives happen with a mix of translate and
@@ -333,7 +334,7 @@ func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point, []Location
 		redlist = s.ReduceReduce(redlist)
 		if len(redlist) == 1 {
 			// Yay we got unambiguous translation...
-			equiv := s.Translations(llist[0], redlist[0], []Location{})
+			equiv := s.Translations(llist[0], redlist[0], []Location{}, SYMMAXCELLS)
 			return []uint8{SYMTRANS}, Point{0, 0}, redlist[0], equiv
 		}
 	}
@@ -371,180 +372,6 @@ func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point, []Location
 	return []uint8{}, Point{}, Point{}, []Location{}
 }
 
-func (t *Torus) Mirror(l1, l2 Location, axis int) int {
-	p1 := t.ToPoint(l1)
-	p2 := t.ToPoint(l2)
-
-	var o, s int
-	var odd bool
-	if axis == 0 {
-		o = p1.R + (p2.R-p1.R+1)/2
-		odd = (p1.R-p2.R)%2 == 1
-		s = t.Rows
-	} else if axis == 1 {
-		o = p1.C + (p2.C-p1.C+1)/2
-		odd = (p1.C-p2.C)%2 == 1
-		s = t.Cols
-	}
-
-	if o == 0 {
-		return 0
-	}
-
-	if !odd {
-		if o > (s+1)/2 {
-			o -= (s + 1) / 2
-		}
-	} else {
-		o = (o + (s+1)/2) % s
-	}
-
-	return o
-}
-func (t *Torus) SymDiff(l1, l2 Location) Point {
-	p1 := t.ToPoint(l1)
-	p2 := t.ToPoint(l2)
-
-	r := p2.R - p1.R
-	c := p2.C - p1.C
-
-	if r > t.Rows/2 {
-		r -= t.Rows
-	}
-	if r < -t.Rows/2 {
-		r += t.Rows
-	}
-	if c > t.Cols/2 {
-		c -= t.Cols
-	}
-	if c < -t.Cols/2 {
-		c += t.Cols
-	}
-	if r < 0 {
-		r = -r
-		c = -c
-	}
-	return Point{R: r, C: c}
-}
-
-// Reduce a translation to its minumum length offset
-// I should just do this with math but my head hurts.
-func (t *Torus) ShiftReduce(l1, l2 Location) (Point, bool) {
-	p1 := t.ToPoint(l1)
-	p2 := t.ToPoint(l2)
-
-	r := p2.R - p1.R
-	c := p2.C - p1.C
-
-	if r < 0 {
-		r += t.Rows
-	}
-	if c < 0 {
-		c += t.Cols
-	}
-
-	l := 65535
-	rm, cm := r, c
-	coff := [3]int{0, 0, -t.Cols}
-	roff := [3]int{0, -t.Rows, 0}
-
-	for i := 0; i < SYMCELLMAX+1; i++ {
-		cs := (c + i*c) % t.Cols
-		rs := (r + i*r) % t.Rows
-		if cs == 0 && rs == 0 && i != 0 {
-			return Point{R: rm, C: cm}, true
-		}
-
-		for j := 0; j < 3; j++ {
-			css := cs + coff[j]
-			rss := rs + roff[j]
-			if Abs(css)+Abs(rss) < l && (css != 0 || rss != 0) {
-				l = Abs(css) + Abs(rss)
-				if rss < 0 {
-					cm = -css
-					rm = -rss
-				} else {
-					cm = css
-					rm = rss
-				}
-			}
-		}
-	}
-
-	return Point{R: 0, C: 0}, false
-}
-
-// Take a list of translation offsets and generate list of shortest spanning set
-func (t *Torus) ReduceReduce(in []Point) []Point {
-	out := make([]Point, 0)
-	left := make([]Point, 0)
-
-	if len(in) == 1 {
-		out = append(out, in[0])
-		return out
-	}
-
-	// figure out shortest line in set
-	l := Abs(in[0].R) + Abs(in[0].C)
-	min := 0
-	for i, p := range in[1:] {
-		if Abs(p.R)+Abs(p.C) < l {
-			l = Abs(p.R) + Abs(p.C)
-			min = i
-		}
-	}
-
-	pm := in[min]
-	for i, p := range in {
-		if i == min || t.EquivT(pm, p) {
-			continue
-		}
-		left = append(left, p)
-	}
-	if len(left) == 0 {
-		out = append(out, pm)
-		return out
-	}
-
-	return append(out, t.ReduceReduce(left)...)
-}
-
-func (t *Torus) EquivT(pm, p Point) bool {
-	if pm.R != 0 && Abs(pm.R) < Abs(p.R) && Abs(p.R)%Abs(pm.R) == 0 {
-		if p.C == pm.C*(p.R/pm.R) || p.C == pm.C*(p.R/pm.R)-t.Cols {
-			return true
-		}
-	}
-	if pm.C != 0 && Abs(pm.C) < Abs(p.C) && Abs(p.C)%Abs(pm.C) == 0 {
-		if p.R == pm.R*(p.C/pm.C) || p.R == pm.R*(p.C/pm.C)-t.Rows {
-			return true
-		}
-	}
-	return false
-}
-
-// Given a point and a translation compute the list of locations
-func (t *Torus) Translations(l1 Location, o Point, ll []Location) []Location {
-	ll = append(ll, l1)
-	p1 := t.ToPoint(l1)
-	p := Point{}
-	for i := 1; i < SYMCELLMAX+1; i++ {
-		p.C = (p1.C + i*o.C) % t.Cols
-		p.R = (p1.R + i*o.R) % t.Rows
-		if p.C < 0 {
-			p.C += t.Cols
-		}
-		if p.R < 0 {
-			p.R += t.Rows
-		}
-		if p.R == p1.R && p.C == p1.C {
-			return ll
-		}
-		ll = append(ll, Location(p.R*t.Cols+p.C))
-	}
-	return []Location{}
-}
-
 func (s *SymData) TransMapValidate(p Point) ([][]Location, bool) {
 	size := s.Size()
 	smap := make([][]Location, size)
@@ -553,7 +380,7 @@ func (s *SymData) TransMapValidate(p Point) ([][]Location, bool) {
 	n := 0
 	for i, _ := range smap {
 		if smap[i] == nil {
-			marr = s.Translations(Location(i), p, marr)
+			marr = s.Translations(Location(i), p, marr, SYMMAXCELLS)
 			if len(marr) == 0 || len(marr) > size {
 				return nil, false
 			}
@@ -574,26 +401,4 @@ func (s *SymData) TransMapValidate(p Point) ([][]Location, bool) {
 	}
 
 	return smap, true
-}
-
-func (t *Torus) TransMap(p Point) [][]Location {
-	size := t.Size()
-	smap := make([][]Location, size)
-	marr := make([]Location, 0, size)
-
-	n := 0
-	for i, _ := range smap {
-		if smap[i] == nil {
-			marr = t.Translations(Location(i), p, marr)
-			if len(marr) == 0 || len(marr) > size {
-				return nil
-			}
-			for _, loc := range marr[n:] {
-				smap[loc] = marr[n:]
-			}
-			n = len(marr)
-		}
-	}
-
-	return smap
 }

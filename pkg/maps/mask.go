@@ -4,6 +4,7 @@ import (
 	"math"
 	"fmt"
 	"log"
+	. "bugnuts/torus"
 )
 
 type Mask struct {

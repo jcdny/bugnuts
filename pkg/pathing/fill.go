@@ -6,6 +6,7 @@ import (
 	"sort"
 	"rand"
 	. "bugnuts/maps"
+	. "bugnuts/torus"
 	. "bugnuts/debug"
 	. "bugnuts/util"
 )
@@ -52,7 +53,7 @@ func (f *Fill) NPathIn(loc Location, steps int) (Location, int) {
 		}
 	}
 
-	if Debug[DBG_PathIn] && WS.Watched(int(loc), -1, 0) {
+	if Debug[DBG_PathIn] && WS.Watched(loc, -1, 0) {
 		log.Printf("step from %v to %v depth %d to %d, steps %d\n", f.ToPoint(origloc), f.ToPoint(loc), f.Depth[origloc], f.Depth[loc], steps)
 	}
 

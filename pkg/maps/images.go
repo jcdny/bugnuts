@@ -7,6 +7,7 @@ import (
 	"os"
 	"image"
 	"image/png"
+	. "bugnuts/torus"
 )
 
 type ImageHelper struct {

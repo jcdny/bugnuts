@@ -1,7 +1,7 @@
 package state
 
 import (
-	. "bugnuts/maps"
+	. "bugnuts/torus"
 	. "bugnuts/pathing"
 	. "bugnuts/util"
 )

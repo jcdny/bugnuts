@@ -1,4 +1,4 @@
-package maps
+package torus
 
 import (
 	"log"
