@@ -101,7 +101,7 @@ func main() {
 	for {
 		// READ TURN INFO FROM SERVER]
 		var t *Turn
-		t = s.TurnScan(in, t)
+		t, _ = s.TurnScan(in, t)
 		if t.End {
 			break
 		}

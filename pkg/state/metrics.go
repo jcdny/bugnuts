@@ -21,6 +21,7 @@ type Metrics struct {
 	PrFood   []int      // Count of Turn * Land adjusted for # that see it.
 	Unknown  []int      // Count of Unknown
 	VisSum   []int      // sum of count of visibles for overlap.
+	Runs     [][4]uint8 // What is the run distance in a given direction for a location
 	// Fills
 	FDownhill *Fill // Downhill from my own hills
 	FHill     *Fill // Distance to my hills
@@ -44,6 +45,7 @@ func NewMetrics(m *Map) *Metrics {
 		Unknown:  make([]int, size),
 		VisSum:   make([]int, size),
 		Horizon:  make([]bool, size),
+		Runs:     make([][4]uint8, size),
 		HBorder:  make([]Location, 0, 1000),
 	}
 	for i := 0; i < NTHREAT; i++ {
@@ -55,6 +57,83 @@ func NewMetrics(m *Map) *Metrics {
 	}
 
 	return &met
+}
+
+func (m *Metrics) UpdateRuns() {
+	for r := 0; r < m.Rows; r++ {
+		loc := r * m.Cols
+		cs, ce := 0, 0
+		for cs < m.Cols {
+			for cs < m.Cols && !StepableItem[m.Grid[loc+cs]] {
+				cs++
+			}
+			for ce = cs; ce < m.Cols && StepableItem[m.Grid[loc+ce]]; ce++ {
+				m.Runs[loc+ce][West] = uint8(ce - cs)
+			}
+			if cs == 0 && ce == m.Cols {
+				// Special case empty row
+				for c := 0; c < m.Cols; c++ {
+					m.Runs[loc+c][East] = uint8(m.Cols)
+					m.Runs[loc+c][West] = uint8(m.Cols)
+				}
+			} else {
+				for cb := ce - 1; cb >= cs; cb-- {
+					m.Runs[loc+cb][East] = uint8(ce - 1 - cb)
+				}
+			}
+			cs = ce
+		}
+		// Fall out here at end, if both 0 and Cols are
+		// steppable bridge the two unless its an empty row
+		if StepableItem[m.Grid[loc]] && StepableItem[m.Grid[loc+m.Cols-1]] {
+			ce := int(m.Runs[loc][East])
+			cw := int(m.Runs[loc+m.Cols-1][West])
+			if ce != m.Cols {
+				for c := 0; c <= ce; c++ {
+					m.Runs[loc+c][West] += uint8(cw + 1)
+				}
+				for c := 0; c <= cw; c++ {
+					m.Runs[loc+m.Cols-1-c][East] += uint8(ce + 1)
+				}
+			}
+		}
+	}
+	for c := 0; c < m.Cols; c++ {
+		rs, re := 0, 0
+		for rs < m.Rows {
+			for rs < m.Rows && !StepableItem[m.Grid[rs*m.Cols+c]] {
+				rs++
+			}
+			for re = rs; re < m.Rows && StepableItem[m.Grid[re*m.Cols+c]]; re++ {
+				m.Runs[re*m.Cols+c][North] = uint8(re - rs)
+			}
+			if rs == 0 && re == m.Rows {
+				// Special case empty col
+				for r := 0; r < m.Rows; r++ {
+					m.Runs[r*m.Cols+c][North] = uint8(m.Rows)
+					m.Runs[r*m.Cols+c][South] = uint8(m.Rows)
+				}
+			} else {
+				for rb := re - 1; rb >= rs; rb-- {
+					m.Runs[rb*m.Cols+c][South] = uint8(re - 1 - rb)
+				}
+			}
+			rs = re
+		}
+		// Fall out here at end, if both 0 and Row end are steppable bridge the two.
+		if StepableItem[m.Grid[c]] && StepableItem[m.Grid[(m.Rows-1)*m.Cols+c]] {
+			rs := int(m.Runs[c][South])
+			rn := int(m.Runs[(m.Rows-1)*m.Cols+c][North])
+			if rn != m.Rows {
+				for r := 0; r <= rs; r++ {
+					m.Runs[r*m.Cols+c][North] += uint8(rn + 1)
+				}
+				for r := 0; r <= rn; r++ {
+					m.Runs[(m.Rows-r-1)*m.Cols+c][South] += uint8(rs + 1)
+				}
+			}
+		}
+	}
 }
 
 func (m *Metrics) UpdateCounts(loc Location, mask *Mask) {

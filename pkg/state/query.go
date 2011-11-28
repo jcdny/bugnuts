@@ -71,7 +71,7 @@ func (s *State) ValidStep(loc Location) bool {
 func (s *State) Stepable(loc Location) bool {
 	i := s.Map.Grid[loc]
 
-	return i != WATER && i != BLOCK && i != FOOD && i != BLOCK
+	return i != WATER && i != BLOCK && i != FOOD
 }
 
 func (m *Metrics) DumpSeen() string {

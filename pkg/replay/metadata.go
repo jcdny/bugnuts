@@ -1,7 +1,6 @@
 package replay
 
 import (
-	"os"
 	"strconv"
 	"bugnuts/maps"
 	"bugnuts/state"
@@ -56,8 +55,7 @@ func (r *Replay) GetGameInfo() *state.GameInfo {
 	return &r.GameInfo
 }
 
-// Return ant locations l[turn][player][ant]
-func (r *Replay) AntLocations(m *maps.Map, turns int) [][][]maps.Location {
+func (r *Replay) AntCount(turns int) [][]int {
 	// count the ants per turn
 	nants := make([][]int, r.Players)
 	for _, a := range r.Ants {
@@ -68,7 +66,15 @@ func (r *Replay) AntLocations(m *maps.Map, turns int) [][][]maps.Location {
 			nants[a.Player][i]++
 		}
 	}
-	// Allocate the slices 
+
+	return nants
+}
+
+// Return ant locations l[turn][player][ant]
+func (r *Replay) AntLocations(m *maps.Map, turns int) [][][]maps.Location {
+	nants := r.AntCount(turns)
+
+	// Allocate the slices
 	al := make([][][]maps.Location, turns+1)
 	for turn := 0; turn <= turns; turn++ {
 		al[turn] = make([][]maps.Location, r.Players)
@@ -111,10 +117,7 @@ func (r *Match) ExtractMetadata() (g *GameResult, p []*PlayerResult) {
 		Location:   r.Location,
 	}
 
-	var (
-		err          os.Error
-		uidp, subidp *int
-	)
+	var uidp, subidp *int
 
 	np := len(r.PlayerNames)
 	p = make([]*PlayerResult, np)
@@ -154,10 +157,7 @@ func (r *Match) ExtractMetadata() (g *GameResult, p []*PlayerResult) {
 		// Again jump through hoops to denote absent fields
 		cr := new(int)
 		if len(r.ChallengeRank) == np {
-			*cr, err = strconv.Atoi(r.ChallengeRank[i])
-			if err != nil {
-				cr = nil
-			}
+			*cr, _ = strconv.Atoi(r.ChallengeRank[i])
 		} else {
 			cr = nil
 		}
@@ -165,7 +165,7 @@ func (r *Match) ExtractMetadata() (g *GameResult, p []*PlayerResult) {
 
 		var cs *float64 = new(float64)
 		if len(r.ChallengeSkill) == np {
-			*cs, err = strconv.Atof64(r.ChallengeSkill[i])
+			*cs, _ = strconv.Atof64(r.ChallengeSkill[i])
 		} else {
 			cs = nil
 		}

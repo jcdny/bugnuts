@@ -28,16 +28,16 @@ func TestParse(t *testing.T) {
 	turns := make([]*Turn, 1, s.Turns)
 
 	for {
-		var t *Turn
-		t = s.TurnScan(in, t)
-		if t.End {
+		var turn *Turn
+		turn, err = s.TurnScan(in, turn)
+		if turn.End {
 			log.Printf("End received at turn %d", len(turns))
 			break
 		}
-		if t.Err != nil {
-			log.Printf("Error on turn %d(%d): %v", len(turns), t.Turn, t.Err)
+		if err != nil {
+			log.Printf("Error on turn %d(%d): %v", len(turns), turn.Turn, err)
 		}
-		turns = append(turns, t)
+		turns = append(turns, turn)
 	}
 }
 
@@ -55,15 +55,15 @@ func BenchmarkParse(b *testing.B) {
 		s := g.NewState()
 		turns := make([]*Turn, 1, s.Turns)
 		for {
-			var t *Turn
-			t = s.TurnScan(in, t)
-			if t.End {
+			var turn *Turn
+			turn, err = s.TurnScan(in, turn)
+			if turn.End {
 				break
 			}
-			if t.Err != nil {
-				log.Printf("Error on turn %d(%d): %v", len(turns), t.Turn, t.Err)
+			if err != nil {
+				log.Printf("Error on turn %d(%d): %v", len(turns), turn.Turn, err)
 			}
-			turns = append(turns, t)
+			turns = append(turns, turn)
 		}
 	}
 }

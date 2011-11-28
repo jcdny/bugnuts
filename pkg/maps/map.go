@@ -50,9 +50,9 @@ func NewMap(rows, cols, players int) *Map {
 func (m *Map) String() string {
 	s := "rows " + strconv.Itoa(m.Rows) + "\n"
 	s += "cols " + strconv.Itoa(m.Rows) + "\n"
-	s += "players " + strconv.Itoa(m.Players) + "\n"
+	s += "players " + strconv.Itoa(m.Players)
 	for r := 0; r < m.Rows; r++ {
-		s += "m "
+		s += "\nm "
 		for _, item := range m.Grid[r*m.Cols : (r+1)*m.Cols] {
 			s += string(item.ToSymbol())
 		}
