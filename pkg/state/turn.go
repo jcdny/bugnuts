@@ -45,10 +45,10 @@ func (s *State) ProcessFood(food []Location, turn int) {
 }
 
 func (s *State) ProcessTurn(t *Turn) {
+	s.ResetGrid()
+
 	s.Turn++
 	s.SSID = s.Map.SID
-
-	s.ResetGrid()
 
 	if !s.TSet(WATER, t.W...) {
 		s.Map.SMap = [][]Location{}
@@ -97,9 +97,11 @@ func (s *State) ProcessTurn(t *Turn) {
 		// Update the one step land count and unseen count for my ants
 		s.Met.SumVisCount(loc, s.ViewMask)
 		for _, nloc := range s.Map.LocStep[loc] {
-			s.Met.SumVisCount(nloc, s.ViewMask)
-			if s.Met.Unknown[nloc] > 0 {
-				s.Met.UpdateCounts(nloc, s.ViewMask)
+			if loc != nloc {
+				s.Met.SumVisCount(nloc, s.ViewMask)
+				if s.Met.Unknown[nloc] > 0 {
+					s.Met.UpdateCounts(nloc, s.ViewMask)
+				}
 			}
 		}
 	}

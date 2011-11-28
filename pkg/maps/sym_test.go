@@ -4,6 +4,7 @@ import (
 	"testing"
 	"log"
 	"fmt"
+	. "bugnuts/torus"
 )
 
 func TestShiftReduce(t *testing.T) {
@@ -12,7 +13,7 @@ func TestShiftReduce(t *testing.T) {
 	l1 := Location(0)
 	p2 := Point{-1, 3}
 	l2 := T.ToLocation(p2)
-	p, good := T.ShiftReduce(l1, l2)
+	p, good := T.ShiftReduce(l1, l2, SYMMAXCELLS)
 	if !good || p.R != 2 || p.C != 1 {
 		t.Errorf("ShiftReduce: expected {2 1} got %v", good, p)
 	}
@@ -33,7 +34,7 @@ func TestMirror(t *testing.T) {
 func TestTransMap(t *testing.T) {
 	T := Torus{Rows: 7, Cols: 7}
 	p := Point{-1, 3}
-	m := T.TransMap(p)
+	m := T.TransMap(p, SYMMAXCELLS)
 	log.Printf("TransMap %v", m)
 }
 
@@ -42,7 +43,7 @@ func BenchmarkTransMap(b *testing.B) {
 	T := Torus{Rows: 119, Cols: 147}
 	p := Point{34, -21}
 	for i := 0; i < b.N; i++ {
-		T.TransMap(p)
+		T.TransMap(p, SYMMAXCELLS)
 	}
 }
 
@@ -176,7 +177,7 @@ func (sym *SymData) symdump(tile SymHash, m *Map) {
 			good := false
 			if l1 != l2 {
 				if sym.Hashes[l1][0] == sym.Hashes[l2][0] {
-					pd, good = m.ShiftReduce(l1, l2)
+					pd, good = m.ShiftReduce(l1, l2, SYMMAXCELLS)
 					if good {
 						redlist = append(redlist, pd)
 					}

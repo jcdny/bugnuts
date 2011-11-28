@@ -24,6 +24,7 @@ type Neighborhood struct {
 	Perm   int // permuter
 	D      Direction
 	Safest bool
+	Item   Item
 }
 
 type AntStep struct {
@@ -62,7 +63,7 @@ func (s *State) GenerateAnts(tset *TargetSet, risk int) (ants map[Location]*AntS
 		hill, ok := s.Hills[loc]
 		if ok && hill.Player == 0 {
 			for _, nloc := range s.Map.LocStep[loc] {
-				if s.Map.Item(nloc).IsEnemyAnt(0) {
+				if nloc != loc && s.Map.Item(nloc).IsEnemyAnt(0) {
 					fixed = true
 					break
 				}
@@ -102,6 +103,7 @@ func (s *State) Neighborhood(loc Location, nh *Neighborhood, d Direction) {
 	//nh.Land = s.Met.Land[loc]
 	nh.PrFood = s.Met.PrFood[loc]
 	nh.D = d
+	nh.Item = s.Map.Grid[loc]
 }
 
 func (s *State) AntStep(loc Location, risk int) *AntStep {

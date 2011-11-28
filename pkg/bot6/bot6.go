@@ -101,7 +101,11 @@ func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
 	return tset
 }
 
+func XX(s *State) {
+	log.Printf("TURN %d 88/37: \"%s\"", s.Turn, s.Map.Grid[s.ToLocation(Point{88, 37})])
+}
 func (bot *BotV6) DoTurn(s *State) os.Error {
+	XX(s)
 	bot.Explore.UpdateSeen(s, 1)
 
 	tset := bot.GenerateTargets(s)
@@ -175,7 +179,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 					ant.N[4].Goal = 0
 					dh := int(s.Met.FHill.Depth[seg.Src])
 					for i := 0; i < 4; i++ {
-						nloc := s.Map.LocStep[seg.Src][i]
+						nloc := s.Map.LocStep[seg.Src][ant.N[i].D]
 						// Don't mark target as taken unless its a valid step and risk = 0
 						// TODO not sure this is how I should be doing this.
 						goal := f.Distance(seg.Src, nloc) * 10
@@ -187,11 +191,6 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 
 						ant.N[i].Goal = goal
 						// Check for a valid move towards the goal
-						if WS.Watched(ant.Source, s.Turn, 0) {
-							log.Printf("TURN %d: %v->%v : %v goal:%d DHill:%d \"%s\" %d: %#v",
-								s.Turn, s.ToPoint(ant.Source), s.ToPoint(nloc), s.Stepable(nloc),
-								goal, dh, tgt.Item, seg.Steps, ant.N[i])
-						}
 						if s.Stepable(nloc) && goal > 0 {
 							// and it needs to be a step we can take
 							if ant.N[i].Safest {
@@ -205,6 +204,13 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 					}
 				}
 
+				if WS.Watched(ant.Source, s.Turn, 0) {
+					for i := 0; i < 5; i++ {
+						log.Printf("TURN %d: %v -> %v (%s): \"%s\" steps %d: \"%s\":%#v",
+							s.Turn, s.ToPoint(ant.Source), s.ToPoint(s.Map.LocStep[seg.Src][ant.N[i].D]),
+							ant.N[i].D, tgt.Item, seg.Steps, ant.N[i].Item, ant.N[i])
+					}
+				}
 				if good {
 					// A good move exists so assume we step to the target
 					if Viz["path"] {
@@ -297,10 +303,10 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 				ant.N[4].Goal = 0
 				// TODO May need to set a dest as well
 				ant.Steps = append(ant.Steps, dh)
-				for d := Direction(0); d < 4; d++ {
-					ant.N[d].Goal = s.Met.FDownhill.DistanceStep(ant.Source, d)
+				for d := Direction(0); d < 5; d++ {
+					ant.N[d].Goal = s.Met.FDownhill.DistanceStep(ant.Source, ant.N[d].D)
 					if WS.Watched(ant.Source, s.Turn, 0) {
-						log.Printf("DOWNHILL: %v %s %#v", s.ToPoint(ant.Source), d, ant.N[d])
+						log.Printf("DOWNHILL: %v %s %#v", s.ToPoint(ant.Source), ant.N[d].D, ant.N[d])
 					}
 				}
 			}
@@ -311,8 +317,9 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	s.GenerateMoves(endants)
 	for _, ant := range endants {
 		if WS.Watched(ant.Source, s.Turn, 0) {
-			for d := Direction(0); d < 4; d++ {
-				log.Printf("MOVE: %v %s d:%s :: %#v", s.ToPoint(ant.Source), ant.Move, d, ant.N[d])
+			log.Printf("ANT: %#v", ant)
+			for d := Direction(0); d < 5; d++ {
+				log.Printf("MOVE: %v %s d:%s :: %#v", s.ToPoint(ant.Source), ant.Move, ant.N[d].D, ant.N[d])
 			}
 		}
 		if ant.Move > 3 || ant.Move < 0 {

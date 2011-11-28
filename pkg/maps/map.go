@@ -22,7 +22,7 @@ type Map struct {
 
 	// internal cache data
 	BorderDist []uint8       // border distance
-	LocStep    [][4]Location // adjecent tile pointer
+	LocStep    [][5]Location // adjecent tile pointer
 }
 
 func NewMap(rows, cols, players int) *Map {
@@ -180,13 +180,13 @@ func borderDistance(rows, cols int) (out []uint8) {
 }
 
 // Generate the cache of one step moves from current cell
-func locationStep(rows, cols int) (out [][4]Location) {
-	out = make([][4]Location, rows*cols)
+func locationStep(rows, cols int) (out [][5]Location) {
+	out = make([][5]Location, rows*cols)
 
 	for r := 0; r < rows; r++ {
 		for c := 0; c < cols; c++ {
 			loc := r*cols + c
-			for i, step := range Steps {
+			for i, step := range DirectionOffset {
 				rstep := r + step.R
 				cstep := c + step.C
 				// Wrap if we need to

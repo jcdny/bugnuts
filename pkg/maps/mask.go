@@ -244,7 +244,8 @@ func (mm *MoveMask) String() string {
 func (m *Map) FreedomKey(loc Location) int {
 	key := 0
 	for i, l := range m.LocStep[loc] {
-		if StepableItem[m.Grid[l]] {
+		// skip no move
+		if l != loc && StepableItem[m.Grid[l]] {
 			key += 1 << uint(i)
 		}
 	}

@@ -14,7 +14,7 @@ dist:
 	zip dist/dist.$(shell date +%Y%m%d-%H%M).zip $(GOFILES)
 
 test: $(TARG)
-	./bot -V none -d=1 < testdata/test.input 2>&1 > /dev/null
+	./bot -V none -d=1 -w 195:@88,36 < i.tmp 2>&1 > /dev/null
 
 $(GOFILES): packages
 
