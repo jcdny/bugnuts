@@ -11,6 +11,10 @@ export MAP3="maze_04p_01.map" # mirror rc straight across from another hill.
 export MAP4="mmaze_04p_01.map" # tr 6 hills per player - insane.
 export MAP5="random_walk_04p_01.map" # tr  empty
 export MAP6="mmaze_04p_02.map"  # mirror rc 2 hills each
+export MAP7="cell_maze_p04_01.map"
+export MAP8="cell_maze_p04_02.map"
+export MAP9="cell_maze_p04_03.map"
+export MAP10="cell_maze_p04_04.map"
 
 export MAP="$MAPS/$MAP1"
 echo $MAP
