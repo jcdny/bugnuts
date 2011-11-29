@@ -2,7 +2,7 @@
 BIN=~/src/ai/bot/bin
 ROOT=~/src/ai/bot/log/tcp
 
-BOT=bugnutsv7.1
+BOT=bugnutsv8.0
 REMOTENAME=bugnutsv5
 
 BHOST=$1
@@ -21,8 +21,8 @@ if [ ! -x $EXE ]; then
 fi
 
 cd $ROOT || exit 1
-if [ -e STOP.$REMOTENAME  ] ; then
-    echo "WARNING: STOP.$REMOTENAME exists.  Remove it to run"
+if [ -e $ROOT/$BHOST/STOP  ] ; then
+    echo "WARNING: $ROOT/$BHOST/STOP exists.  Remove it to run"
     exit 1
 fi
 
