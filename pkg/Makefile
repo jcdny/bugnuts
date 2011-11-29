@@ -22,6 +22,7 @@ DIRS=\
 	pathing\
 	replay\
 	state\
+	torus\
 	util\
 	viz\
 	watcher
