@@ -318,17 +318,17 @@ func (f *Fill) MapFillSeedNN(m *Map, origin map[Location]int, pri uint16) (*Fill
 				// Here we are at a point where we are half way between two Seeds.
 				// check if this is a new minima.
 				Seed1 = f.Seed[floc]
-				if Seed1 > Seed {
+				if Seed1 < Seed {
 					Seed2 = Seed
-					L1 = floc
-					L2 = loc
-				} else {
-					Seed1, Seed2 = Seed, Seed1
 					L1 = loc
 					L2 = floc
+				} else {
+					Seed1, Seed2 = Seed, Seed1
+					L1 = floc
+					L2 = loc
 				}
 
-				nSteps := 2 * int(Depth)
+				nSteps := 2 * int(Depth-1)
 				if f.Depth[floc] == newDepth {
 					nSteps++
 					L1, L2 = floc, floc
