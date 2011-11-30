@@ -86,7 +86,7 @@ func reducer(key string, in <-chan *Job, out chan<- *Result) {
 
 	for job := range in {
 		res.N++
-		g, p := job.Data.Match.ExtractMetaData()
+		g, p := job.Data.Match.ExtractMetadata()
 		res.Games = append(res.Games, g)
 		res.Players = append(res.Players, p...)
 	}
