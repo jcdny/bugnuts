@@ -1,5 +1,6 @@
 MyBot.install: parameters.install state.install
 bot6.install: MyBot.install debug.install maps.install parameters.install pathing.install state.install torus.install viz.install
+bot7.install: MyBot.install debug.install maps.install parameters.install pathing.install state.install torus.install viz.install
 debug.install: watcher.install
 maps.install: debug.install torus.install util.install
 parameters.install: maps.install
