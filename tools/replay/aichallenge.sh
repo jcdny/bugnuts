@@ -1,7 +1,7 @@
 #!/bin/bash
 HOST=aichallenge.org
 URLBASE=http://aichallenge.org/game/0/
-ROOT=~/src/ai/bot/
+ROOT=~/ai/
 SUFFIX=".replaygz"
 PREFIX=""
 LAST=$ROOT/data/$HOST/LAST
@@ -63,5 +63,4 @@ while [ $GAME -lt $END ]; do
     GAME="`expr $GAME + 1`"
     echo $GAME > $LAST
 done
-
 rm -f $LOCK

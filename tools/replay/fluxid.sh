@@ -1,7 +1,7 @@
 #!/bin/bash
 HOST=ants.fluxid.pl
 URLBASE=http://ants.fluxid.pl/replay
-ROOT=~/src/ai/bot/
+ROOT=~/ai
 LAST=$ROOT/data/$HOST/LAST
 LOCK=$ROOT/data/$HOST/LOCK
 

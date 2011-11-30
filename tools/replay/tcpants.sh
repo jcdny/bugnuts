@@ -1,7 +1,7 @@
 #!/bin/bash
 HOST=tcpants.com
 URLBASE=http://tcpants.com/replay
-ROOT=~/src/ai/bot
+ROOT=~/ai
 LAST=$ROOT/data/$HOST/LAST
 LOCK=$ROOT/data/$HOST/LOCK
 
@@ -20,7 +20,6 @@ echo `date` > $HOST/LOCK
 
 END=$(curl -s http://$HOST | egrep "href='/replay.[0-9]" | head -n1 | sed -e 's#^.*/replay\.\([0-9]*\)[^0-9].*#\1#')
 GAME="`cat $LAST || echo 1`"
-echo "End is \"$END\""
 
 if [ "$END" = "" -o "$GAME" = "" ]; then
     echo "FATAL: game range error end: \"$END\" start: \"$GAME\""
