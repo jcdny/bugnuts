@@ -4,12 +4,8 @@ package pathing
 import (
 	"log"
 	"strconv"
-	"sort"
-	"rand"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
-	. "bugnuts/debug"
-	. "bugnuts/util"
 )
 
 // A Fill is an distance metric on a given Map.
@@ -43,7 +39,7 @@ func (f *Fill) String() string {
 	}
 
 	if f.Seed != nil {
-		s += "Seed:\n"
+		s += "\nSeed:\n"
 		for i, d := range f.Seed {
 			if i%f.Cols == 0 {
 				s += "\n"
@@ -171,13 +167,13 @@ func MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint1
 }
 
 func (f *Fill) Reset() {
-	for i := 0; i < len(f.Depth); i++ {
+	for i := range f.Depth {
 		f.Depth[i] = 0
 	}
 }
 
 // Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
-// use map value
+// use origin map value
 func (f *Fill) MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	if f.Rows != m.Rows || f.Cols != m.Cols {
 		log.Panicf("Map and fill mismatch")
@@ -217,7 +213,7 @@ func (f *Fill) MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int,
 }
 
 // Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
-// use map value
+// use origin map value
 func (f *Fill) MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	if f.Rows != m.Rows || f.Cols != m.Cols {
 		log.Panicf("Map and fill mismatch")
@@ -250,8 +246,8 @@ func (f *Fill) MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, 
 		for i := 0; i < 4; i++ {
 			floc := m.LocStep[loc][i]
 			// TODO: block is local.  Ugly but making it traversible in some # of turns might help 
-			if m.Grid[floc] != WATER && m.Grid[floc] != BLOCK &&
-				(f.Depth[floc] == 0 || f.Depth[floc] > newDepth) {
+			if (f.Depth[floc] == 0 || f.Depth[floc] > newDepth) &&
+				m.Grid[floc] != WATER && m.Grid[floc] != BLOCK {
 				q = append(q, floc)
 				f.Depth[floc] = newDepth
 				f.Seed[floc] = Seed
@@ -260,6 +256,99 @@ func (f *Fill) MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, 
 	}
 
 	return f, cap(q), newDepth
+}
+
+type Neighbor struct {
+	L     [4]Location
+	Steps int
+}
+
+type Neighbors map[Location]map[Location]Neighbor
+
+func NewNeighbors(origin []Location) Neighbors {
+	nn := make(Neighbors, len(origin))
+	for _, loc := range origin {
+		nn[loc] = make(map[Location]Neighbor, 8)
+	}
+	return nn
+}
+
+func (nn Neighbors) Add(s1, s2, l1, l2 Location, steps int) {
+	nn[s1][s2] = Neighbor{L: [4]Location{s1, l1, l2, s2}, Steps: steps}
+}
+
+// MapFillSeedNN computes a flood fill BFS.  If pri is > 0 then use it for the point pri otherwise
+// use map value.  Returns the fill together with the q size and max depth.
+func (f *Fill) MapFillSeedNN(m *Map, origin map[Location]int, pri uint16) (*Fill, Neighbors) {
+	if f.Rows != m.Rows || f.Cols != m.Cols {
+		log.Panicf("Map and fill mismatch")
+	}
+
+	f.Seed = make([]Location, len(f.Depth))
+
+	q := make([]Location, 0, 100+len(origin)*4)
+
+	for loc, opri := range origin {
+		q = append(q, loc)
+		f.Seed[loc] = loc
+		if pri > 0 {
+			f.Depth[loc] = pri
+		} else {
+			f.Depth[loc] = uint16(opri)
+		}
+	}
+
+	nn := NewNeighbors(q)
+
+	newDepth := uint16(0)
+	for len(q) > 0 {
+		loc := q[0]
+		q = q[1:len(q)]
+
+		Depth := f.Depth[loc]
+		Seed := f.Seed[loc]
+		newDepth = Depth + 1
+
+		// TODO: block is local.  Ugly but making it traversible in some # of turns might help
+		for i := 0; i < 4; i++ {
+			floc := m.LocStep[loc][i]
+			if f.Depth[floc] > 0 && f.Seed[loc] != f.Seed[floc] &&
+				(f.Depth[floc] == newDepth || f.Depth[floc] == Depth) {
+				var Seed1, Seed2, L1, L2 Location
+				// Here we are at a point where we are half way between two Seeds.
+				// check if this is a new minima.
+				Seed1 = f.Seed[floc]
+				if Seed1 > Seed {
+					Seed2 = Seed
+					L1 = floc
+					L2 = loc
+				} else {
+					Seed1, Seed2 = Seed, Seed1
+					L1 = loc
+					L2 = floc
+				}
+
+				nSteps := 2 * int(Depth)
+				if f.Depth[floc] == newDepth {
+					nSteps++
+					L1, L2 = floc, floc
+				}
+
+				if N, ok := nn[Seed1][Seed2]; !ok || N.Steps > nSteps {
+					// either we have not seen this before or we have a shorter distance.
+					// TODO I should check if it's even possible to have a shorter distance...
+					nn.Add(Seed1, Seed2, L1, L2, nSteps)
+				}
+			} else if m.Grid[floc] != WATER && m.Grid[floc] != BLOCK &&
+				(f.Depth[floc] == 0 || f.Depth[floc] > newDepth) {
+				q = append(q, floc)
+				f.Depth[floc] = newDepth
+				f.Seed[floc] = Seed
+			}
+		}
+	}
+
+	return f, nn
 }
 
 func (f *Fill) Distance(from, to Location) int {
@@ -271,132 +360,4 @@ func (f *Fill) DistanceStep(loc Location, d Direction) int {
 		return 0
 	}
 	return int(f.Depth[loc]) - int(f.Depth[f.LocStep[loc][d]])
-}
-
-// Closest builds a list of locations ordered by depth from closest to furthest
-// TODO see if perm on the per depth list helps.
-// 
-func (f *Fill) Closest(slice []Location) []Location {
-	llist := make(map[int][]Location) // List of locations keyed by depth
-	dlist := make([]int, 0, 128)      // List of depths encountered
-
-	if len(slice) < 1 {
-		return slice
-	}
-	log.Printf("Closest slice %v", slice)
-
-	for _, loc := range slice {
-		depth := int(f.Depth[loc])
-		if _, ok := llist[depth]; !ok {
-			llist[depth] = make([]Location, 0)
-			dlist = append(dlist, depth)
-		}
-		llist[depth] = append(llist[depth], loc)
-	}
-
-	sort.Sort(IntSlice(dlist))
-
-	n := 0
-	for _, depth := range dlist {
-		copy(slice[n:n+len(llist[depth])], llist[depth])
-		n += len(llist[depth])
-	}
-
-	if n != len(slice) {
-		log.Panicf("Output length does not match input length (%d, %d)", n, len(slice))
-	}
-
-	return slice
-}
-
-// Sample returns N random points sampled from a fill with step
-// distance between low and hi inclusive.  it will return a count > 1
-// if the sample size is smaller than N.  If n < 1 then return all
-// points.
-func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
-	pool := make([]Location, 0, 200)
-	lo, hi := uint16(low), uint16(high)
-	for i, depth := range f.Depth {
-		if depth >= lo && depth <= hi {
-			pool = append(pool, Location(i))
-		}
-	}
-	if n < 1 {
-		return pool, nil
-	}
-
-	if len(pool) == 0 {
-		return nil, nil
-	}
-
-	over := n / len(pool)
-	perm := rand.Perm(len(pool))[0 : n%len(pool)]
-	if Debug[DBG_Sample] {
-		log.Printf("Sample: Looking for %d explore points %d-%d, have %d possible", n, low, hi, len(pool))
-	}
-
-	var count []int
-	if over > 0 {
-		count = make([]int, len(pool))
-		for i, _ := range count {
-			count[i] = over
-		}
-	} else {
-		count = make([]int, len(perm))
-	}
-
-	for i, _ := range perm {
-		count[i]++
-	}
-
-	if over > 0 {
-		return pool, count
-	} else {
-		pout := make([]Location, len(perm))
-		for i, pi := range perm {
-			if Debug[DBG_Sample] {
-				log.Printf("Sample: adding location %d to output pool", pool[pi])
-			}
-			pout[i] = pool[pi]
-		}
-		return pout, count
-	}
-
-	return nil, nil
-}
-
-// Segment is a pathing segment which has a Src location, End location
-// and distance in Steps.
-type Segment struct {
-	Src   Location
-	End   Location
-	Steps int
-}
-
-type SegSlice []Segment
-
-func (p SegSlice) Len() int           { return len(p) }
-func (p SegSlice) Less(i, j int) bool { return p[i].Steps < p[j].Steps }
-func (p SegSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-
-// ClosestStep takes a slice of Segment with Src populated and 
-// computes the End and Steps returning the slice order by steps from closest to furthest.
-// Return true if any segments were found.
-func (f *Fill) ClosestStep(seg []Segment) bool {
-	if len(seg) < 1 {
-		return false
-	}
-
-	any := false
-	for i, _ := range seg {
-		seg[i].End = f.Seed[seg[i].Src]
-		seg[i].Steps += Abs(int(f.Depth[seg[i].Src]) - int(f.Depth[seg[i].End]))
-		if seg[i].End != 0 || f.Depth[seg[i].End] != 0 {
-			any = true
-		}
-	}
-
-	sort.Sort(SegSlice(seg))
-
-	return any
 }

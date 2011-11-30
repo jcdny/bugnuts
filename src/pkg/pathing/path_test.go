@@ -36,13 +36,37 @@ func TestMapFill(t *testing.T) {
 
 }
 
+func TestMapFillSeedNN(t *testing.T) {
+	file := "../maps/testdata/maps/cell_maze_p06_01.map" // "testdata/fill2.map" // fill.2 Point{r:4, c:5}
+	m, err := MapLoadFile(file)
+
+	if m == nil || err != nil {
+		t.Errorf("Read failed for %s: %v", file, err)
+	}
+
+	l := make(map[Location]int, 0)
+	for _, hill := range m.Hills(-1) {
+		l[hill] = 1
+	}
+	f := NewFill(m)
+	sfs, nn := f.MapFillSeedNN(m, l, 1)
+	log.Printf("MapFillSeedNN:\n%v\nNN:\n", sfs)
+	for s1, m1 := range nn {
+		for s2, N := range m1 {
+			log.Printf("%v %v (%d): %v", m.ToPoint(s1), m.ToPoint(s2), N.Steps, m.ToPoints(N.L[:]))
+		}
+	}
+}
+
 // Benchmark the version which does not maintain a seed array
 // but allocates per fill
+//var benchFile string = "../maps/testdata/maps/mmaze_05p_01.map"
+var benchFile string = "../maps/testdata/maps/cell_maze_p06_01.map"
+
 func BenchmarkMapFillAlloc(b *testing.B) {
-	file := "../maps/testdata/maps/mmaze_05p_01.map"
-	m, err := MapLoadFile(file)
+	m, err := MapLoadFile(benchFile)
 	if m == nil || err != nil {
-		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
+		log.Panicf("Error reading %s: err %v map: %v", benchFile, err, m)
 	}
 
 	l := make(map[Location]int, 40)
@@ -58,10 +82,9 @@ func BenchmarkMapFillAlloc(b *testing.B) {
 
 // Benchmark not reusing the fill struct.
 func BenchmarkMapFill(b *testing.B) {
-	file := "../maps/testdata/maps/mmaze_05p_01.map"
-	m, err := MapLoadFile(file)
+	m, err := MapLoadFile(benchFile)
 	if m == nil || err != nil {
-		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
+		log.Panicf("Error reading %s: err %v map: %v", benchFile, err, m)
 	}
 
 	l := make(map[Location]int, 40)
@@ -76,12 +99,30 @@ func BenchmarkMapFill(b *testing.B) {
 	}
 }
 
+// Benchmark not reusing the fill struct.
+func BenchmarkMapFillSeedNN(b *testing.B) {
+	m, err := MapLoadFile(benchFile)
+	if m == nil || err != nil {
+		log.Panicf("Error reading %s: err %v map: %v", benchFile, err, m)
+	}
+
+	l := make(map[Location]int, 40)
+
+	for _, hill := range m.Hills(-1) {
+		l[hill] = 1
+	}
+
+	for i := 0; i < b.N; i++ {
+		f := NewFill(m)
+		f.MapFillSeedNN(m, l, 1)
+	}
+}
+
 // Benchmark allocating fill + computing seed.
 func BenchmarkMapFillSeed(b *testing.B) {
-	file := "../maps/testdata/maps/mmaze_05p_01.map"
-	m, err := MapLoadFile(file)
+	m, err := MapLoadFile(benchFile)
 	if m == nil || err != nil {
-		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
+		log.Panicf("Error reading %s: err %v map: %v", benchFile, err, m)
 	}
 
 	l := make(map[Location]int, 40)
