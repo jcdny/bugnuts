@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 ROOT=~/src/ai
-EXE=$ROOT/bot/bin/bot.sh
+EXE=$ROOT/bot/bin/bot7
 TOOLS=$ROOT/tools
 MAPS=$ROOT/bot/pkg/maps/testdata/maps
 ARCH="`uname -s`"
