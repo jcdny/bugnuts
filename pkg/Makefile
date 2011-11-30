@@ -16,6 +16,7 @@ all: install
 DIRS=\
 	MyBot\
 	bot6\
+	bot7\
 	debug\
 	maps\
 	parameters\

@@ -8,11 +8,12 @@ import (
 )
 
 type Parameters struct {
-	ExpireFood     int // If we have not seen the food in this many turns then assume it's gone.
-	PriorityMap    *map[string]int
-	Outbound       int // Radius inside which we step away from hill by default.
-	MinHorizon     int // minimum horizon of mystery to our hill
-	DefendDistance int // How early to we consider an ant a threat to the hill
+	ExpireFood       int // If we have not seen the food in this many turns then assume it's gone.
+	PriorityMap      *map[string]int
+	Outbound         int     // Radius inside which we step away from hill by default.
+	MinHorizon       int     // minimum horizon of mystery to our hill
+	DefendDistance   int     // How early to we consider an ant a threat to the hill
+	RiskOffThreshold float64 // if static ants > than this turn off risk aversion
 }
 
 func init() {

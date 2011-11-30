@@ -51,11 +51,11 @@ func (s *State) MoveAnt(from, to Location) bool {
 	return false
 }
 
-func (s *State) GenerateAnts(tset *TargetSet, risk int) (ants map[Location]*AntStep) {
+func (s *State) GenerateAnts(tset *TargetSet, riskOff bool) (ants map[Location]*AntStep) {
 	ants = make(map[Location]*AntStep, len(s.Ants[0]))
 
 	for loc, _ := range s.Ants[0] {
-		ants[loc] = s.AntStep(loc, risk)
+		ants[loc] = s.AntStep(loc, riskOff)
 
 		fixed := false
 
@@ -106,7 +106,7 @@ func (s *State) Neighborhood(loc Location, nh *Neighborhood, d Direction) {
 	nh.Item = s.Map.Grid[loc]
 }
 
-func (s *State) AntStep(loc Location, risk int) *AntStep {
+func (s *State) AntStep(loc Location, riskOff bool) *AntStep {
 	as := &AntStep{
 		Source:  loc,
 		Steptot: 0,
@@ -142,7 +142,7 @@ func (s *State) AntStep(loc Location, risk int) *AntStep {
 	as.N[4].Valid = true
 
 	// Compute the min threat moves.
-	if risk > 0 {
+	if riskOff {
 		for i := 0; i < 5; i++ {
 			as.N[i].Threat -= 4
 			if as.N[i].Threat <= 0 {

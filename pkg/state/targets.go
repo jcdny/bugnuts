@@ -112,8 +112,8 @@ func MakeExplorers(s *State, scale float64, count, pri int) *TargetSet {
 		scale = 1.0
 	}
 
-	rstride := int(math.Sqrt(float64(s.ViewRadius2)) * 3 / 2)
-	cstride := int(math.Sqrt(float64(s.ViewRadius2) * 3))
+	rstride := int(math.Sqrt(float64(s.ViewRadius2)) * 3 / 2 * scale)
+	cstride := int(math.Sqrt(float64(s.ViewRadius2)*3) * scale)
 
 	tset := make(TargetSet, (s.Rows * s.Cols / (rstride * cstride)))
 	for r := 0; r < s.Rows; r += rstride {
@@ -222,9 +222,9 @@ func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist 
 	for i := 1; i < len(s.Ants); i++ {
 		for loc, _ := range s.Ants[i] {
 			// TODO: use seed rather than PathIn
-			_, steps := f.PathIn(Location(loc))
+			steps := int(f.Depth[Location(loc)] - 1)
 			if steps < DefendDist {
-				tloc, _ := f.NPathIn(loc, MaxV(steps/2, 3))
+				tloc, _ := f.NPathIn(loc, MaxV(steps-8, steps/2))
 				if Debug[DBG_PathInDefense] {
 					log.Printf("Enemy Pathin: defense: %v @ %v", s.ToPoint(loc), s.ToPoint(tloc))
 				}

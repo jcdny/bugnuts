@@ -27,12 +27,21 @@ func NewFill(m *Map) *Fill {
 	return f
 }
 
+// Compute a path in to a point and return location and steps to minima.
 func (f *Fill) PathIn(loc Location) (Location, int) {
-	return f.NPathIn(loc, 0)
+	return f.NPathIn(loc, -1)
 }
 
-// Step in N steps to minima, if steps=0 then go to minima and return steps taken
+// Step in N steps to minima
+// if steps == -1 then go to minima and return steps taken
+// if steps == 0 noop, more for clean logic elsewhere
 func (f *Fill) NPathIn(loc Location, steps int) (Location, int) {
+	if steps == 0 {
+		return loc, steps
+	} else if steps < -1 {
+		steps = -1
+	}
+
 	origloc := loc
 	done := false
 	for !done {
@@ -57,7 +66,7 @@ func (f *Fill) NPathIn(loc Location, steps int) (Location, int) {
 		log.Printf("step from %v to %v depth %d to %d, steps %d\n", f.ToPoint(origloc), f.ToPoint(loc), f.Depth[origloc], f.Depth[loc], steps)
 	}
 
-	return loc, -steps
+	return loc, -(steps + 1)
 }
 
 func (f *Fill) MontePathIn(m *Map, start []Location, N int, MinDepth uint16) (dist []int, flow [][4]int) {

@@ -15,13 +15,12 @@ import (
 	. "bugnuts/debug"
 	. "bugnuts/state"
 	. "bugnuts/MyBot"
-	. "bugnuts/bot6"
-	. "bugnuts/parameters"
+	_ "bugnuts/bot6"
+	_ "bugnuts/bot7"
 )
 
 var runBot string
 var mapFile string
-var paramKey string
 var watchPoints string
 var debugLevel int
 
@@ -30,17 +29,15 @@ func init() {
 	log.SetFlags(log.Lshortfile)
 
 	vizList := ""
-	vizHelp := "Visualize: all,none,useful,"
+	vizHelp := "Visualize: all,none,useful"
 	for flag, _ := range Viz {
-		vizHelp += flag
+		vizHelp += "," + flag
 	}
-
 	flag.StringVar(&vizList, "V", "", vizHelp)
 
 	flag.IntVar(&debugLevel, "d", 0, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
-	flag.StringVar(&runBot, "b", "V6", "Which bot to run")
+	flag.StringVar(&runBot, "b", "v7", "Which bot to run")
 	flag.StringVar(&mapFile, "m", "", "Map file, used to validate generated map, hill guessing etc.")
-	flag.StringVar(&paramKey, "p", "", "Parameter set, defaults to default.BOT")
 	flag.StringVar(&watchPoints, "w", "", "Watch points \"T1:T2@R,C,N[;T1:T2...]\", \":\" will watch all")
 
 	flag.Parse()
@@ -48,8 +45,6 @@ func init() {
 	SetDebugLevel(debugLevel)
 	SetViz(vizList, Viz)
 }
-
-var Times = make(map[string]int64, 30)
 
 func main() {
 	var refmap *Map
@@ -77,21 +72,13 @@ func main() {
 		WS.Load(wlist)
 	}
 
-	// Set up bot
-	if paramKey == "" {
-		paramKey = runBot
-	}
-
-	var bot Bot
-	switch runBot {
-	case "CUR":
-		fallthrough // no flag given run latest defined bot...
-	case "V6":
-		bot = NewBotV6(s, ParameterSets[paramKey])
-	default:
+	bot := NewBot(runBot, s)
+	if bot == nil {
 		log.Printf("Unkown bot %s", runBot)
+		log.Printf("Bots:\n%s\n", strings.Join(BotList(), "\n"))
 		return
 	}
+
 	// Send go to tell server we are ready to process turns
 	fmt.Fprintf(os.Stdout, "go\n")
 	btime := time.Nanoseconds()

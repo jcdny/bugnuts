@@ -9,7 +9,7 @@ import (
 type ABot struct {
 	Key    string
 	Desc   string
-	PSet   string
+	PKey   string
 	NewBot func(*State, *Parameters) Bot
 }
 
@@ -39,4 +39,14 @@ func BotGet(k string) ABot {
 	}
 
 	return b
+}
+
+func NewBot(k string, s *State) Bot {
+	b, ok := botList[k]
+	if !ok {
+		return nil
+	}
+	nbot := b.NewBot(s, ParameterSets[b.PKey])
+
+	return nbot
 }

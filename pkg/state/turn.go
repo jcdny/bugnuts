@@ -309,13 +309,16 @@ func (s *State) UpdateHillMaps() {
 		lend[hill] = 1
 	}
 
-	log.Printf("Updating hill fill for player 0 %#v", lend)
 	s.Met.FHill, _, _ = MapFillSeed(s.Map, lend, 1)
 
 	outbound := make(map[Location]int)
 	R := MinV(MaxV(MinV(s.Rows, s.Cols)/s.NHills[0]/2, 8), 16)
 	samples, _ := s.Met.FHill.Sample(0, R, R)
-	log.Printf("Outbound Radius %d samples: %d", R, len(samples))
+
+	if false {
+		log.Printf("Updating hill fill for player 0 %#v", lend)
+		log.Printf("Outbound Radius %d samples: %d", R, len(samples))
+	}
 	for _, loc := range samples {
 		outbound[loc] = 1
 	}

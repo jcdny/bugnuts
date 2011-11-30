@@ -34,11 +34,15 @@ type BotV6 struct {
 }
 
 func init() {
-	RegisterABot(ABot{Key: "v6", Desc: "V6 - Final Noncombat bot", PSet: "v6", NewBot: NewBotV6})
+	RegisterABot(ABot{Key: "v6", Desc: "V6 - Final Noncombat bot", PKey: "v6", NewBot: NewBotV6})
 }
 
 //NewBot creates a new instance of your bot
 func NewBotV6(s *State, pset *Parameters) Bot {
+	if pset == nil {
+		log.Panic("Nil parameter set")
+	}
+
 	mb := &BotV6{
 		P:          pset,
 		IdleAnts:   make([]int, 0, s.Turns+2),
@@ -109,12 +113,14 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 
 	tset := bot.GenerateTargets(s)
 
-	riskOff := 0
-	if len(s.Ants[0])/3 < bot.StaticAnts[s.Turn-1] {
-		riskOff = 1
+	var RiskOff bool
+	if float64(bot.StaticAnts[s.Turn-1])/float64(len(s.Ants[0])) > bot.P.RiskOffThreshold {
+		RiskOff = true
+	} else {
+		RiskOff = false
 	}
 
-	ants := s.GenerateAnts(tset, riskOff)
+	ants := s.GenerateAnts(tset, RiskOff)
 
 	endants := make([]*AntStep, 0, len(ants))
 	segs := make([]Segment, 0, len(ants))

@@ -1,15 +1,6 @@
-package bot6
+package bot7
 
-// The v6 Bot -- Now Officially not terrible
-//
-// Lesons from v5:
-// The "Explore" concept was a failure.
-//
-// Need to be smarter about target priority
-//
-// Need to track chicken bots vs aggressive bots.
-//
-// Need to guess hills
+// The v7 Bot -- Now with combat (eventually)
 
 import (
 	"os"
@@ -25,21 +16,26 @@ import (
 	. "bugnuts/viz"
 )
 
-type BotV6 struct {
+type BotV7 struct {
 	P          *Parameters
 	PriMap     *[256]int // array mapping Item to priority
 	Explore    *TargetSet
 	IdleAnts   []int
 	StaticAnts []int
+	RiskOff    bool
 }
 
 func init() {
-	RegisterABot(ABot{Key: "v6", Desc: "V6 - Final Noncombat bot", PSet: "v6", NewBot: NewBotV6})
+	RegisterABot(ABot{Key: "v7", Desc: "V7 - combat bot", PKey: "v7", NewBot: NewBotV7})
 }
 
 //NewBot creates a new instance of your bot
-func NewBotV6(s *State, pset *Parameters) Bot {
-	mb := &BotV6{
+func NewBotV7(s *State, pset *Parameters) Bot {
+	if pset == nil {
+		log.Panic("Nil parameter set")
+	}
+
+	mb := &BotV7{
 		P:          pset,
 		IdleAnts:   make([]int, 0, s.Turns+2),
 		StaticAnts: make([]int, s.Turns+2),
@@ -57,7 +53,7 @@ func NewBotV6(s *State, pset *Parameters) Bot {
 	return mb
 }
 
-func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
+func (bot *BotV7) GenerateTargets(s *State) *TargetSet {
 	tset := &TargetSet{}
 
 	// TODO figure out how to handle multihill defense.
@@ -101,20 +97,21 @@ func (bot *BotV6) GenerateTargets(s *State) *TargetSet {
 	return tset
 }
 
-func XX(s *State) {
+func XX7(s *State) {
 	log.Printf("TURN %d 88/37: \"%s\"", s.Turn, s.Map.Grid[s.ToLocation(Point{88, 37})])
 }
-func (bot *BotV6) DoTurn(s *State) os.Error {
-	bot.Explore.UpdateSeen(s, 1)
+func (bot *BotV7) DoTurn(s *State) os.Error {
 
+	bot.Explore.UpdateSeen(s, 1)
 	tset := bot.GenerateTargets(s)
 
-	riskOff := 0
-	if len(s.Ants[0])/3 < bot.StaticAnts[s.Turn-1] {
-		riskOff = 1
+	if float64(bot.StaticAnts[s.Turn-1])/float64(len(s.Ants[0])) > bot.P.RiskOffThreshold {
+		bot.RiskOff = true
+	} else {
+		bot.RiskOff = false
 	}
 
-	ants := s.GenerateAnts(tset, riskOff)
+	ants := s.GenerateAnts(tset, bot.RiskOff)
 
 	endants := make([]*AntStep, 0, len(ants))
 	segs := make([]Segment, 0, len(ants))
