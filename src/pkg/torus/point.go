@@ -3,7 +3,8 @@ package torus
 import (
 	"fmt"
 )
-
+// Point is the coordinate on the torus.  It can be signed in the case of offset arrays 
+// or points in non standard form.
 type Point struct {
 	R, C int
 }

@@ -4,6 +4,10 @@ import (
 	. "bugnuts/util"
 )
 
+// Mirror returns the midpoint between two points.  Axis 0 is R and 1
+// is C.  By convention it will return either the axis closer to {0,0}
+// if the side dimension is even or the axis which exists between the
+// even spread of p1/p2.
 func (t *Torus) Mirror(l1, l2 Location, axis int) int {
 	p1 := t.ToPoint(l1)
 	p2 := t.ToPoint(l2)
@@ -34,6 +38,9 @@ func (t *Torus) Mirror(l1, l2 Location, axis int) int {
 
 	return o
 }
+
+// SymDiff returns the difference between two points.  By convention will return 
+// r >= 0.
 func (t *Torus) SymDiff(l1, l2 Location) Point {
 	p1 := t.ToPoint(l1)
 	p2 := t.ToPoint(l2)
@@ -60,7 +67,7 @@ func (t *Torus) SymDiff(l1, l2 Location) Point {
 	return Point{R: r, C: c}
 }
 
-// Reduce a translation to its minumum length offset
+// ShiftReduce will take a translation to its minumum length offset.
 // I should just do this with math but my head hurts.
 func (t *Torus) ShiftReduce(l1, l2 Location, maxcells int) (Point, bool) {
 	p1 := t.ToPoint(l1)
@@ -107,7 +114,8 @@ func (t *Torus) ShiftReduce(l1, l2 Location, maxcells int) (Point, bool) {
 	return Point{R: 0, C: 0}, false
 }
 
-// Take a list of translation offsets and generate list of shortest spanning set
+// ReduceReduce takes a list of translation offsets and generates the shortest spanning set
+// of offsets
 func (t *Torus) ReduceReduce(in []Point) []Point {
 	out := make([]Point, 0)
 	left := make([]Point, 0)
@@ -129,7 +137,7 @@ func (t *Torus) ReduceReduce(in []Point) []Point {
 
 	pm := in[min]
 	for i, p := range in {
-		if i == min || t.EquivT(pm, p) {
+		if i == min || t.TranslationEquiv(pm, p) {
 			continue
 		}
 		left = append(left, p)
@@ -142,7 +150,8 @@ func (t *Torus) ReduceReduce(in []Point) []Point {
 	return append(out, t.ReduceReduce(left)...)
 }
 
-func (t *Torus) EquivT(pm, p Point) bool {
+// TranslationEquiv returns true if pm and p are equivalent translations
+func (t *Torus) TranslationEquiv(pm, p Point) bool {
 	if pm.R != 0 && Abs(pm.R) < Abs(p.R) && Abs(p.R)%Abs(pm.R) == 0 {
 		if p.C == pm.C*(p.R/pm.R) || p.C == pm.C*(p.R/pm.R)-t.Cols {
 			return true
@@ -156,7 +165,9 @@ func (t *Torus) EquivT(pm, p Point) bool {
 	return false
 }
 
-// Given a point and a translation compute the list of locations
+// Translations produces the list of locations generated from a given
+// Location and translation.  It will return an empty slice in the
+// event that the translation is not periodic in maxcells steps.
 func (t *Torus) Translations(l1 Location, o Point, ll []Location, maxcells int) []Location {
 	ll = append(ll, l1)
 	p1 := t.ToPoint(l1)
@@ -178,6 +189,7 @@ func (t *Torus) Translations(l1 Location, o Point, ll []Location, maxcells int) 
 	return []Location{}
 }
 
+// TransMap returns a mapping from a given location to the its equiv set.
 func (t *Torus) TransMap(p Point, maxcells int) [][]Location {
 	size := t.Size()
 	smap := make([][]Location, size)

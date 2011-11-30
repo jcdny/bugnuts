@@ -4,12 +4,12 @@ import (
 	"log"
 	. "bugnuts/torus"
 )
-
+// A Point Queue
 type Queue struct {
 	c []Point
 }
 
-func QNew(cap int) *Queue {
+func NewQueue(cap int) *Queue {
 	q := &Queue{
 		c: make([]Point, 0, cap),
 	}

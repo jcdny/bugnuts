@@ -8,13 +8,14 @@ import (
 	"fmt"
 	"strconv"
 	. "bugnuts/maps"
+	. "bugnuts/torus"
 )
 
 func TestMapFill(t *testing.T) {
 	file := "testdata/fill2.map" // fill.2 Point{r:4, c:5}
 	m, err := MapLoadFile(file)
 
-	if err != os.EOF {
+	if err != nil {
 		t.Errorf("Read failed for %s: %v", file, err)
 	} else if m == nil {
 		t.Errorf("Invalid load of map m == nil")
@@ -40,7 +41,7 @@ func TestMapFill(t *testing.T) {
 func BenchmarkMapFillAlloc(b *testing.B) {
 	file := "../maps/testdata/maps/mmaze_05p_01.map"
 	m, err := MapLoadFile(file)
-	if m == nil || err != os.EOF {
+	if m == nil || err != nil {
 		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
 	}
 
@@ -59,7 +60,7 @@ func BenchmarkMapFillAlloc(b *testing.B) {
 func BenchmarkMapFill(b *testing.B) {
 	file := "../maps/testdata/maps/mmaze_05p_01.map"
 	m, err := MapLoadFile(file)
-	if m == nil || err != os.EOF {
+	if m == nil || err != nil {
 		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
 	}
 
@@ -79,7 +80,7 @@ func BenchmarkMapFill(b *testing.B) {
 func BenchmarkMapFillSeed(b *testing.B) {
 	file := "../maps/testdata/maps/mmaze_05p_01.map"
 	m, err := MapLoadFile(file)
-	if m == nil || err != os.EOF {
+	if m == nil || err != nil {
 		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
 	}
 
@@ -100,7 +101,7 @@ func TestMapFillDist(t *testing.T) {
 	for _, name := range AllMaps {
 		filename := "../maps/testdata/maps/" + name + ".map"
 		m, err := MapLoadFile(filename)
-		if m == nil || err != os.EOF {
+		if m == nil || err != nil {
 			log.Panicf("Error: failed to read %s: %v", filename, err)
 		}
 		for _, player := range []int{-1, 0} {
@@ -150,7 +151,7 @@ func TestMonteCarloPathing(t *testing.T) {
 	for _, name := range AllMaps {
 		filename := "../maps/testdata/maps/" + name + ".map"
 		m, err := MapLoadFile(filename)
-		if m == nil || err != os.EOF {
+		if m == nil || err != nil {
 			log.Panicf("Error: failed to read %s: %v", filename, err)
 		}
 

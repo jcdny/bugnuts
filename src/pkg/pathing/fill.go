@@ -1,3 +1,4 @@
+// Pathing computes distance maps, possibly with seed locations and nearest neighbors.
 package pathing
 
 import (
@@ -11,13 +12,14 @@ import (
 	. "bugnuts/util"
 )
 
+// A Fill is an distance metric on a given Map.
 type Fill struct {
-	// add offset and wrap flag for subfill work
-	Depth []uint16
-	Seed  []Location
-	*Map
+	Depth []uint16   // Steps from a given Seed point
+	Seed  []Location // The Seed point associated with a given point.
+	*Map             // The map referenced for the construction of this fill 
 }
 
+// NewFill returns a pointer to a new Fill
 func NewFill(m *Map) *Fill {
 	f := &Fill{
 		Depth: make([]uint16, m.Size(), m.Size()),
@@ -25,75 +27,6 @@ func NewFill(m *Map) *Fill {
 	}
 
 	return f
-}
-
-// Compute a path in to a point and return location and steps to minima.
-func (f *Fill) PathIn(loc Location) (Location, int) {
-	return f.NPathIn(loc, -1)
-}
-
-// Step in N steps to minima
-// if steps == -1 then go to minima and return steps taken
-// if steps == 0 noop, more for clean logic elsewhere
-func (f *Fill) NPathIn(loc Location, steps int) (Location, int) {
-	if steps == 0 {
-		return loc, steps
-	} else if steps < -1 {
-		steps = -1
-	}
-
-	origloc := loc
-	done := false
-	for !done {
-		depth := f.Depth[loc]
-		done = true
-		for _, d := range Permute4() {
-			nl := f.LocStep[loc][d]
-			if f.Depth[nl] < depth && f.Depth[nl] > 0 {
-				loc = nl
-				steps--
-				if steps == 0 {
-					done = true
-				} else {
-					done = false
-				}
-				break
-			}
-		}
-	}
-
-	if Debug[DBG_PathIn] && WS.Watched(loc, -1, 0) {
-		log.Printf("step from %v to %v depth %d to %d, steps %d\n", f.ToPoint(origloc), f.ToPoint(loc), f.Depth[origloc], f.Depth[loc], steps)
-	}
-
-	return loc, -(steps + 1)
-}
-
-func (f *Fill) MontePathIn(m *Map, start []Location, N int, MinDepth uint16) (dist []int, flow [][4]int) {
-	dist = make([]int, len(f.Depth))
-	flow = make([][4]int, len(f.Depth))
-
-	for _, origloc := range start {
-		for n := 0; n < N; n++ {
-			loc := origloc
-			d := 0
-
-			for d < 4 {
-				depth := f.Depth[loc]
-				nperm := rand.Intn(24)
-				for d = 0; d < 4; d++ {
-					nloc := m.LocStep[loc][Perm4[nperm][d]]
-					if f.Depth[nloc] < depth && f.Depth[nloc] > MinDepth {
-						flow[loc][Perm4[nperm][d]]++
-						loc = nloc
-						dist[loc]++
-						break
-					}
-				}
-			}
-		}
-	}
-	return
 }
 
 func (f *Fill) String() string {
@@ -126,9 +59,8 @@ func (f *Fill) String() string {
 	return s
 }
 
-// Program to dump the fill and q state in a pretty format.
-// @ or # is current pos, . is unvisited, % is water
-// A is a point in the queue
+// Program to dump the fill and q state in a pretty format.  @ or # is
+// current pos, . is unvisited, % is water A is a point in the queue
 func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string {
 	s := ""
 	for i, d := range f.Depth {
@@ -177,8 +109,9 @@ func PrettyFill(m *Map, f *Fill, p, fillp Point, q *Queue, Depth uint16) string 
 	return s
 }
 
-// Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
-// use map value
+// mapFillSlow generates a flood fill of a map given a collection of origin points.
+// If pri is > 0 then use it for the initial points depth otherwise use origin map value.
+// Mostly still here as a sanity checker.
 func MapFillSlow(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	Directions := []Point{{0, -1}, {-1, 0}, {0, 1}, {1, 0}} // w n e s
 
@@ -186,7 +119,7 @@ func MapFillSlow(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint1
 
 	f := NewFill(m)
 
-	q := QNew(100)
+	q := NewQueue(100)
 
 	for loc, opri := range origin {
 		// log.Printf("Q loc %v pri %d", f.ToPoint(loc), pri)
@@ -251,7 +184,6 @@ func (f *Fill) MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int,
 	}
 
 	q := make([]Location, 0, 200+len(origin)*2)
-	safe := 0
 
 	for loc, opri := range origin {
 		// log.Printf("Q loc %v pri %d", f.ToPoint(loc), pri)
@@ -265,11 +197,6 @@ func (f *Fill) MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int,
 
 	newDepth := uint16(0)
 	for len(q) > 0 {
-		// just for sanity...
-		if safe++; safe > 10*len(f.Depth) {
-			log.Panicf("Oh No Crazytime %d %d", len(f.Depth), safe)
-		}
-
 		loc := q[0]
 		q = q[1:len(q)]
 
@@ -299,7 +226,6 @@ func (f *Fill) MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, 
 	f.Seed = make([]Location, len(f.Depth))
 
 	q := make([]Location, 0, 200+len(origin)*2)
-	safe := 0
 
 	for loc, opri := range origin {
 		// log.Printf("Q loc %v pri %d", f.ToPoint(loc), pri)
@@ -314,11 +240,6 @@ func (f *Fill) MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, 
 
 	newDepth := uint16(0)
 	for len(q) > 0 {
-		// just for sanity...
-		if safe++; safe > 10*len(f.Depth) {
-			log.Panicf("Oh No Crazytime %d %d", len(f.Depth), safe)
-		}
-
 		loc := q[0]
 		q = q[1:len(q)]
 
@@ -349,12 +270,12 @@ func (f *Fill) DistanceStep(loc Location, d Direction) int {
 	if d == NoMovement {
 		return 0
 	}
-	//log.Printf("%v %d %v %d", f.m.ToPoint(loc), f.Depth[loc], f.m.ToPoint(f.m.LocStep[loc][d]), f.Depth[f.m.LocStep[loc][d]])
 	return int(f.Depth[loc]) - int(f.Depth[f.LocStep[loc][d]])
 }
 
-// Build list of locations ordered by depth from closest to furthest
-// TODO see if perm on the per depth list helps
+// Closest builds a list of locations ordered by depth from closest to furthest
+// TODO see if perm on the per depth list helps.
+// 
 func (f *Fill) Closest(slice []Location) []Location {
 	llist := make(map[int][]Location) // List of locations keyed by depth
 	dlist := make([]int, 0, 128)      // List of depths encountered
@@ -388,8 +309,10 @@ func (f *Fill) Closest(slice []Location) []Location {
 	return slice
 }
 
-// Return N random points sampled from a fill with steps between low and hi inclusive.
-// it will return a count > 1 if the sample size is smaller than N
+// Sample returns N random points sampled from a fill with step
+// distance between low and hi inclusive.  it will return a count > 1
+// if the sample size is smaller than N.  If n < 1 then return all
+// points.
 func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
 	pool := make([]Location, 0, 200)
 	lo, hi := uint16(low), uint16(high)
@@ -442,22 +365,23 @@ func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
 	return nil, nil
 }
 
-// Build list of locations ordered by depth from closest to furthest
-// TODO see if perm on the per depth list helps
+// Segment is a pathing segment which has a Src location, End location
+// and distance in Steps.
 type Segment struct {
 	Src   Location
 	End   Location
 	Steps int
 }
+
 type SegSlice []Segment
 
-func (p SegSlice) Len() int { return len(p) }
-// Metric is Manhattan distance from origin.
+func (p SegSlice) Len() int           { return len(p) }
 func (p SegSlice) Less(i, j int) bool { return p[i].Steps < p[j].Steps }
 func (p SegSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
+// ClosestStep takes a slice of Segment with Src populated and 
+// computes the End and Steps returning the slice order by steps from closest to furthest.
 // Return true if any segments were found.
-
 func (f *Fill) ClosestStep(seg []Segment) bool {
 	if len(seg) < 1 {
 		return false

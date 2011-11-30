@@ -2,11 +2,11 @@ package pathing
 
 import (
 	"testing"
-	. "bugnuts/maps"
+	. "bugnuts/torus"
 )
 
 func TestQ(t *testing.T) {
-	q := QNew(100)
+	q := NewQueue(100)
 
 	q.Q(Point{C: 1})
 	q.Q(Point{C: 2})
