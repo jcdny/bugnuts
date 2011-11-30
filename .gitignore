@@ -12,6 +12,7 @@ tmp/
 *.png
 replay/data
 nohup.out
+build.out
 bin/Darwin
 bin/Linux
 cmd/bot/bot
