@@ -1,6 +1,8 @@
 #!/usr/bin/env sh
 ROOT=~/src/ai
-EXE=$ROOT/bot/bin/bot7
+BOT7=$ROOT/bot/bin/bot7
+BOT6=$ROOT/bot/bin/bot6
+EXE=$BOT7
 TOOLS=$ROOT/tools
 MAPS=$ROOT/bot/pkg/maps/testdata/maps
 ARCH="`uname -s`"
@@ -16,7 +18,7 @@ export MAP8="cell_maze_p04_02.map"
 export MAP9="cell_maze_p04_03.map"
 export MAP10="cell_maze_p04_04.map"
 
-export MAP="$MAPS/$MAP1"
+export MAP="$MAPS/$MAP4"
 echo $MAP
 
 #    --nolaunch \
@@ -27,7 +29,7 @@ $TOOLS/playgame.py \
     --turntime 4000 \
     --player_seed 41 \
     --engine_seed 41 \
-    --end_wait=0.25 \
+    --end_wait=2.0 \
     --verbose \
     --log_dir $ROOT/bot/log \
     --turns 1000 \
@@ -40,7 +42,7 @@ $TOOLS/playgame.py \
     --cutoff_percent 0.85 \
     "$@" \
     "$EXE" \
-    "$ROOT/bot/bin/$ARCH/bugnutsv5" \
+    "$BOT6" \
     "python $TOOLS/sample_bots/python/GreedyBot.py" "python $TOOLS/sample_bots/python/HunterBot.py" \
 
 

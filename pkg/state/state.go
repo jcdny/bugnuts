@@ -47,7 +47,8 @@ type State struct {
 	Stats *Statistics
 
 	// Map Metrics
-	Met *Metrics
+	Met     *Metrics
+	Testing bool
 }
 
 func (g *GameInfo) NewState() *State {

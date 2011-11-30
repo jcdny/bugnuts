@@ -209,13 +209,50 @@ func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8,
 		log.Panic("ComputeThreat slice size mismatch")
 	}
 
-	m := mask[0]
+	m := mask[0] // for 0 turns out we just use the 0 degree of freedom mask.
+
+	var mythreat []int8
+	if player >= 0 && turn > 0 && s.Testing {
+		mythreat = make([]int8, s.Map.Size())
+		for loc, _ := range s.Ants[player] {
+			p := s.ToPoint(loc)
+			m = mask[s.FreedomKey(loc)]
+			for _, op := range m.Point {
+				mythreat[s.ToLocation(s.PointAdd(p, op))]++
+			}
+		}
+	}
+
+	//llist := make([]Location, len(mask[0].Point))
 	for i, _ := range s.Ants {
 		if i != player {
 			for loc, _ := range s.Ants[i] {
 				p := s.Map.ToPoint(loc)
 				if turn > 0 {
-					m = mask[s.Map.FreedomKey(loc)]
+					if false { // crazy or willing to sacrifice or other rules
+						m = mask[s.Map.FreedomKey(loc)]
+					} else {
+						var nsup [4]int8
+						for _, op := range mask[0].Point {
+							l := s.ToLocation(s.PointAdd(p, op))
+							if _, ok := s.Ants[i][l]; ok {
+								if op.R >= 0 {
+									nsup[South]++
+								}
+								if op.R <= 0 {
+									nsup[North]++
+								}
+								if op.C >= 0 {
+									nsup[East]++
+								}
+								if op.C <= 0 {
+									nsup[West]++
+								}
+
+							}
+						}
+						m = mask[s.Map.FreedomKeyThreat(loc, mythreat, nsup)]
+					}
 				}
 				for i, op := range m.Point {
 					threat[s.ToLocation(s.PointAdd(p, op))]++

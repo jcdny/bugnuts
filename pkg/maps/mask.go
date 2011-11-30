@@ -17,6 +17,9 @@ type Mask struct {
 	// Locations added or removed for a step in each direction
 	Add    [][]Point
 	Remove [][]Point
+	// Support
+	Sup [][]Point
+
 	// Union of points in all directions
 	Union    []Point
 	UnionLoc []Location
@@ -246,6 +249,17 @@ func (m *Map) FreedomKey(loc Location) int {
 	for i, l := range m.LocStep[loc] {
 		// skip no move
 		if l != loc && StepableItem[m.Grid[l]] {
+			key += 1 << uint(i)
+		}
+	}
+
+	return key
+}
+
+func (m *Map) FreedomKeyThreat(loc Location, t []int8, nsup [4]int8) int {
+	key := 0
+	for i, l := range m.LocStep[loc] {
+		if l != loc && StepableItem[m.Grid[l]] && (len(t) == 0 || t[l] < nsup[i]) {
 			key += 1 << uint(i)
 		}
 	}

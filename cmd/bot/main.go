@@ -41,6 +41,7 @@ func init() {
 	flag.StringVar(&watchPoints, "w", "", "Watch points \"T1:T2@R,C,N[;T1:T2...]\", \":\" will watch all")
 
 	flag.Parse()
+	log.SetPrefix(runBot + ":")
 
 	SetDebugLevel(debugLevel)
 	SetViz(vizList, Viz)
@@ -77,6 +78,10 @@ func main() {
 		log.Printf("Unkown bot %s", runBot)
 		log.Printf("Bots:\n%s\n", strings.Join(BotList(), "\n"))
 		return
+	}
+
+	if runBot == "v7" {
+		s.Testing = true
 	}
 
 	// Send go to tell server we are ready to process turns
