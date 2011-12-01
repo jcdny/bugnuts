@@ -138,6 +138,24 @@ func BenchmarkMapFillAlloc(b *testing.B) {
 }
 
 // Benchmark not reusing the fill struct.
+func BenchmarkResetSlow(b *testing.B) {
+	m, _ := getBenchMap()
+
+	f := NewFill(m)
+	for i := 0; i < b.N; i++ {
+		f.slowReset()
+	}
+}
+// Benchmark not reusing the fill struct.
+func BenchmarkReset(b *testing.B) {
+	m, _ := getBenchMap()
+
+	f := NewFill(m)
+	for i := 0; i < b.N; i++ {
+		f.Reset()
+	}
+}
+
 func BenchmarkMapFill(b *testing.B) {
 	m, l := getBenchMap()
 
