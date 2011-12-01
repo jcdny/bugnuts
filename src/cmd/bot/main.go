@@ -14,6 +14,7 @@ import (
 	. "bugnuts/watcher"
 	. "bugnuts/debug"
 	. "bugnuts/state"
+	. "bugnuts/game"
 	. "bugnuts/MyBot"
 	_ "bugnuts/bot6"
 	_ "bugnuts/bot7"
@@ -63,7 +64,7 @@ func main() {
 		log.Printf("Game Info:\n%v\n", g)
 	}
 
-	s := g.NewState()
+	s := NewState(g)
 	turns := make([]*Turn, 1, s.Turns+2)
 
 	// Create watch points
@@ -93,7 +94,7 @@ func main() {
 	for {
 		// READ TURN INFO FROM SERVER]
 		var t *Turn
-		t, _ = s.TurnScan(in, t)
+		t, _ = TurnScan(s.Map, in, t)
 		if t.End {
 			break
 		}

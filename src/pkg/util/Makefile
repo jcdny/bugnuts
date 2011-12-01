@@ -3,7 +3,7 @@ include $(GOROOT)/src/Make.inc
 TARG=bugnuts/util
 GOFILES=\
 	timing.go\
-	util.go
+	math.go
 
 include $(GOROOT)/src/Make.pkg
 

@@ -4,6 +4,6 @@ TARG=bugnuts/torus
 GOFILES=\
 	point.go\
 	torus.go\
-	sym.go\
+	symmetry.go\
 
 include $(GOROOT)/src/Make.pkg
