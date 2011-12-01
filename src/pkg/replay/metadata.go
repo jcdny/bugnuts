@@ -5,6 +5,7 @@ import (
 	"bugnuts/maps"
 	"bugnuts/torus"
 	"bugnuts/state"
+	. "bugnuts/util"
 )
 
 type GameResult struct {
@@ -56,28 +57,30 @@ func (r *Replay) GetGameInfo() *state.GameInfo {
 	return &r.GameInfo
 }
 
-func (r *Replay) AntCount(turns int) [][]int {
+func (r *Replay) AntCount(tmin, tmax int) [][]int {
 	// count the ants per turn
 	nants := make([][]int, r.Players)
+	for i := 0; i < r.Players; i++ {
+		nants[i] = make([]int, tmax-tmin+1)
+	}
 	for _, a := range r.Ants {
-		if len(nants[a.Player]) == 0 {
-			nants[a.Player] = make([]int, turns+1)
-		}
-		for i := a.Start; i < a.End; i++ {
-			nants[a.Player][i]++
+		if a.Start <= tmax && a.End >= tmin {
+			for i := MaxV(a.Start-tmin, 0); i <= MinV(tmax, a.End)-tmin; i++ {
+				nants[a.Player][i]++
+			}
 		}
 	}
 
 	return nants
 }
 
-// Return ant locations l[turn][player][ant]
-func (r *Replay) AntLocations(m *maps.Map, turns int) [][][]torus.Location {
-	nants := r.AntCount(turns)
+// Return ant locations in array [(turn-tmin)][player][ant] for turns tmin..tmax inclusive
+func (r *Replay) AntLocations(m *maps.Map, tmin, tmax int) [][][]torus.Location {
+	nants := r.AntCount(tmin, tmax)
 
 	// Allocate the slices
-	al := make([][][]torus.Location, turns+1)
-	for turn := 0; turn <= turns; turn++ {
+	al := make([][][]torus.Location, tmax-tmin+1)
+	for turn := 0; turn <= tmax-tmin; turn++ {
 		al[turn] = make([][]torus.Location, r.Players)
 		for np := 0; np < r.Players; np++ {
 			if nants[np][turn] > 0 {
@@ -87,21 +90,25 @@ func (r *Replay) AntLocations(m *maps.Map, turns int) [][][]torus.Location {
 	}
 	// Populate the array
 	for _, a := range r.Ants {
-		turn := a.Start
-		loc := m.ToLocation(torus.Point{a.Row, a.Col})
-		for _, move := range a.Moves {
-			al[turn][a.Player] = append(al[turn][a.Player], loc)
-			turn++
-			d := maps.ByteToDirection[move]
-			switch d {
-			case maps.NoMovement:
-			case maps.InvalidMove:
-			default:
-				loc = m.LocStep[loc][d]
+		if a.Start <= tmax && a.End >= tmin {
+			turn := a.Start
+			loc := m.ToLocation(torus.Point{a.Row, a.Col})
+			for _, move := range a.Moves {
+				if turn+1 > tmax {
+					break
+				} else if turn >= tmin {
+					al[turn-tmin][a.Player] = append(al[turn-tmin][a.Player], loc)
+				}
+				turn++
+				d := maps.ByteToDirection[move]
+				if d != maps.InvalidMove {
+					loc = m.LocStep[loc][d]
+				}
 			}
+			al[turn-tmin][a.Player] = append(al[turn-tmin][a.Player], loc)
 		}
-		al[turn][a.Player] = append(al[turn][a.Player], loc)
 	}
+
 	return al
 }
 
