@@ -5,9 +5,9 @@ GOFILES=\
 	metrics.go\
 	montecarlo.go\
 	movement.go\
+	process.go\
 	query.go\
 	state.go\
-	turn.go\
 	targets.go\
 
 include $(GOROOT)/src/Make.pkg
