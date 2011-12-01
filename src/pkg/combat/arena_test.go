@@ -4,6 +4,7 @@ import (
 	"testing"
 	"log"
 	"bugnuts/maps"
+	"bugnuts/torus"
 	"bugnuts/replay"
 )
 
@@ -18,8 +19,7 @@ func init() {
 	}
 	M = match.Replay.GetMap()
 
-	A = NewArena(M, maps.Location(9*96+11))
-	log.Printf("Arena:\n%v", A)
+	A = NewArena(M, torus.Location(9*96+11))
 }
 
 func TestArena(t *testing.T) {
@@ -34,10 +34,14 @@ func TestArena(t *testing.T) {
 		}
 		m := match.Replay.GetMap()
 
-		a := NewArena(m, maps.Location(9*96+11))
-		log.Printf("Arena:\n%v", a)
+		a := NewArena(m, torus.Location(9*96+11))
+		if false {
+			log.Printf("Arena:\n%v", a)
+		}
 	}
 }
+
+const NMonte int = 10000
 
 func BenchmarkMonte(b *testing.B) {
 	start := ALoc(40)
@@ -45,7 +49,7 @@ func BenchmarkMonte(b *testing.B) {
 	n := 0
 	tn := 0
 	s := 0
-	for i := 0; i < b.N*10000; i++ {
+	for i := 0; i < b.N*NMonte; i++ {
 		var d maps.Direction
 		for _, d = range maps.Permute5() {
 			s++
@@ -66,13 +70,13 @@ func BenchmarkMonte(b *testing.B) {
 	log.Printf("mean steps to exit %.2f exited %d Steps %d %d", float64(tn)/float64(n), n, tn, b.N)
 }
 
-func BenchmarkMontef(b *testing.B) {
-	start := maps.Location(136)
+func BenchmarkMonteFull(b *testing.B) {
+	start := torus.Location(136)
 	l := start
 	n := 0
 	tn := 0
 	s := 0
-	for i := 0; i < b.N*10000; i++ {
+	for i := 0; i < b.N*NMonte; i++ {
 		s++
 		var d maps.Direction
 		for _, d = range maps.Permute5() {

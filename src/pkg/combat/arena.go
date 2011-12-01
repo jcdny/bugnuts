@@ -2,16 +2,20 @@ package combat
 
 import (
 	. "bugnuts/maps"
+	. "bugnuts/torus"
 )
 
 type ALoc uint8
-
+// An Arena in a 16x16 submap for (ostensibly) faster montecarlo
+// simulation.  It turns out however that it really does not matter
+// much and montecarlo on the full map is just about as fast.  This
+// can stay as a monument to premature optimization.
 type Arena struct {
 	Grid    [256]Item
 	LocStep [256][256]ALoc
 }
 
-// Extract an arena map from a full map.
+// NewArena extracts an arena map from a full map.
 func NewArena(m *Map, loc Location) *Arena {
 	a := &Arena{}
 
