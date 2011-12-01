@@ -309,14 +309,15 @@ func (f *Fill) MapFillSeedNN(m *Map, origin map[Location]int, pri uint16) (*Fill
 		Seed := f.Seed[loc]
 		newDepth = Depth + 1
 
-		// TODO: block is local.  Ugly but making it traversible in some # of turns might help
 		for i := 0; i < 4; i++ {
 			floc := m.LocStep[loc][i]
-			if f.Depth[floc] > 0 && f.Seed[loc] != f.Seed[floc] &&
+			// Order of tests here matters for performance.
+			if f.Depth[floc] > 0 &&
+				f.Seed[loc] != f.Seed[floc] &&
 				(f.Depth[floc] == newDepth || f.Depth[floc] == Depth) {
+				// We are at a point where we are half way between two Seeds.
+				// Check if this is a new minima and if so update the NN map.
 				var Seed1, Seed2, L1, L2 Location
-				// Here we are at a point where we are half way between two Seeds.
-				// check if this is a new minima.
 				Seed1 = f.Seed[floc]
 				if Seed1 < Seed {
 					Seed2 = Seed
@@ -339,8 +340,8 @@ func (f *Fill) MapFillSeedNN(m *Map, origin map[Location]int, pri uint16) (*Fill
 					// TODO I should check if it's even possible to have a shorter distance...
 					nn.Add(Seed1, Seed2, L1, L2, nSteps)
 				}
-			} else if m.Grid[floc] != WATER && m.Grid[floc] != BLOCK &&
-				(f.Depth[floc] == 0 || f.Depth[floc] > newDepth) {
+			} else if (f.Depth[floc] == 0 || f.Depth[floc] > newDepth) &&
+				m.Grid[floc] != WATER && m.Grid[floc] != BLOCK {
 				q = append(q, floc)
 				f.Depth[floc] = newDepth
 				f.Seed[floc] = Seed

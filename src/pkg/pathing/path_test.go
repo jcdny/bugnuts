@@ -7,6 +7,7 @@ import (
 	"time"
 	"fmt"
 	"strconv"
+	"reflect"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 )
@@ -36,8 +37,28 @@ func TestMapFill(t *testing.T) {
 
 }
 
+type resultNN struct {
+	s1, s2 Location
+	steps  int
+	L      [4]Location
+}
+
 func TestMapFillSeedNN(t *testing.T) {
-	file := "../maps/testdata/maps/cell_maze_p06_01.map" // "testdata/fill2.map" // fill.2 Point{r:4, c:5}
+	// file := "../maps/testdata/maps/cell_maze_p06_01.map" 
+	// file := "testdata/fill2.map" // fill.2 Point{r:4, c:5}
+	file := "testdata/fillNN.map" // fill.2 Point{r:4, c:5}
+
+	expect := []resultNN{
+		{52, 136, 6, [4]Location{52, 100, 88, 136}},
+		{37, 52, 5, [4]Location{37, 62, 62, 52}},
+		{37, 136, 12, [4]Location{37, 142, 143, 136}},
+		{28, 52, 1, [4]Location{28, 40, 40, 52}},
+		{28, 136, 2, [4]Location{28, 4, 16, 136}},
+		{28, 29, 0, [4]Location{28, 29, 28, 29}},
+		{29, 52, 2, [4]Location{29, 40, 41, 52}},
+		{29, 136, 3, [4]Location{29, 5, 5, 136}},
+		{29, 37, 8, [4]Location{29, 34, 33, 37}},
+	}
 	m, err := MapLoadFile(file)
 
 	if m == nil || err != nil {
@@ -50,10 +71,23 @@ func TestMapFillSeedNN(t *testing.T) {
 	}
 	f := NewFill(m)
 	sfs, nn := f.MapFillSeedNN(m, l, 1)
-	log.Printf("MapFillSeedNN:\n%v\nNN:\n", sfs)
+	if false {
+		log.Printf("MapFillSeedNN:\n%v\nNN:\n", sfs)
+	}
+
+	i := 0
 	for s1, m1 := range nn {
 		for s2, N := range m1 {
-			log.Printf("%v %v (%d): %v", m.ToPoint(s1), m.ToPoint(s2), N.Steps, m.ToPoints(N.L[:]))
+			if len(expect) < i ||
+				expect[i].s1 != s1 ||
+				expect[i].s2 != s2 ||
+				expect[i].steps != N.Steps ||
+				!reflect.DeepEqual(N.L, expect[i].L) {
+				//log.Printf("%v %v (%d): %v", m.ToPoint(s1), m.ToPoint(s2), N.Steps, m.ToPoints(N.L[:]))
+				//log.Printf("%d,%v,%v,%d,%#v", i, s1, s2, N.Steps, N.L[:], expect[i])
+				t.Errorf("Mismatch\ngot:%v,%v,%d,%#v, expected %#v", s1, s2, N.Steps, N.L[:], expect[i])
+			}
+			i++
 		}
 	}
 }
@@ -61,20 +95,39 @@ func TestMapFillSeedNN(t *testing.T) {
 // Benchmark the version which does not maintain a seed array
 // but allocates per fill
 //var benchFile string = "../maps/testdata/maps/mmaze_05p_01.map"
-var benchFile string = "../maps/testdata/maps/cell_maze_p06_01.map"
 
-func BenchmarkMapFillAlloc(b *testing.B) {
+func getBenchMap() (*Map, map[Location]int) {
+	return getBenchReplay()
+}
+func getBenchReplay() (*Map, map[Location]int) {
+	benchReplay := "testdata/replay.big.json"
+	match, err := Load(file)
+	if err != nil {
+		t.Errorf("Load of %s failed: %v", file, err)
+	}
+	m := match.GetMap()
+	al := match.AntLocations(m, match.GameLength)
+	for _, hill := range m.Hills(-1) {
+		l[hill] = 1
+	}
+	return m, l
+}
+func getBenchFile() (*Map, map[Location]int) {
+	benchFile := "../maps/testdata/maps/cell_maze_p06_01.map"
 	m, err := MapLoadFile(benchFile)
 	if m == nil || err != nil {
 		log.Panicf("Error reading %s: err %v map: %v", benchFile, err, m)
 	}
-
 	l := make(map[Location]int, 40)
 
 	for _, hill := range m.Hills(-1) {
 		l[hill] = 1
 	}
+	return m, l
+}
 
+func BenchmarkMapFillAlloc(b *testing.B) {
+	m, l := getBenchMap()
 	for i := 0; i < b.N; i++ {
 		MapFill(m, l, 1)
 	}
@@ -82,16 +135,8 @@ func BenchmarkMapFillAlloc(b *testing.B) {
 
 // Benchmark not reusing the fill struct.
 func BenchmarkMapFill(b *testing.B) {
-	m, err := MapLoadFile(benchFile)
-	if m == nil || err != nil {
-		log.Panicf("Error reading %s: err %v map: %v", benchFile, err, m)
-	}
+	m, l := getBenchMap()
 
-	l := make(map[Location]int, 40)
-
-	for _, hill := range m.Hills(-1) {
-		l[hill] = 1
-	}
 	f := NewFill(m)
 	for i := 0; i < b.N; i++ {
 		f.Reset()
@@ -101,16 +146,7 @@ func BenchmarkMapFill(b *testing.B) {
 
 // Benchmark not reusing the fill struct.
 func BenchmarkMapFillSeedNN(b *testing.B) {
-	m, err := MapLoadFile(benchFile)
-	if m == nil || err != nil {
-		log.Panicf("Error reading %s: err %v map: %v", benchFile, err, m)
-	}
-
-	l := make(map[Location]int, 40)
-
-	for _, hill := range m.Hills(-1) {
-		l[hill] = 1
-	}
+	m, l := getBenchMap()
 
 	for i := 0; i < b.N; i++ {
 		f := NewFill(m)
@@ -120,16 +156,8 @@ func BenchmarkMapFillSeedNN(b *testing.B) {
 
 // Benchmark allocating fill + computing seed.
 func BenchmarkMapFillSeed(b *testing.B) {
-	m, err := MapLoadFile(benchFile)
-	if m == nil || err != nil {
-		log.Panicf("Error reading %s: err %v map: %v", benchFile, err, m)
-	}
+	m, l := getBenchMap()
 
-	l := make(map[Location]int, 40)
-
-	for _, hill := range m.Hills(-1) {
-		l[hill] = 1
-	}
 	for i := 0; i < b.N; i++ {
 		MapFillSeed(m, l, 1)
 	}
