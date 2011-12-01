@@ -5,6 +5,7 @@ import (
 	"rand"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
+	. "bugnuts/game"
 )
 
 const (
@@ -51,7 +52,7 @@ type State struct {
 	Testing bool
 }
 
-func (g *GameInfo) NewState() *State {
+func NewState(g *GameInfo) *State {
 	// Initialize Maps and cache some precalculated results
 	m := NewMap(g.Rows, g.Cols, -1)
 	s := &State{

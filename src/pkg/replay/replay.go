@@ -3,7 +3,7 @@ package replay
 import (
 	"json"
 	"os"
-	"bugnuts/state"
+	"bugnuts/game"
 )
 
 // [57, 61, 246, 250, 2, "esss"]
@@ -40,7 +40,7 @@ type FoodHistory struct {
 }
 
 type Replay struct {
-	state.GameInfo
+	game.GameInfo
 	Ants        []*AntHistory
 	Bonus       []int
 	Cutoff      string

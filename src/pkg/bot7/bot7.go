@@ -97,9 +97,6 @@ func (bot *BotV7) GenerateTargets(s *State) *TargetSet {
 	return tset
 }
 
-func XX7(s *State) {
-	log.Printf("TURN %d 88/37: \"%s\"", s.Turn, s.Map.Grid[s.ToLocation(Point{88, 37})])
-}
 func (bot *BotV7) DoTurn(s *State) os.Error {
 
 	bot.Explore.UpdateSeen(s, 1)

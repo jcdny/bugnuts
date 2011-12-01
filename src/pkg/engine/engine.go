@@ -45,7 +45,6 @@ func NewGame(gi *state.GameInfo, m *maps.Map) *Game {
 func GenerateTurn(g *Game, r *replay.Replay) []*state.Turn {
 	al := r.GetAnts(g.Turn)
 	// per player update seen and visible masks
-	3for i, p := range g.Players {
-
+	for i, p := range g.Players {
 	}
 }

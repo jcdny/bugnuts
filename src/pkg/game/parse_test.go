@@ -1,4 +1,4 @@
-package state
+package game
 
 import (
 	"log"
@@ -7,6 +7,7 @@ import (
 	"bufio"
 	"io/ioutil"
 	"bytes"
+	. "bugnuts/maps"
 )
 
 func TestParse(t *testing.T) {
@@ -23,13 +24,13 @@ func TestParse(t *testing.T) {
 		t.Errorf("Reading %s error %v", fnm, err)
 	}
 
-	s := g.NewState()
+	m := NewMap(g.Rows, g.Cols, 0)
 
-	turns := make([]*Turn, 1, s.Turns)
+	turns := make([]*Turn, 1, g.Turns)
 
 	for {
 		var turn *Turn
-		turn, err = s.TurnScan(in, turn)
+		turn, err = TurnScan(m, in, turn)
 		if turn.End {
 			log.Printf("End received at turn %d", len(turns))
 			break
@@ -52,11 +53,11 @@ func BenchmarkParse(b *testing.B) {
 		if err != nil {
 			log.Panicf("Reading %s error %v", fnm, err)
 		}
-		s := g.NewState()
-		turns := make([]*Turn, 1, s.Turns)
+		m := NewMap(g.Rows, g.Cols, 0)
+		turns := make([]*Turn, 1, g.Turns)
 		for {
 			var turn *Turn
-			turn, err = s.TurnScan(in, turn)
+			turn, err = TurnScan(m, in, turn)
 			if turn.End {
 				break
 			}

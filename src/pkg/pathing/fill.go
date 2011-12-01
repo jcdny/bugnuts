@@ -268,7 +268,7 @@ type Neighbors map[Location]map[Location]Neighbor
 func NewNeighbors(origin []Location) Neighbors {
 	nn := make(Neighbors, len(origin))
 	for _, loc := range origin {
-		nn[loc] = make(map[Location]Neighbor, 8)
+		nn[loc] = make(map[Location]Neighbor, 0)
 	}
 	return nn
 }

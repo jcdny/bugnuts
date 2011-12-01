@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"bugnuts/maps"
 	"bugnuts/torus"
-	"bugnuts/state"
+	"bugnuts/game"
 	. "bugnuts/util"
 )
 
@@ -53,7 +53,7 @@ func (r *Replay) GetMap() *maps.Map {
 	return m
 }
 
-func (r *Replay) GetGameInfo() *state.GameInfo {
+func (r *Replay) GetGameInfo() *game.GameInfo {
 	return &r.GameInfo
 }
 

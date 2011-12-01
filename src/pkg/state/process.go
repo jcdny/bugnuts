@@ -6,6 +6,7 @@ import (
 	. "bugnuts/torus"
 	. "bugnuts/util"
 	. "bugnuts/pathing"
+	. "bugnuts/game"
 )
 
 const (

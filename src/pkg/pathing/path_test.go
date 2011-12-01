@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"reflect"
+	"bugnuts/replay"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 )
@@ -100,23 +101,26 @@ func getBenchMap() (*Map, map[Location]int) {
 	return getBenchReplay()
 }
 func getBenchReplay() (*Map, map[Location]int) {
-	benchReplay := "testdata/replay.big.json"
-	match, err := Load(file)
+	file := "testdata/replay.big.json.gz"
+	match, err := replay.Load(file)
 	if err != nil {
-		t.Errorf("Load of %s failed: %v", file, err)
+		log.Panicf("Load of %s failed: %v", file, err)
 	}
 	m := match.GetMap()
-	al := match.AntLocations(m, match.GameLength)
-	for _, hill := range m.Hills(-1) {
-		l[hill] = 1
+	al := match.AntLocations(m, 300, 300)
+	l := make(map[Location]int, len(al[0][0])*len(al[0]))
+	for p := range al[0] {
+		for _, loc := range al[0][p] {
+			l[loc] = 1
+		}
 	}
 	return m, l
 }
 func getBenchFile() (*Map, map[Location]int) {
-	benchFile := "../maps/testdata/maps/cell_maze_p06_01.map"
-	m, err := MapLoadFile(benchFile)
+	file := "../maps/testdata/maps/cell_maze_p06_01.map"
+	m, err := MapLoadFile(file)
 	if m == nil || err != nil {
-		log.Panicf("Error reading %s: err %v map: %v", benchFile, err, m)
+		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
 	}
 	l := make(map[Location]int, 40)
 

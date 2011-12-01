@@ -18,6 +18,7 @@ DIRS=\
 	bot6\
 	bot7\
 	debug\
+	game\
 	maps\
 	parameters\
 	pathing\
