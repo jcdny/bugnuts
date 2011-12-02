@@ -123,6 +123,7 @@ func (r *Match) ExtractMetadata() (g *GameResult, p []*PlayerResult) {
 		PostId:     r.PostId,
 		WorkerId:   r.WorkerId,
 		Location:   r.Location,
+		MapId:      r.GetMap().MapId(),
 	}
 
 	var uidp, subidp *int

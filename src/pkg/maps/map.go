@@ -7,6 +7,8 @@ import (
 	"bufio"
 	"strings"
 	"fmt"
+	"crypto/md5"
+	"io"
 	. "bugnuts/util"
 	. "bugnuts/torus"
 )
@@ -46,6 +48,16 @@ func NewMap(rows, cols, players int) *Map {
 	m.SymData = m.NewSymData(4)
 
 	return m
+}
+
+// MapId computes an md5 hash of the string representation of the map data
+func (m *Map) MapId() string {
+	c := md5.New()
+	s := m.String()
+	io.WriteString(c, s)
+	out := fmt.Sprintf("%x", c.Sum())
+
+	return out
 }
 
 func (m *Map) String() string {

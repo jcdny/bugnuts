@@ -33,9 +33,7 @@ func main() {
 
 	results := Process(args)
 	log.Printf("got %d results", len(results))
-	/* 
-		 for _, r := range results {
-			log.Print(r)
-		}
-	*/
+	for _, r := range results {
+		fmt.Fprint(os.Stdout, r)
+	}
 }

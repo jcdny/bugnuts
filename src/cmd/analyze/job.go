@@ -56,6 +56,7 @@ func Load(job *Job) (*JobData, os.Error) {
 
 func stager(in chan *Job, out chan<- *Job, ring chan chan *Job, done chan<- int) {
 	var err os.Error
+
 	for job := range in {
 		// Populate the job data
 		job.Data, err = Load(job)
@@ -98,11 +99,46 @@ func (r *Result) String() string {
 	buf := make([]byte, 0, 100*len(r.Games))
 	b := bytes.NewBuffer(buf)
 	for _, g := range r.Games {
-		fmt.Fprintf(b, "\"game\",%d,%s,%d,\"%s\",%s,%s,%s,%s,%s\n",
-			g.GameId, g.Date, g.GameLength, g.Challenge, g.MatchupId, g.PostId, g.WorkerId, g.Location, g.MapId)
+		fmt.Fprintf(b, "\"game\",%d,%s,%d,\"%s\",%s,\"%s\",\"%s\"",
+			g.GameId, g.Date, g.GameLength, g.Challenge,
+			g.WorkerId, g.Location, g.MapId)
+		if g.MatchupId == nil {
+			b.WriteString(",\\N")
+		} else {
+			fmt.Fprintf(b, ",%d", *g.MatchupId)
+		}
+		if g.PostId == nil {
+			b.WriteString(",\\N")
+		} else {
+			fmt.Fprintf(b, ",%d", *g.PostId)
+		}
+		b.WriteString("\n")
 	}
 	for _, p := range r.Players {
-		fmt.Fprintf(b, "\"player\",\"%s\",%d\n", p.PlayerName, p.GameId)
+		fmt.Fprintf(b, "\"player\",\"%s\",%d,%d,%d,%d,%d,\"%s\"",
+			p.PlayerName, p.GameId, p.PlayerTurns, p.Score, p.Rank, p.Bonus, p.Status)
+		// TODO reflect this
+		if p.UserId == nil {
+			b.WriteString(",\\N")
+		} else {
+			fmt.Fprintf(b, ",%d", *p.UserId)
+		}
+		if p.SubmissionId == nil {
+			b.WriteString(",\\N")
+		} else {
+			fmt.Fprintf(b, ",%d", *p.SubmissionId)
+		}
+		if p.ChallengeRank == nil {
+			b.WriteString(",\\N")
+		} else {
+			fmt.Fprintf(b, ",%d", *p.ChallengeRank)
+		}
+		if p.ChallengeSkill == nil {
+			b.WriteString(",\\N")
+		} else {
+			fmt.Fprintf(b, ",%.2f", *p.ChallengeSkill)
+		}
+		b.WriteString("\n")
 	}
 
 	return string(b.Bytes())
