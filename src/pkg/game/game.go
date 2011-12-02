@@ -37,7 +37,6 @@ func gameDefaults() *GameInfo {
 func (g *GameInfo) String() string {
 	str := ""
 
-	str += "turn 0\n"
 	str += "loadtime " + strconv.Itoa(g.LoadTime) + "\n"
 	str += "turntime " + strconv.Itoa(g.TurnTime) + "\n"
 	str += "rows " + strconv.Itoa(g.Rows) + "\n"
@@ -46,7 +45,7 @@ func (g *GameInfo) String() string {
 	str += "viewradius2 " + strconv.Itoa(g.ViewRadius2) + "\n"
 	str += "attackradius2 " + strconv.Itoa(g.AttackRadius2) + "\n"
 	str += "spawnradius2 " + strconv.Itoa(g.SpawnRadius2) + "\n"
-	str += "player_seed " + strconv.Itoa64(g.PlayerSeed) + "\n"
+	str += "player_seed " + strconv.Itoa64(g.PlayerSeed)
 
 	return str
 }

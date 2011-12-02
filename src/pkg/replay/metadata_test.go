@@ -10,17 +10,49 @@ import (
 	"bugnuts/torus"
 )
 
+func replayGet(file string) (*Match, *maps.Map) {
+	match, err := Load(file)
+	if err != nil {
+		log.Panicf("Load of %s failed: %v", file, err)
+	}
+	m := match.GetMap()
+
+	return match, m
+}
+
+func TestFoodLocations(t *testing.T) {
+	files := []string{
+		"testdata/replay.0.json",
+	}
+
+	for _, file := range files {
+		match, m := replayGet(file)
+
+		f := match.FoodLocations(m, 5, 10)
+		log.Print("food:", f)
+	}
+}
+
+func TestHillLocations(t *testing.T) {
+	files := []string{
+		"testdata/replay.0.json",
+	}
+
+	for _, file := range files {
+		match, m := replayGet(file)
+
+		f := match.HillLocations(m, 5, 10)
+		log.Print("hills:", f)
+	}
+}
+
 func TestAntLocations(t *testing.T) {
 	files := []string{
 		"testdata/replay.0.json",
 	}
 
 	for _, file := range files {
-		match, err := Load(file)
-		if err != nil {
-			t.Errorf("Load of %s failed: %v", file, err)
-		}
-		m := match.GetMap()
+		match, m := replayGet(file)
 
 		ac9 := match.AntCount(9, 9)
 		ac910 := match.AntCount(9, 10)

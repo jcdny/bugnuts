@@ -8,20 +8,19 @@ import (
 
 func TestEngine(t *testing.T) {
 
-	match, err := replay.Load("testdata/replay.0.json")
-	if err != nil {
+	match, err := replay.Load("testdata/replay.1.json")
+
+	if err != nil || match == nil {
 		log.Panicf("Error loading replay: %v", err)
 	}
-
 	m := match.GetMap()
 
 	g := NewGame(&match.GameInfo, m)
 
-	log.Printf("turn 0\n%vready\n", g.GameInfo)
+	tout := g.Replay(match.Replay, 0, match.GameLength)
 
-	for i := 0; i < match.GameLength; i++ {
-		//turns := GenerateTurn(match.Replay)
-		//log.Printf("%v", ts[i][0])
-		log.Printf("%d", i)
+	log.Printf("turn 0\n%v\nready\n", g.GameInfo)
+	for i := range tout {
+		log.Print("\nturn ", i+1, "\n", tout[i][0], "\n")
 	}
 }

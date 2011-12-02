@@ -173,7 +173,7 @@ func (f *Fill) slowReset() {
 	}
 }
 
-var _zero [65536]uint16
+var _zero [MAXMAPSIZE]uint16
 
 func (f *Fill) Reset() {
 	copy(f.Depth, _zero[:len(f.Depth)])

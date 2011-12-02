@@ -46,6 +46,11 @@ func Load(file string) (*Match, os.Error) {
 	}
 
 	err = json.Unmarshal(buf, &m)
+	// TODO hackery - rows and cols belong in the map not the gameinfo
+	m.Rows = m.Map.Rows
+	m.Cols = m.Map.Cols
+	m.Replay.GameInfo.PlayerSeed = m.Replay.PlayerSeed
+
 	if err != nil {
 		return nil, err
 	}

@@ -44,6 +44,7 @@ type Replay struct {
 	Ants        []*AntHistory
 	Bonus       []int
 	Cutoff      string
+	EngineSeed  int64 `json:"engine_seed"`
 	Food        []FoodHistory
 	FoodRate    int `json:"food_rate"`
 	FoodStart   int `json:"food_start"`
@@ -55,7 +56,8 @@ type Replay struct {
 	RankingTurn int `json:"ranking_turn"`
 	Revision    int
 	Scores      [][]int
-	WinningTurn int `json:"winning_turn"`
+	WinningTurn int   `json:"winning_turn"`
+	PlayerSeed  int64 `json:"player_seed"` // this should be in replay but for some reason it's not
 }
 
 type Match struct {

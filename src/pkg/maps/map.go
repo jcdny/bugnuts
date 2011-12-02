@@ -27,6 +27,8 @@ type Map struct {
 	LocStep    [][5]Location // adjecent tile pointer
 }
 
+const MAXMAPSIZE = 65536 // this dictated by using uint16 etc for depth
+
 func NewMap(rows, cols, players int) *Map {
 	if rows < 1 || cols < 1 {
 		log.Panicf("Invalid map size %d %d", rows, cols)

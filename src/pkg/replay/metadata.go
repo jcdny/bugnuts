@@ -2,6 +2,7 @@ package replay
 
 import (
 	"strconv"
+	"sort"
 	"bugnuts/maps"
 	"bugnuts/torus"
 	"bugnuts/game"
@@ -35,7 +36,7 @@ type PlayerResult struct {
 }
 
 func (r *Replay) GetMap() *maps.Map {
-	m := maps.NewMap(r.Map.Rows, r.Map.Cols, r.Players)
+	m := maps.NewMap(r.Rows, r.Cols, r.Players)
 	for r, rdat := range r.Map.Data {
 		for c, item := range rdat {
 			if maps.ToItem(byte(item)) == maps.WATER {
@@ -110,6 +111,59 @@ func (r *Replay) AntLocations(m *maps.Map, tmin, tmax int) [][][]torus.Location 
 	}
 
 	return al
+}
+
+type foodSlice []FoodHistory
+
+func (p foodSlice) Len() int           { return len(p) }
+func (p foodSlice) Less(i, j int) bool { return p[i].Row*256+p[i].Col < p[j].Row*256+p[j].Col }
+func (p foodSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+// Return food locations per turn
+func (r *Replay) FoodLocations(m *maps.Map, tmin, tmax int) [][]torus.Location {
+	food := make([][]torus.Location, tmax-tmin+1)
+	sort.Sort(foodSlice(r.Food))
+
+	for _, f := range r.Food {
+		gather := f.Gather
+		if gather == 0 {
+			gather = tmax
+		}
+		if f.Spawn <= tmax && gather >= tmin {
+			loc := m.ToLocation(torus.Point{f.Row, f.Col})
+			for i := MaxV(f.Spawn-tmin, 0); i <= MinV(tmax, gather)-tmin; i++ {
+				food[i] = append(food[i], loc)
+			}
+		}
+	}
+	return food
+}
+
+type hillSlice []HillData
+
+func (p hillSlice) Len() int           { return len(p) }
+func (p hillSlice) Less(i, j int) bool { return p[i].Row*256+p[i].Col < p[j].Row*256+p[j].Col }
+func (p hillSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
+// Return hill locations for the given turns.
+// [turn][hill]
+func (r *Replay) HillLocations(m *maps.Map, tmin, tmax int) [][]game.PlayerLoc {
+	hills := make([][]game.PlayerLoc, tmax-tmin+1)
+	// sort here so we get them in location order so we match replay output.
+	sort.Sort(hillSlice(r.Hills))
+	for _, h := range r.Hills {
+		loc := m.ToLocation(torus.Point{h.Row, h.Col})
+		razed := h.Razed
+		if razed < 1 {
+			razed = tmax
+		}
+		if razed >= tmin {
+			for i := 0; i < MinV(razed, tmax)-tmin+1; i++ {
+				hills[i] = append(hills[i], game.PlayerLoc{Loc: loc, Player: h.Player})
+			}
+		}
+	}
+	return hills
 }
 
 func (r *Match) ExtractMetadata() (g *GameResult, p []*PlayerResult) {
