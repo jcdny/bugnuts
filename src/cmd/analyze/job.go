@@ -48,6 +48,11 @@ func Load(job *Job) (*JobData, os.Error) {
 		buf = bout.Bytes()
 	}
 
+	// md5 of the replay data
+	/* h := md5.New()
+	io.WriteString(h, string(buf))
+	replayid := h.Sum() */
+
 	err = json.Unmarshal(buf, &m)
 	if err != nil {
 		return nil, err
@@ -116,8 +121,8 @@ func (r *Result) String() string {
 		b.WriteString("\n")
 	}
 	for _, p := range r.Players {
-		fmt.Fprintf(b, "\"player\",\"%s\",%d,%d,%d,%d,%d,\"%s\"",
-			p.PlayerName, p.GameId, p.PlayerTurns, p.Score, p.Rank, p.Bonus, p.Status)
+		fmt.Fprintf(b, "\"player\",\"%s\",\"%s\",%d,%d,%d,%d,%d,\"%s\"",
+			p.PlayerName, p.Game.Location, p.Game.GameId, p.PlayerTurns, p.Score, p.Rank, p.Bonus, p.Status)
 		// TODO reflect this
 		if p.UserId == nil {
 			b.WriteString(",\\N")
@@ -137,7 +142,7 @@ func (r *Result) String() string {
 		if p.ChallengeSkill == nil {
 			b.WriteString(",\\N")
 		} else {
-			fmt.Fprintf(b, ",%.2f", *p.ChallengeSkill)
+			fmt.Fprintf(b, ",%f", *p.ChallengeSkill)
 		}
 		b.WriteString("\n")
 	}

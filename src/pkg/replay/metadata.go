@@ -21,7 +21,7 @@ type GameResult struct {
 }
 
 type PlayerResult struct {
-	GameId         int
+	Game           *GameResult
 	PlayerName     string
 	PlayerTurns    int
 	UserId         *int
@@ -153,7 +153,7 @@ func (r *Match) ExtractMetadata() (g *GameResult, p []*PlayerResult) {
 		}
 
 		p[i] = &PlayerResult{
-			GameId:       r.GameId,
+			Game:         g,
 			PlayerName:   r.PlayerNames[i],
 			PlayerTurns:  r.PlayerTurns[i],
 			UserId:       uidp,

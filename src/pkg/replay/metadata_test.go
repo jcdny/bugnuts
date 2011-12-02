@@ -60,7 +60,7 @@ func TestAntLocations(t *testing.T) {
 
 type testData struct {
 	file string
-	g    GameResult
+	g    *GameResult
 	p    []PlayerResult
 }
 
@@ -69,20 +69,20 @@ func TestExtractMetadata(t *testing.T) {
 	tests := []testData{
 		{
 			file: "testdata/replay.0.json",
-			g:    GameResult{GameId: 0, Date: "", GameLength: 288, Challenge: "ants", WorkerId: "", Location: "localhost", MapId: ""},
+			g:    &GameResult{GameId: 0, Date: "", GameLength: 288, Challenge: "ants", WorkerId: "", Location: "localhost", MapId: "c24acaf851f914c95f5686ae3a117691"},
 			p: []PlayerResult{
-				{GameId: 0, PlayerName: "bot.sh", PlayerTurns: 288, Score: 34, Rank: 0, Bonus: 0, Status: "survived"},
-				{GameId: 0, PlayerName: "bugnutsv3", PlayerTurns: 203, Score: 4, Rank: 1, Bonus: 0, Status: "eliminated"},
-				{GameId: 0, PlayerName: "HunterBot.py", PlayerTurns: 288, Score: 2, Rank: 3, Bonus: 0, Status: "survived"},
-				{GameId: 0, PlayerName: "GreedyBot.py", PlayerTurns: 143, Score: 4, Rank: 1, Bonus: 0, Status: "eliminated"},
+				{PlayerName: "bot.sh", PlayerTurns: 288, Score: 34, Rank: 0, Bonus: 0, Status: "survived"},
+				{PlayerName: "bugnutsv3", PlayerTurns: 203, Score: 4, Rank: 1, Bonus: 0, Status: "eliminated"},
+				{PlayerName: "HunterBot.py", PlayerTurns: 288, Score: 2, Rank: 3, Bonus: 0, Status: "survived"},
+				{PlayerName: "GreedyBot.py", PlayerTurns: 143, Score: 4, Rank: 1, Bonus: 0, Status: "eliminated"},
 			},
 		},
 		{
 			file: "testdata/replay.1.json",
-			g:    GameResult{GameId: 95405, Date: "2011-11-15T07:03:21+00:00", GameLength: 70, Challenge: "ants", MatchupId: new(int), PostId: new(int), WorkerId: "69", Location: "aichallenge.org", MapId: ""},
+			g:    &GameResult{GameId: 95405, Date: "2011-11-15T07:03:21+00:00", GameLength: 70, Challenge: "ants", MatchupId: new(int), PostId: new(int), WorkerId: "69", Location: "aichallenge.org", MapId: "e55cc99bdaf9a567b01c70bf21410e4d"},
 			p: []PlayerResult{
-				{GameId: 95405, PlayerName: "hohohoman", PlayerTurns: 70, UserId: new(int), SubmissionId: new(int), Score: 1, Rank: 0, Bonus: 0, Status: "eliminated", ChallengeRank: new(int), ChallengeSkill: new(float64)},
-				{GameId: 95405, PlayerName: "amoore", PlayerTurns: 70, UserId: new(int), SubmissionId: new(int), Score: 1, Rank: 0, Bonus: 0, Status: "eliminated", ChallengeRank: new(int), ChallengeSkill: new(float64)},
+				{PlayerName: "hohohoman", PlayerTurns: 70, UserId: new(int), SubmissionId: new(int), Score: 1, Rank: 0, Bonus: 0, Status: "eliminated", ChallengeRank: new(int), ChallengeSkill: new(float64)},
+				{PlayerName: "amoore", PlayerTurns: 70, UserId: new(int), SubmissionId: new(int), Score: 1, Rank: 0, Bonus: 0, Status: "eliminated", ChallengeRank: new(int), ChallengeSkill: new(float64)},
 			},
 		},
 	}
@@ -112,13 +112,14 @@ func TestExtractMetadata(t *testing.T) {
 				fmt.Fprintf(os.Stdout, "%#v\n", p[i])
 			}
 		} else {
-			if !reflect.DeepEqual(g, &test.g) {
+			if !reflect.DeepEqual(g, test.g) {
 				t.Errorf("Game result mismatch %s:\nexpected: %#v\ngot: %#v", test.file, test.g, g)
 			}
 			if len(p) != len(test.p) {
 				t.Errorf("Player len mismatch %s %d != %d ", test.file, len(test.p), len(p))
 			} else {
 				for i := range p {
+					test.p[i].Game = g
 					if !reflect.DeepEqual(p[i], &test.p[i]) {
 						t.Errorf("Game result mismatch %s:\nexpected: %#v\ngot: %#v", test.file, test.p[i], p[i])
 					}
