@@ -46,10 +46,12 @@ CREATE TABLE maps (
        mid BIGINT DEFAULT nextval('maps_mid_seq')
          PRIMARY KEY
        , mapid text NOT NULL
-       , players integer
+       , mapname text
        , nrows integer
        , ncols integer
-       , mapdata text 
+       , players integer
+       , hills integer
+       , mapdata text
 );
 
 CREATE SEQUENCE games_gid_seq;

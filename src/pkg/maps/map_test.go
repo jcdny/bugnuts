@@ -2,6 +2,9 @@ package maps
 
 import (
 	"testing"
+	"log"
+	"fmt"
+	"os"
 )
 
 func TestMapNew(t *testing.T) {
@@ -39,4 +42,23 @@ func TestMapLoad(t *testing.T) {
 	}
 
 	//m.WriteDebugImage("_maptest", 0, func(c, r int) image.NRGBAColor { return m.At(r, c) })
+}
+
+func TestMapId(t *testing.T) {
+	out, err := os.Create("testdata/maps.csv.tmp")
+	if err != nil {
+		log.Panic("Open of testdata/maps.csv.tmp failed ", err)
+	}
+	defer out.Close()
+
+	for _, name := range AllMaps {
+		file := "testdata/maps/" + name + ".map"
+		m, err := MapLoadFile(file)
+		if m == nil || err != nil {
+			log.Panicf("Error reading %s: err %v map: %v", file, err, m)
+		}
+		mapid := m.MapId()
+		fmt.Fprintf(out, "\"%s\",\"%s\",%d,%d,%d,%d,\"%v\"\n", mapid, name, m.Rows, m.Cols, m.Players, len(m.Hills(-1)), m)
+		log.Printf("\"%s\",\"%s\",%d,%d,%d,%d\n", mapid, name, m.Rows, m.Cols, m.Players, len(m.Hills(-1)))
+	}
 }
