@@ -7,3 +7,6 @@ GOFILES=\
 	main.go
 
 include $(GOROOT)/src/Make.cmd
+
+test: $(TARG)
+	./mapper testdata

@@ -37,12 +37,13 @@ func Load(job *Job) (*JobData, os.Error) {
 		// decode gzip file
 		unzip, err := gzip.NewReader(bytes.NewBuffer(buf[:]))
 		if err != nil {
-			log.Panic("Unzip: %v", err)
+			log.Print("Unzip ", job.File, " ", err)
 		}
 		bout := bytes.NewBuffer(make([]byte, 0, 8*len(buf)))
 		_, err = io.Copy(bout, unzip)
 		if err != nil {
-			log.Panic("Unzip: %v", err)
+			log.Print("Unzip ", job.File, " ", err)
+			return nil, err
 		}
 		buf = bout.Bytes()
 	}
@@ -60,14 +61,14 @@ func stager(in chan *Job, out chan<- *Job, ring chan chan *Job, done chan<- int)
 	for job := range in {
 		// Populate the job data
 		job.Data, err = Load(job)
-		job.Key = fmt.Sprintf("%d", job.Data.Match.GameId%10)
 
 		// Pass job off to next step
-		if err == nil {
+		if err == nil && job.Data != nil {
+			job.Key = fmt.Sprintf("%d", job.Data.Match.GameId%10)
 			out <- job
 		} else {
 			// TODO feed job to a failed channel to record somewhere.
-			log.Printf("Fail: %s %v", job.File, err)
+			log.Print("Failed loading ", job.File, " ", err)
 		}
 
 		// Release this proc back into the ring buffer
