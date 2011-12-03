@@ -2,7 +2,6 @@ package replay
 
 import (
 	"strconv"
-	"sort"
 	"bugnuts/maps"
 	"bugnuts/torus"
 	"bugnuts/game"
@@ -76,11 +75,13 @@ func (r *Replay) AntCount(tmin, tmax int) [][]int {
 }
 
 // Return ant locations in array [(turn-tmin)][player][ant] for turns tmin..tmax inclusive
-func (r *Replay) AntLocations(m *maps.Map, tmin, tmax int) [][][]torus.Location {
+// Return the spawns [turn][]PlayerLoc
+func (r *Replay) AntLocations(m *maps.Map, tmin, tmax int) ([][][]torus.Location, [][]game.PlayerLoc) {
 	nants := r.AntCount(tmin, tmax)
 
 	// Allocate the slices
 	al := make([][][]torus.Location, tmax-tmin+1)
+	spawn := make([][]game.PlayerLoc, tmax-tmin+1)
 	for turn := 0; turn <= tmax-tmin; turn++ {
 		al[turn] = make([][]torus.Location, r.Players)
 		for np := 0; np < r.Players; np++ {
@@ -94,11 +95,16 @@ func (r *Replay) AntLocations(m *maps.Map, tmin, tmax int) [][][]torus.Location 
 		if a.Start <= tmax && a.End >= tmin {
 			turn := a.Start
 			loc := m.ToLocation(torus.Point{a.Row, a.Col})
+			if turn >= tmin && turn <= tmax {
+				spawn[turn-tmin] = append(spawn[turn-tmin], game.PlayerLoc{Loc: loc, Player: a.Player})
+			}
 			for _, move := range a.Moves {
 				if turn+1 > tmax {
 					break
 				} else if turn >= tmin {
-					al[turn-tmin][a.Player] = append(al[turn-tmin][a.Player], loc)
+					if turn != a.Start {
+						al[turn-tmin][a.Player] = append(al[turn-tmin][a.Player], loc)
+					}
 				}
 				turn++
 				d := maps.ByteToDirection[move]
@@ -106,23 +112,18 @@ func (r *Replay) AntLocations(m *maps.Map, tmin, tmax int) [][][]torus.Location 
 					loc = m.LocStep[loc][d]
 				}
 			}
-			al[turn-tmin][a.Player] = append(al[turn-tmin][a.Player], loc)
+			if turn != a.Start {
+				al[turn-tmin][a.Player] = append(al[turn-tmin][a.Player], loc)
+			}
 		}
 	}
 
-	return al
+	return al, spawn
 }
-
-type foodSlice []FoodHistory
-
-func (p foodSlice) Len() int           { return len(p) }
-func (p foodSlice) Less(i, j int) bool { return p[i].Row*256+p[i].Col < p[j].Row*256+p[j].Col }
-func (p foodSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 // Return food locations per turn
 func (r *Replay) FoodLocations(m *maps.Map, tmin, tmax int) [][]torus.Location {
 	food := make([][]torus.Location, tmax-tmin+1)
-	sort.Sort(foodSlice(r.Food))
 
 	for _, f := range r.Food {
 		gather := f.Gather - 1
@@ -136,21 +137,13 @@ func (r *Replay) FoodLocations(m *maps.Map, tmin, tmax int) [][]torus.Location {
 	return food
 }
 
-type hillSlice []HillData
-
-func (p hillSlice) Len() int           { return len(p) }
-func (p hillSlice) Less(i, j int) bool { return p[i].Row*256+p[i].Col < p[j].Row*256+p[j].Col }
-func (p hillSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
-
 // Return hill locations for the given turns.
 // [turn][hill]
 func (r *Replay) HillLocations(m *maps.Map, tmin, tmax int) [][]game.PlayerLoc {
 	hills := make([][]game.PlayerLoc, tmax-tmin+1)
-	// sort here so we get them in location order so we match replay output.
-	sort.Sort(hillSlice(r.Hills))
 	for _, h := range r.Hills {
 		loc := m.ToLocation(torus.Point{h.Row, h.Col})
-		razed := h.Razed
+		razed := h.Razed - 1
 		if razed < 1 {
 			razed = tmax
 		}

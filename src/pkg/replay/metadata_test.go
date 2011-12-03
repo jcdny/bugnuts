@@ -57,9 +57,9 @@ func TestAntLocations(t *testing.T) {
 		ac9 := match.AntCount(9, 9)
 		ac910 := match.AntCount(9, 10)
 		ac := match.AntCount(0, match.GameLength)
-		al := match.AntLocations(m, 0, match.GameLength)
-		al9 := match.AntLocations(m, 9, 9)
-		al910 := match.AntLocations(m, 9, 10)
+		al, spawn := match.AntLocations(m, 0, match.GameLength)
+		al9, spawn9 := match.AntLocations(m, 9, 9)
+		al910, spawn910 := match.AntLocations(m, 9, 10)
 	OUT:
 		for p := range ac {
 			if ac[p][9] != ac9[p][0] ||
@@ -71,12 +71,28 @@ func TestAntLocations(t *testing.T) {
 			if !reflect.DeepEqual(al[9][p], al9[0][p]) ||
 				!reflect.DeepEqual(al[9][p], al910[0][p]) ||
 				!reflect.DeepEqual(al[10][p], al910[1][p]) {
+				log.Print(al[9][p])
+				log.Print(al9[0][p])
+				log.Print(spawn[9])
+				log.Print(spawn9[0])
 				t.Errorf("Ant location mismatch at turn 9")
 			}
 
+			if !reflect.DeepEqual(spawn[9], spawn9[0]) ||
+				!reflect.DeepEqual(spawn[9], spawn910[0]) ||
+				!reflect.DeepEqual(spawn[10], spawn910[1]) {
+				t.Errorf("Ant spawn mismatch at turn 9")
+			}
+
 			for turn := range ac[p] {
-				if ac[p][turn] != len(al[turn][p]) {
-					t.Errorf("Ant count, ant location mismatch player %d turn %d: count(%d) != locs(%d)", p, turn, ac[p][turn], len(al[turn][p]))
+				ns := 0
+				for _, s := range spawn[turn] {
+					if s.Player == p {
+						ns++
+					}
+				}
+				if ac[p][turn] != len(al[turn][p])+ns {
+					t.Errorf("Ant count, ant location mismatch player %d turn %d: count(%d) != locs(%d) + spawn(%d)", p, turn, ac[p][turn], len(al[turn][p]), ns)
 					break OUT
 				}
 			}
