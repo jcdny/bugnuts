@@ -96,9 +96,6 @@ func (p *Player) UpdateVisibility(g *Game, ants []torus.Location) []torus.Locati
 		}
 	}
 
-	if CanonicalOrder {
-		sort.Sort(torus.LocationSlice(seen))
-	}
 	return seen
 }
 
@@ -118,6 +115,9 @@ func (g *Game) GenerateTurn(ants [][]torus.Location, hills []game.PlayerLoc, foo
 	for i, p := range g.Players {
 		t := &game.Turn{Map: g.Map}
 		seen := p.UpdateVisibility(g, ants[i])
+		if CanonicalOrder {
+			sort.Sort(torus.LocationSlice(seen))
+		}
 		for _, loc := range seen {
 			if g.Map.Grid[loc] == maps.WATER {
 				t.W = append(t.W, loc)
