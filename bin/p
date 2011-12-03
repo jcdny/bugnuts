@@ -1,10 +1,9 @@
 #!/usr/bin/env sh
-ROOT=~/src/ai
-BOT7=$ROOT/bot/bin/bot7
-BOT6=$ROOT/bot/bin/bot6
+BOT7=~/bot/bin/bot7
+BOT6=~/bot/bin/bot6
 EXE=$BOT7
-TOOLS=$ROOT/tools
-MAPS=$ROOT/bot/pkg/maps/testdata/maps
+TOOLS=~/src/ai/tools
+MAPS=~/bot/src/pkg/maps/testdata/maps
 ARCH="`uname -s`"
 
 export MAP1="random_walk_04p_02.map" # translation  symmetry
@@ -31,7 +30,7 @@ $TOOLS/playgame.py \
     --engine_seed 41 \
     --end_wait=2.0 \
     --verbose \
-    --log_dir $ROOT/bot/log \
+    --log_dir ~/bot/log \
     --turns 1000 \
     --map_file $MAP \
     --food_rate 5 11 \
@@ -43,7 +42,8 @@ $TOOLS/playgame.py \
     "$@" \
     "$EXE" \
     "$BOT6" \
-    "python $TOOLS/sample_bots/python/GreedyBot.py" "python $TOOLS/sample_bots/python/HunterBot.py" \
+    "python $TOOLS/sample_bots/python/GreedyBot.py" \
+    "python $TOOLS/sample_bots/python/HunterBot.py" \
 
 
 
