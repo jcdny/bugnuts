@@ -145,14 +145,14 @@ func (f *Fill) Sample(n, low, high int) ([]Location, []int) {
 	var count []int
 	if over > 0 {
 		count = make([]int, len(pool))
-		for i, _ := range count {
+		for i := range count {
 			count[i] = over
 		}
 	} else {
 		count = make([]int, len(perm))
 	}
 
-	for i, _ := range perm {
+	for i := range perm {
 		count[i]++
 	}
 
@@ -195,7 +195,7 @@ func (f *Fill) ClosestStep(seg []Segment) bool {
 	}
 
 	any := false
-	for i, _ := range seg {
+	for i := range seg {
 		seg[i].End = f.Seed[seg[i].Src]
 		seg[i].Steps += Abs(int(f.Depth[seg[i].Src]) - int(f.Depth[seg[i].End]))
 		if seg[i].End != 0 || f.Depth[seg[i].End] != 0 {

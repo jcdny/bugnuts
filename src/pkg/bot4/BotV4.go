@@ -50,7 +50,7 @@ func (bot *BotV4) DoTurn(s *State) os.Error {
 	// Build list of locations sorted by depth and attempt to go downhill
 	ll := make(map[int][]Location)
 	var dl []int
-	for loc, _ := range s.Ants[0] {
+	for loc := range s.Ants[0] {
 		depth := int(f.Depth[loc])
 		if _, ok := ll[depth]; !ok {
 			ll[depth] = make([]Location, 0)

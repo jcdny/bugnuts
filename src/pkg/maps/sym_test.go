@@ -60,7 +60,7 @@ func TestTile(t *testing.T) {
 	if !test {
 		// Generate the expected data
 		log.Printf("%#v", sym)
-		for i, _ := range smap {
+		for i := range smap {
 			str += fmt.Sprintf("%#v,\n", smap[i])
 		}
 		log.Print("\n" + str)
@@ -68,7 +68,7 @@ func TestTile(t *testing.T) {
 	if test {
 		mismatch := false
 		str = ""
-		for loc, _ := range sym {
+		for loc := range sym {
 			if loc%m.Cols == 0 {
 				str += fmt.Sprintf("\n%2d :", loc/m.Cols)
 			}
@@ -91,7 +91,7 @@ func TestTile(t *testing.T) {
 			for loc, v := range smap {
 				ve := expectmap[loc]
 				//log.Printf("%d:%#v", k, *v)
-				for i, _ := range v {
+				for i := range v {
 					if v[i] != ve[i] {
 						t.Errorf("Value mismatch loc %d, %v vs %v", loc, *v, ve)
 					}
@@ -213,7 +213,7 @@ func (sym *SymData) symdump(tile SymHash, m *Map) {
 		if true {
 			str += "    "
 			// Symmetry matrix
-			for _, _ = range llist {
+			for _ = range llist {
 				for i1 := uint8(0); i1 < 8; i1++ {
 					str += fmt.Sprintf("%d", i1)
 				}

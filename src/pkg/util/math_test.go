@@ -32,7 +32,7 @@ func TestMinMax(t *testing.T) {
 func BenchmarkMinV(b *testing.B) {
 	L := make([]int, 49)
 
-	for i, _ := range L {
+	for i := range L {
 		L[i] = rand.Intn(20)
 	}
 
@@ -44,7 +44,7 @@ func BenchmarkMinV(b *testing.B) {
 func BenchmarkMin(b *testing.B) {
 	L := make([]int, 50)
 
-	for i, _ := range L {
+	for i := range L {
 		L[i] = rand.Intn(20)
 	}
 

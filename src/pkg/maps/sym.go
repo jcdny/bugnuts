@@ -133,7 +133,7 @@ func (m *Map) NewSymData(minBits uint8) *SymData {
 func (m *Map) Tile(minBits uint8) *SymData {
 	s := m.NewSymData(minBits)
 
-	for loc, _ := range m.Grid {
+	for loc := range m.Grid {
 		s.Update(Location(loc))
 	}
 
@@ -164,7 +164,7 @@ func (s *SymData) UpdateSymmetryData() {
 
 	TMark("hashed")
 
-	for minhash, _ := range check {
+	for minhash := range check {
 		tile := s.Tiles[minhash]
 		symset, origin, offset, equiv := s.SymAnalyze(minhash)
 		tile.Symmetry = symset
@@ -378,7 +378,7 @@ func (s *SymData) TransMapValidate(p Point) ([][]Location, bool) {
 	marr := make([]Location, 0, size)
 
 	n := 0
-	for i, _ := range smap {
+	for i := range smap {
 		if smap[i] == nil {
 			marr = s.Translations(Location(i), p, marr, SYMMAXCELLS)
 			if len(marr) == 0 || len(marr) > size {

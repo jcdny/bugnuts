@@ -27,10 +27,10 @@ var WS *Watches
 
 // DebugLevels are cumulative, but a 0 resets all to false and a -Level unsets.
 var debugLevels = [][]int{
-	0: []int{0},
-	1: []int{DBG_TurnTime},
-	2: []int{DBG_Iterations, DBG_Symmetry},
-	3: []int{DBG_Targets},
+	0: {0},
+	1: {DBG_TurnTime},
+	2: {DBG_Iterations, DBG_Symmetry},
+	3: {DBG_Targets},
 }
 
 func SetDebugLevel(dlev int) {
@@ -40,7 +40,7 @@ func SetDebugLevel(dlev int) {
 	for d := 0; d <= dlev; d++ {
 		for _, dbg := range debugLevels[d] {
 			if dbg == 0 {
-				for i, _ := range Debug {
+				for i := range Debug {
 					Debug[i] = false
 				}
 			} else if dbg > 0 {

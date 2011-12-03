@@ -27,7 +27,7 @@ func (bot *BotV3) Priority(i Item) int {
 }
 
 func (bot *BotV3) DoTurn(s *State) os.Error {
-	for loc, _ := range s.Ants[0] {
+	for loc := range s.Ants[0] {
 		p := s.Map.ToPoint(loc)
 		best := math.MinInt32
 		var score [4]int

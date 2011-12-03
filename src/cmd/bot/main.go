@@ -31,7 +31,7 @@ func init() {
 
 	vizList := ""
 	vizHelp := "Visualize: all,none,useful"
-	for flag, _ := range Viz {
+	for flag := range Viz {
 		vizHelp += "," + flag
 	}
 	flag.StringVar(&vizList, "V", "", vizHelp)

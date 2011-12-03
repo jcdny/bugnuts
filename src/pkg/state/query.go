@@ -9,7 +9,7 @@ import (
 )
 
 func (s *State) FoodLocations() (l []Location) {
-	for loc, _ := range s.Food {
+	for loc := range s.Food {
 		l = append(l, Location(loc))
 	}
 

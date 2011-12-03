@@ -94,7 +94,7 @@ func (s *State) ProcessTurn(t *Turn) {
 		}
 	}
 
-	for loc, _ := range s.Ants[0] {
+	for loc := range s.Ants[0] {
 		// Update the one step land count and unseen count for my ants
 		s.Met.SumVisCount(loc, s.ViewMask)
 		for _, nloc := range s.Map.LocStep[loc] {
@@ -227,7 +227,7 @@ func (s *State) ProcessHills(hl []PlayerLoc, player int, turn int) {
 	}
 
 	// Update hill data in map.
-	for i, _ := range s.NHills {
+	for i := range s.NHills {
 		s.NHills[i] = s.InitialHills
 	}
 

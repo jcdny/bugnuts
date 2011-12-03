@@ -196,7 +196,7 @@ func (t *Torus) TransMap(p Point, maxcells int) [][]Location {
 	marr := make([]Location, 0, size)
 
 	n := 0
-	for i, _ := range smap {
+	for i := range smap {
 		if smap[i] == nil {
 			marr = t.Translations(Location(i), p, marr, maxcells)
 			if len(marr) == 0 || len(marr) > size {

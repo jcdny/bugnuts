@@ -150,7 +150,7 @@ func (s *State) AddBorderTargets(N int, tset *TargetSet, explore *TargetSet, pri
 	fexp, _, _ := MapFill(s.Map, s.Ants[0], 1)
 	loc, n := fexp.Sample(N, 14, 20)
 	added := 0
-	for i, _ := range loc {
+	for i := range loc {
 		if s.Met.Seen[loc[i]] < s.Turn-1 {
 			if Debug[DBG_BorderTargets] {
 				log.Printf("Adding %d", i)
@@ -220,7 +220,7 @@ func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist 
 	f, _, _ := MapFill(s.Map, hills, 0)
 
 	for i := 1; i < len(s.Ants); i++ {
-		for loc, _ := range s.Ants[i] {
+		for loc := range s.Ants[i] {
 			// TODO: use seed rather than PathIn
 			steps := int(f.Depth[Location(loc)] - 1)
 			if steps < DefendDist {
@@ -254,7 +254,7 @@ func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist 
 }
 
 func (tset *TargetSet) UpdateSeen(s *State, count int) {
-	for loc, _ := range *tset {
+	for loc := range *tset {
 		if s.Met.Seen[loc] == s.Turn {
 			(*tset).Remove(loc)
 		} else {

@@ -53,7 +53,7 @@ func NewMetrics(m *Map) *Metrics {
 		met.Threat = append(met.Threat, make([]int8, size))
 		met.PThreat = append(met.PThreat, make([]uint16, size))
 	}
-	for i, _ := range met.Unknown {
+	for i := range met.Unknown {
 		met.Unknown[i] = 999
 	}
 
@@ -214,7 +214,7 @@ func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8,
 	var mythreat []int8
 	if player >= 0 && turn > 0 && s.Testing {
 		mythreat = make([]int8, s.Map.Size())
-		for loc, _ := range s.Ants[player] {
+		for loc := range s.Ants[player] {
 			p := s.ToPoint(loc)
 			m = mask[s.FreedomKey(loc)]
 			for _, op := range m.Point {
@@ -224,9 +224,9 @@ func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8,
 	}
 
 	//llist := make([]Location, len(mask[0].Point))
-	for i, _ := range s.Ants {
+	for i := range s.Ants {
 		if i != player {
-			for loc, _ := range s.Ants[i] {
+			for loc := range s.Ants[i] {
 				p := s.Map.ToPoint(loc)
 				if turn > 0 {
 					if false { // crazy or willing to sacrifice or other rules

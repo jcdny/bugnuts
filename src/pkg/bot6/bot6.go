@@ -143,7 +143,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 		}
 
 		segs = segs[0:0]
-		for loc, _ := range ants {
+		for loc := range ants {
 			segs = append(segs, Segment{Src: loc, Steps: ants[loc].Steptot})
 		}
 
@@ -272,7 +272,7 @@ func (bot *BotV6) DoTurn(s *State) os.Error {
 	if Debug[DBG_Iterations] {
 		log.Printf("TURN %d ITER %d ANTS %d END %d", s.Turn, iter, len(ants), len(endants))
 		if iter == maxiter {
-			for loc, _ := range tset.Active() {
+			for loc := range tset.Active() {
 				log.Printf("Active: %v %v", s.ToPoint(loc), (*tset)[loc])
 			}
 		}

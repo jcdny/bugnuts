@@ -120,7 +120,7 @@ func Mapper(in <-chan *Job, out chan<- []*Result) {
 	// their result data then return it via the out channel which was
 	// passed in.
 	results := make([]*Result, 0, len(reducers))
-	for _, _ = range reducers {
+	for _ = range reducers {
 		results = append(results, <-rout)
 	}
 

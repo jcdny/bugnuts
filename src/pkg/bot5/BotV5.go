@@ -46,7 +46,7 @@ func NewBotV5(s *State) Bot {
 
 func (bot *BotV5) ExploreUpdate(s *State) {
 	// Any explore point which is visible should be nuked
-	for loc, _ := range *bot.Explore {
+	for loc := range *bot.Explore {
 		if s.Map.Seen[loc] == s.Turn {
 			bot.Explore.Remove(loc)
 		} else {
@@ -111,7 +111,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 
 		// Build list of locations sorted by depth
 		ccl := make([]Location, len(ants))
-		for loc, _ := range ants {
+		for loc := range ants {
 			ccl = append(ccl, loc)
 		}
 		for _, loc := range f.Closest(ccl) {
@@ -194,7 +194,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 
 			fexp, _, _ := MapFill(s.Map, s.Ants[0], 1)
 			loc, N := fexp.Sample(len(ants), 14, 14)
-			for i, _ := range loc {
+			for i := range loc {
 				bot.Explore.Add(EXPLORE, loc[i], N[i], bot.Priority(EXPLORE))
 				tset.Add(EXPLORE, loc[i], N[i], bot.Priority(EXPLORE))
 			}

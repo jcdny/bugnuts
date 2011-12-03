@@ -23,7 +23,7 @@ func (s *State) MonteCarloDensity() {
 		f, _, _ := MapFillSeed(s.Map, tgt, 0)
 
 		for player := 1; player < len(s.Ants); player++ {
-			for loc, _ := range s.Ants[player] {
+			for loc := range s.Ants[player] {
 				endloc := f.Seed[loc]
 				steps := f.Depth[loc] - f.Depth[f.Seed[loc]]
 				hill, ok := s.Hills[endloc]

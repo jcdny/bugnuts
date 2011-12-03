@@ -54,7 +54,7 @@ func (s *State) MoveAnt(from, to Location) bool {
 func (s *State) GenerateAnts(tset *TargetSet, riskOff bool) (ants map[Location]*AntStep) {
 	ants = make(map[Location]*AntStep, len(s.Ants[0]))
 
-	for loc, _ := range s.Ants[0] {
+	for loc := range s.Ants[0] {
 		ants[loc] = s.AntStep(loc, riskOff)
 
 		fixed := false
@@ -118,7 +118,7 @@ func (s *State) AntStep(loc Location, riskOff bool) *AntStep {
 		Perm:    rand.Int(),
 	}
 	nh := new([5]Neighborhood)
-	for i, _ := range as.N {
+	for i := range as.N {
 		as.N[i] = &nh[i]
 	}
 

@@ -28,11 +28,11 @@ func SetViz(vizList string, Viz map[string]bool) {
 		for _, word := range strings.Split(strings.ToLower(vizList), ",") {
 			switch word {
 			case "all":
-				for flag, _ := range Viz {
+				for flag := range Viz {
 					Viz[flag] = true
 				}
 			case "none":
-				for flag, _ := range Viz {
+				for flag := range Viz {
 					Viz[flag] = false
 				}
 			case "useful":
@@ -182,7 +182,7 @@ func VizMCHillIn(s *State) {
 		f, _, _ := MapFillSeed(s.Map, hills, 0)
 
 		for i := 1; i < len(s.Ants); i++ {
-			for loc, _ := range s.Ants[i] {
+			for loc := range s.Ants[i] {
 				steps := f.Depth[loc] - f.Depth[f.Seed[loc]]
 				if steps < 64 {
 					ants = append(ants, Location(loc))

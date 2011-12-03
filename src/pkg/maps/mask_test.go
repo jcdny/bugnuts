@@ -60,7 +60,7 @@ func TestMaskChange(t *testing.T) {
 			break
 		}
 
-		for i, _ := range add {
+		for i := range add {
 			if len(add[i]) != len(remove[i]) {
 				t.Errorf("maskChange sizes are wrong add: %v remove: %v", add, remove)
 				break
