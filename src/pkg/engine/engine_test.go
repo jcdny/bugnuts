@@ -4,11 +4,13 @@ import (
 	"log"
 	"testing"
 	"bugnuts/replay"
+	"fmt"
+	"os"
 )
 
 func TestEngine(t *testing.T) {
 
-	match, err := replay.Load("testdata/replay.1.json")
+	match, err := replay.Load("testdata/0.replay")
 
 	if err != nil || match == nil {
 		log.Panicf("Error loading replay: %v", err)
@@ -19,8 +21,14 @@ func TestEngine(t *testing.T) {
 
 	tout := g.Replay(match.Replay, 0, match.GameLength)
 
-	log.Printf("turn 0\n%v\nready\n", g.GameInfo)
+	out, err := os.Create("testdata/0.input.tmp")
+	if err != nil {
+		log.Panic("open failed for testdata/0.input.tmp:", err)
+	}
+	defer out.Close()
+
+	fmt.Fprintf(out, "turn 0\n%v\nready\n", g.GameInfo)
 	for i := range tout {
-		log.Print("\nturn ", i+1, "\n", tout[i][0], "\n")
+		fmt.Fprint(out, "turn ", i+1, "\n", tout[i][0], "\ngo\n")
 	}
 }

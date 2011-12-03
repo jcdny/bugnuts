@@ -15,6 +15,24 @@ type PlayerLoc struct {
 	Loc    Location
 }
 
+// PlayerLoc Sorting by Loc then Player
+type PlayerLocSlice []PlayerLoc
+
+func (p PlayerLocSlice) Len() int { return len(p) }
+func (p PlayerLocSlice) Less(i, j int) bool {
+	return p[i].Loc < p[j].Loc || (p[i].Loc == p[j].Loc && p[i].Player < p[j].Player)
+}
+func (p PlayerLocSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+
+// PlayerLoc Sorting by player then loc
+type LocPlayerSlice []PlayerLoc
+
+func (p LocPlayerSlice) Len() int { return len(p) }
+func (p LocPlayerSlice) Less(i, j int) bool {
+	return p[i].Player < p[j].Player || (p[i].Player == p[j].Player && p[i].Loc < p[j].Loc)
+}
+func (p LocPlayerSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
+
 func stringPlayerLoc(t *Turn, pl *PlayerLoc) string {
 	str := ""
 	p := t.ToPoint(pl.Loc)
@@ -39,15 +57,15 @@ func (t *Turn) String() string {
 		p := t.ToPoint(t.W[i])
 		str += "\nw " + strconv.Itoa(p.R) + " " + strconv.Itoa(p.C)
 	}
-	for i := range t.F {
-		p := t.ToPoint(t.F[i])
-		str += "\nf " + strconv.Itoa(p.R) + " " + strconv.Itoa(p.C)
-	}
 	for _, pl := range t.H {
 		str += "\nh " + stringPlayerLoc(t, &pl)
 	}
 	for _, pl := range t.A {
 		str += "\na " + stringPlayerLoc(t, &pl)
+	}
+	for i := range t.F {
+		p := t.ToPoint(t.F[i])
+		str += "\nf " + strconv.Itoa(p.R) + " " + strconv.Itoa(p.C)
 	}
 	for _, pl := range t.D {
 		str += "\nd " + stringPlayerLoc(t, &pl)

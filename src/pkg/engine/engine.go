@@ -2,6 +2,7 @@ package engine
 
 import (
 	"log"
+	"sort"
 	"bugnuts/torus"
 	"bugnuts/maps"
 	"bugnuts/game"
@@ -24,6 +25,8 @@ type Game struct {
 	Turn       int
 	Players    []*Player
 }
+
+const CanonicalOrder bool = true
 
 func NewGame(gi *game.GameInfo, m *maps.Map) *Game {
 	g := &Game{
@@ -93,6 +96,9 @@ func (p *Player) UpdateVisibility(g *Game, ants []torus.Location) []torus.Locati
 		}
 	}
 
+	if CanonicalOrder {
+		sort.Sort(torus.LocationSlice(seen))
+	}
 	return seen
 }
 
@@ -127,12 +133,19 @@ func (g *Game) GenerateTurn(ants [][]torus.Location, hills []game.PlayerLoc, foo
 				}
 			}
 		}
+
+		if CanonicalOrder {
+			sort.Sort(game.PlayerLocSlice(t.A))
+			sort.Sort(game.PlayerLocSlice(hills))
+
+		}
+
 		for _, h := range hills {
 			if p.Visible[h.Loc] {
 				if p.IdMap[h.Player] < 0 {
 					p.IdMap[h.Player] = util.Max(p.IdMap) + 1
 				}
-				t.H = append(t.H, h)
+				t.H = append(t.H, game.PlayerLoc{Loc: h.Loc, Player: p.IdMap[h.Player]})
 			}
 		}
 		for _, loc := range food {

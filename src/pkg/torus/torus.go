@@ -17,6 +17,12 @@ type Torus struct {
 // A Location is a linear index to the torus position.
 type Location int
 
+type LocationSlice []Location
+
+func (p LocationSlice) Len() int           { return len(p) }
+func (p LocationSlice) Less(i, j int) bool { return p[i] < p[j] }
+func (p LocationSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
+
 // Size returns the number of cells in a given Torus.
 func (t *Torus) Size() int {
 	return t.Rows * t.Cols

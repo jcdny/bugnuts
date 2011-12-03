@@ -1,0 +1,720 @@
+v6:timing.go:40: 1.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 1.29 UpdateSymmetryData
+v6:state.go:87: TURN 1 Seed 6374750 (Player Seed 41 and hillHash)
+v6:main.go:125: TURN 1 43.40ms 0.87ms GC
+turn    1 bot 1 ignored actions:
+o 25 71 s # move blocked
+v6:timing.go:40: 0.47 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.92 UpdateSymmetryData
+v6:main.go:125: TURN 2 43.12ms 0.00ms GC
+v6:timing.go:40: 1.21 UpdateSymmetryData: hashed
+v6:timing.go:27: 1.74 UpdateSymmetryData
+v6:main.go:125: TURN 3 22.82ms 1.34ms GC
+v6:timing.go:40: 0.41 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.54 UpdateSymmetryData
+v6:main.go:125: TURN 4 16.31ms 0.00ms GC
+v6:timing.go:40: 0.44 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.58 UpdateSymmetryData
+v6:main.go:125: TURN 5 20.14ms 0.00ms GC
+v6:timing.go:40: 0.45 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.59 UpdateSymmetryData
+v6:main.go:125: TURN 6 22.16ms 1.36ms GC
+v6:timing.go:40: 0.37 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.47 UpdateSymmetryData
+v6:main.go:125: TURN 7 29.81ms 0.00ms GC
+v6:timing.go:40: 0.37 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.47 UpdateSymmetryData
+v6:main.go:125: TURN 8 21.32ms 0.00ms GC
+v6:timing.go:40: 0.45 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.63 UpdateSymmetryData
+v6:main.go:125: TURN 9 22.36ms 0.00ms GC
+v6:timing.go:40: 0.34 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.55 UpdateSymmetryData
+v6:main.go:125: TURN 10 22.27ms 1.65ms GC
+v6:timing.go:40: 0.58 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.74 UpdateSymmetryData
+v6:main.go:125: TURN 11 19.11ms 0.00ms GC
+v6:timing.go:40: 0.49 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.62 UpdateSymmetryData
+v6:main.go:125: TURN 12 22.42ms 0.00ms GC
+v6:timing.go:40: 0.36 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.51 UpdateSymmetryData
+v6:main.go:125: TURN 13 22.57ms 1.71ms GC
+v6:timing.go:40: 0.34 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.49 UpdateSymmetryData
+v6:main.go:125: TURN 14 17.38ms 0.00ms GC
+v6:timing.go:40: 0.48 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.67 UpdateSymmetryData
+v6:main.go:125: TURN 15 19.92ms 0.00ms GC
+v6:timing.go:40: 0.37 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.50 UpdateSymmetryData
+v6:main.go:125: TURN 16 21.14ms 1.63ms GC
+v6:timing.go:40: 0.53 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.74 UpdateSymmetryData
+v6:main.go:125: TURN 17 20.77ms 0.00ms GC
+v6:timing.go:40: 0.44 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.58 UpdateSymmetryData
+v6:main.go:125: TURN 18 19.48ms 1.64ms GC
+v6:timing.go:40: 0.30 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.39 UpdateSymmetryData
+v6:main.go:125: TURN 19 18.83ms 0.00ms GC
+v6:timing.go:40: 0.34 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.47 UpdateSymmetryData
+v6:main.go:125: TURN 20 20.57ms 0.00ms GC
+v6:timing.go:40: 0.40 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.58 UpdateSymmetryData
+v6:main.go:125: TURN 21 43.99ms 1.71ms GC
+v6:timing.go:40: 0.34 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.46 UpdateSymmetryData
+v6:main.go:125: TURN 22 18.61ms 0.00ms GC
+v6:timing.go:40: 0.39 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.61 UpdateSymmetryData
+v6:main.go:125: TURN 23 19.94ms 0.00ms GC
+v6:timing.go:40: 0.31 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.45 UpdateSymmetryData
+v6:main.go:125: TURN 24 21.84ms 1.68ms GC
+v6:timing.go:40: 0.52 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.81 UpdateSymmetryData
+v6:main.go:125: TURN 25 19.75ms 0.00ms GC
+v6:timing.go:40: 0.30 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.54 UpdateSymmetryData
+v6:main.go:125: TURN 26 20.91ms 1.81ms GC
+v6:timing.go:40: 0.30 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.56 UpdateSymmetryData
+v6:main.go:125: TURN 27 20.25ms 0.00ms GC
+v6:timing.go:40: 0.30 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.57 UpdateSymmetryData
+v6:main.go:125: TURN 28 20.32ms 0.00ms GC
+v6:timing.go:40: 0.35 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.67 UpdateSymmetryData
+v6:main.go:125: TURN 29 20.98ms 0.00ms GC
+v6:timing.go:40: 0.32 UpdateSymmetryData: hashed
+v6:timing.go:27: 2.80 UpdateSymmetryData
+v6:main.go:125: TURN 30 34.64ms 2.18ms GC
+v6:timing.go:40: 0.27 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.58 UpdateSymmetryData
+v6:main.go:125: TURN 31 19.66ms 0.00ms GC
+v6:timing.go:40: 0.22 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.43 UpdateSymmetryData
+v6:main.go:125: TURN 32 20.44ms 0.00ms GC
+v6:timing.go:40: 0.22 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.41 UpdateSymmetryData
+v6:main.go:125: TURN 33 23.17ms 2.29ms GC
+v6:timing.go:40: 0.36 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.72 UpdateSymmetryData
+v6:main.go:125: TURN 34 18.98ms 0.00ms GC
+v6:timing.go:40: 0.26 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.50 UpdateSymmetryData
+v6:main.go:125: TURN 35 23.13ms 2.00ms GC
+v6:timing.go:40: 0.21 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.34 UpdateSymmetryData
+v6:main.go:125: TURN 36 29.15ms 0.00ms GC
+v6:timing.go:40: 0.26 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.46 UpdateSymmetryData
+v6:main.go:125: TURN 37 20.86ms 0.00ms GC
+v6:timing.go:40: 0.19 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.33 UpdateSymmetryData
+v6:main.go:125: TURN 38 23.53ms 2.44ms GC
+v6:timing.go:40: 0.15 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.25 UpdateSymmetryData
+v6:main.go:125: TURN 39 18.51ms 0.00ms GC
+v6:timing.go:40: 0.24 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.35 UpdateSymmetryData
+v6:main.go:125: TURN 40 21.51ms 0.00ms GC
+v6:timing.go:40: 0.16 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.24 UpdateSymmetryData
+v6:main.go:125: TURN 41 21.22ms 0.00ms GC
+v6:timing.go:40: 0.14 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.23 UpdateSymmetryData
+v6:main.go:125: TURN 42 21.99ms 1.94ms GC
+v6:timing.go:40: 0.17 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.26 UpdateSymmetryData
+v6:main.go:125: TURN 43 20.76ms 0.00ms GC
+v6:timing.go:40: 0.17 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.28 UpdateSymmetryData
+v6:main.go:125: TURN 44 20.50ms 0.00ms GC
+v6:timing.go:40: 0.21 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.32 UpdateSymmetryData
+v6:main.go:125: TURN 45 25.41ms 1.95ms GC
+v6:timing.go:40: 0.24 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.38 UpdateSymmetryData
+v6:main.go:125: TURN 46 29.14ms 0.00ms GC
+v6:timing.go:40: 0.31 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.47 UpdateSymmetryData
+v6:main.go:125: TURN 47 22.31ms 0.00ms GC
+v6:timing.go:40: 0.20 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.30 UpdateSymmetryData
+v6:main.go:125: TURN 48 22.95ms 2.05ms GC
+v6:timing.go:40: 0.21 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.32 UpdateSymmetryData
+v6:main.go:125: TURN 49 31.59ms 0.00ms GC
+v6:timing.go:40: 0.23 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.38 UpdateSymmetryData
+v6:main.go:125: TURN 50 33.08ms 0.00ms GC
+v6:timing.go:40: 0.18 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.28 UpdateSymmetryData
+v6:main.go:125: TURN 51 31.25ms 0.00ms GC
+v6:timing.go:40: 0.27 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.49 UpdateSymmetryData
+v6:main.go:125: TURN 52 35.50ms 2.27ms GC
+v6:timing.go:40: 0.19 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.34 UpdateSymmetryData
+v6:main.go:125: TURN 53 18.83ms 0.00ms GC
+v6:timing.go:40: 0.22 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.38 UpdateSymmetryData
+v6:main.go:125: TURN 54 32.19ms 0.00ms GC
+v6:timing.go:40: 0.22 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.34 UpdateSymmetryData
+v6:main.go:125: TURN 55 22.42ms 0.00ms GC
+v6:timing.go:40: 0.11 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.23 UpdateSymmetryData
+v6:main.go:125: TURN 56 23.23ms 2.17ms GC
+v6:timing.go:40: 0.11 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.25 UpdateSymmetryData
+v6:main.go:125: TURN 57 23.35ms 0.00ms GC
+v6:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.17 UpdateSymmetryData
+v6:main.go:125: TURN 58 33.54ms 2.73ms GC
+v6:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.22 UpdateSymmetryData
+v6:main.go:125: TURN 59 28.54ms 0.00ms GC
+v6:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.25 UpdateSymmetryData
+v6:main.go:125: TURN 60 20.75ms 0.00ms GC
+v6:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.23 UpdateSymmetryData
+v6:main.go:125: TURN 61 25.38ms 3.60ms GC
+v6:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.18 UpdateSymmetryData
+v6:main.go:125: TURN 62 29.08ms 0.00ms GC
+v6:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.20 UpdateSymmetryData
+v6:main.go:125: TURN 63 22.07ms 0.00ms GC
+v6:timing.go:40: 0.11 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.25 UpdateSymmetryData
+v6:main.go:125: TURN 64 36.93ms 3.83ms GC
+v6:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.16 UpdateSymmetryData
+v6:main.go:125: TURN 65 29.19ms 0.00ms GC
+v6:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.14 UpdateSymmetryData
+v6:main.go:125: TURN 66 33.49ms 3.41ms GC
+v6:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.20 UpdateSymmetryData
+v6:main.go:125: TURN 67 27.61ms 0.00ms GC
+v6:timing.go:40: 0.10 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.25 UpdateSymmetryData
+v6:main.go:125: TURN 68 28.14ms 3.41ms GC
+v6:timing.go:40: 0.10 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.24 UpdateSymmetryData
+v6:main.go:125: TURN 69 32.21ms 2.70ms GC
+v6:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.14 UpdateSymmetryData
+v6:main.go:125: TURN 70 27.84ms 0.00ms GC
+v6:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.22 UpdateSymmetryData
+v6:main.go:125: TURN 71 36.01ms 3.34ms GC
+v6:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.16 UpdateSymmetryData
+v6:main.go:125: TURN 72 43.43ms 0.00ms GC
+v6:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.15 UpdateSymmetryData
+v6:main.go:125: TURN 73 34.16ms 3.42ms GC
+v6:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.18 UpdateSymmetryData
+v6:main.go:125: TURN 74 33.34ms 2.86ms GC
+v6:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.18 UpdateSymmetryData
+v6:main.go:125: TURN 75 39.78ms 0.00ms GC
+v6:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.17 UpdateSymmetryData
+v6:main.go:125: TURN 76 36.61ms 3.50ms GC
+v6:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.22 UpdateSymmetryData
+v6:main.go:125: TURN 77 44.55ms 2.71ms GC
+v6:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.16 UpdateSymmetryData
+v6:main.go:125: TURN 78 35.78ms 2.88ms GC
+v6:timing.go:40: 0.10 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.20 UpdateSymmetryData
+v6:main.go:125: TURN 79 42.81ms 0.00ms GC
+v6:timing.go:40: 0.11 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.21 UpdateSymmetryData
+v6:main.go:125: TURN 80 36.49ms 3.90ms GC
+v6:timing.go:40: 0.11 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.24 UpdateSymmetryData
+v6:main.go:125: TURN 81 39.15ms 3.01ms GC
+v6:timing.go:40: 0.11 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.26 UpdateSymmetryData
+v6:main.go:125: TURN 82 41.34ms 0.00ms GC
+v6:timing.go:40: 0.10 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.22 UpdateSymmetryData
+v6:main.go:125: TURN 83 48.62ms 3.69ms GC
+v6:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.13 UpdateSymmetryData
+v6:main.go:125: TURN 84 49.30ms 0.00ms GC
+v6:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.13 UpdateSymmetryData
+v6:main.go:125: TURN 85 47.95ms 3.95ms GC
+v6:timing.go:40: 0.11 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.27 UpdateSymmetryData
+v6:main.go:125: TURN 86 28.92ms 0.00ms GC
+v6:timing.go:40: 0.10 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.27 UpdateSymmetryData
+v6:main.go:125: TURN 87 47.94ms 3.38ms GC
+v6:timing.go:40: 0.11 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.25 UpdateSymmetryData
+v6:main.go:125: TURN 88 30.94ms 0.00ms GC
+v6:timing.go:40: 0.10 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.26 UpdateSymmetryData
+v6:main.go:125: TURN 89 33.11ms 3.41ms GC
+v6:timing.go:40: 0.10 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.27 UpdateSymmetryData
+v6:main.go:125: TURN 90 30.21ms 0.00ms GC
+v6:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.23 UpdateSymmetryData
+v6:main.go:125: TURN 91 40.16ms 3.57ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.11 UpdateSymmetryData
+v6:main.go:125: TURN 92 28.45ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.10 UpdateSymmetryData
+v6:main.go:125: TURN 93 35.70ms 3.44ms GC
+v6:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.22 UpdateSymmetryData
+v6:main.go:125: TURN 94 26.46ms 0.00ms GC
+v6:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.23 UpdateSymmetryData
+v6:main.go:125: TURN 95 39.09ms 3.97ms GC
+v6:timing.go:40: 0.11 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.27 UpdateSymmetryData
+v6:main.go:125: TURN 96 30.40ms 0.00ms GC
+v6:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.27 UpdateSymmetryData
+v6:main.go:125: TURN 97 44.16ms 0.00ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.10 UpdateSymmetryData
+v6:main.go:125: TURN 98 36.57ms 3.38ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.11 UpdateSymmetryData
+v6:main.go:125: TURN 99 29.63ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 100 36.29ms 3.38ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.11 UpdateSymmetryData
+v6:main.go:125: TURN 101 29.95ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.11 UpdateSymmetryData
+v6:main.go:125: TURN 102 47.99ms 3.79ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 103 29.44ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.12 UpdateSymmetryData
+v6:main.go:125: TURN 104 39.06ms 4.16ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 105 29.00ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 106 37.78ms 3.51ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.11 UpdateSymmetryData
+v6:main.go:125: TURN 107 61.37ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 108 35.63ms 0.00ms GC
+v6:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.12 UpdateSymmetryData
+v6:main.go:125: TURN 109 38.87ms 3.84ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 110 30.91ms 0.00ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.10 UpdateSymmetryData
+v6:main.go:125: TURN 111 36.58ms 3.21ms GC
+v6:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.16 UpdateSymmetryData
+v6:main.go:125: TURN 112 32.61ms 0.00ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.15 UpdateSymmetryData
+v6:main.go:125: TURN 113 35.71ms 3.44ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 114 30.46ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 115 36.91ms 3.83ms GC
+v6:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.13 UpdateSymmetryData
+v6:main.go:125: TURN 116 31.30ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.11 UpdateSymmetryData
+v6:main.go:125: TURN 117 37.95ms 3.77ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 118 30.06ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 119 38.98ms 4.11ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 120 28.40ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 121 36.29ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 122 39.86ms 4.18ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 123 31.63ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 124 36.85ms 3.49ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.11 UpdateSymmetryData
+v6:main.go:125: TURN 125 42.04ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 126 37.35ms 3.49ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 127 32.06ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 128 38.43ms 3.66ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 129 31.20ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 130 53.00ms 3.98ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 131 31.95ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 132 40.13ms 3.97ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 133 30.52ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 134 50.44ms 4.01ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 135 30.37ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 136 73.76ms 3.64ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 137 32.79ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 138 50.35ms 3.78ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 139 35.97ms 0.00ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.12 UpdateSymmetryData
+v6:main.go:125: TURN 140 40.28ms 4.06ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 141 54.66ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 142 39.75ms 3.64ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 143 32.12ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 144 39.20ms 3.61ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 145 44.85ms 3.10ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 146 36.16ms 0.00ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 147 38.21ms 3.54ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 148 33.43ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 149 38.20ms 3.78ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 150 30.85ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 151 40.51ms 3.45ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 152 34.06ms 2.97ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 153 32.35ms 0.00ms GC
+v6:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.11 UpdateSymmetryData
+v6:main.go:125: TURN 154 38.60ms 3.45ms GC
+v6:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.12 UpdateSymmetryData
+v6:main.go:125: TURN 155 28.66ms 0.00ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.11 UpdateSymmetryData
+v6:main.go:125: TURN 156 38.31ms 3.38ms GC
+v6:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.13 UpdateSymmetryData
+v6:main.go:125: TURN 157 42.67ms 0.00ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.12 UpdateSymmetryData
+v6:main.go:125: TURN 158 40.61ms 3.31ms GC
+v6:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.10 UpdateSymmetryData
+v6:main.go:125: TURN 159 32.63ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 160 37.54ms 3.52ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 161 31.21ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 162 40.90ms 3.03ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 163 32.86ms 0.00ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.10 UpdateSymmetryData
+v6:main.go:125: TURN 164 38.28ms 3.42ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.12 UpdateSymmetryData
+v6:main.go:125: TURN 165 39.93ms 0.00ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.12 UpdateSymmetryData
+v6:main.go:125: TURN 166 37.83ms 3.38ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 167 42.69ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 168 39.39ms 3.39ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 169 32.91ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 170 38.37ms 3.29ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 171 31.94ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 172 38.95ms 3.38ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 173 31.51ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 174 39.91ms 3.57ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 175 45.15ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.10 UpdateSymmetryData
+v6:main.go:125: TURN 176 38.97ms 3.37ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 177 43.27ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 178 39.08ms 3.38ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 179 42.17ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.11 UpdateSymmetryData
+v6:main.go:125: TURN 180 36.11ms 3.16ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 181 43.30ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 182 49.40ms 3.17ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 183 32.50ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 184 48.77ms 3.12ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 185 31.92ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 186 50.52ms 3.26ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 187 40.74ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 188 37.25ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 189 49.13ms 3.59ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 190 32.40ms 2.89ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.10 UpdateSymmetryData
+v6:main.go:125: TURN 191 43.46ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 192 33.12ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 193 41.98ms 3.43ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 194 33.93ms 2.78ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 195 29.50ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.10 UpdateSymmetryData
+v6:main.go:125: TURN 196 47.96ms 3.30ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 197 33.94ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 198 34.87ms 3.06ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 199 31.05ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 200 33.75ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 201 36.84ms 3.27ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 202 32.55ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 203 34.95ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 204 45.53ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 205 43.03ms 3.22ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 206 44.43ms 2.82ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.10 UpdateSymmetryData
+v6:main.go:125: TURN 207 35.79ms 2.78ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.04 UpdateSymmetryData
+v6:main.go:125: TURN 208 26.51ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 209 40.73ms 2.92ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 210 45.84ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 211 29.48ms 2.85ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 212 48.18ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 213 41.05ms 2.92ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 214 34.18ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 215 37.88ms 2.81ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 216 39.09ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.10 UpdateSymmetryData
+v6:main.go:125: TURN 217 53.83ms 2.89ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 218 30.28ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 219 44.84ms 2.78ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 220 47.70ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 221 30.18ms 2.72ms GC
+v6:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.13 UpdateSymmetryData
+v6:main.go:125: TURN 222 49.22ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 223 41.31ms 2.85ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 224 31.51ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 225 45.98ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 226 36.29ms 2.81ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 227 31.44ms 0.00ms GC
+v6:timing.go:40: 0.02 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.04 UpdateSymmetryData
+v6:main.go:125: TURN 228 34.28ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 229 2047.33ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 230 37.24ms 2.93ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 231 30.85ms 0.00ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.09 UpdateSymmetryData
+v6:main.go:125: TURN 232 42.74ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 233 2038.46ms 3.08ms GC
+v6:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.08 UpdateSymmetryData
+v6:main.go:125: TURN 234 29.73ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 235 32.74ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.06 UpdateSymmetryData
+v6:main.go:125: TURN 236 31.91ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 237 34.83ms 2.86ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.05 UpdateSymmetryData
+v6:main.go:125: TURN 238 40.25ms 0.00ms GC
+v6:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v6:timing.go:27: 0.07 UpdateSymmetryData
+v6:main.go:125: TURN 239 32.24ms 0.00ms GC

@@ -1,0 +1,730 @@
+v7:timing.go:40: 1.28 UpdateSymmetryData: hashed
+v7:timing.go:27: 1.53 UpdateSymmetryData
+v7:state.go:87: TURN 1 Seed 2649726 (Player Seed 41 and hillHash)
+v7:main.go:125: TURN 1 43.33ms 0.79ms GC
+turn    1 bot 0 ignored actions:
+o 41 95 s # move blocked
+v7:timing.go:40: 0.58 UpdateSymmetryData: hashed
+v7:timing.go:27: 1.02 UpdateSymmetryData
+v7:main.go:125: TURN 2 42.52ms 0.00ms GC
+v7:timing.go:40: 1.23 UpdateSymmetryData: hashed
+v7:timing.go:27: 1.70 UpdateSymmetryData
+v7:main.go:125: TURN 3 22.02ms 1.33ms GC
+v7:timing.go:40: 0.47 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.59 UpdateSymmetryData
+v7:main.go:125: TURN 4 17.00ms 0.00ms GC
+v7:timing.go:40: 0.54 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.65 UpdateSymmetryData
+v7:main.go:125: TURN 5 20.30ms 0.00ms GC
+v7:timing.go:40: 0.73 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.93 UpdateSymmetryData
+v7:main.go:125: TURN 6 22.60ms 1.73ms GC
+v7:timing.go:40: 0.46 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.57 UpdateSymmetryData
+v7:main.go:125: TURN 7 29.34ms 0.00ms GC
+v7:timing.go:40: 0.48 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.61 UpdateSymmetryData
+v7:main.go:125: TURN 8 22.44ms 0.00ms GC
+v7:timing.go:40: 0.46 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.56 UpdateSymmetryData
+v7:main.go:125: TURN 9 20.09ms 0.00ms GC
+v7:timing.go:40: 0.49 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.58 UpdateSymmetryData
+v7:main.go:125: TURN 10 22.61ms 1.53ms GC
+v7:timing.go:40: 0.59 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.72 UpdateSymmetryData
+v7:main.go:125: TURN 11 19.08ms 0.00ms GC
+v7:timing.go:40: 0.49 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.59 UpdateSymmetryData
+v7:main.go:125: TURN 12 20.75ms 0.00ms GC
+v7:timing.go:40: 0.41 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.47 UpdateSymmetryData
+v7:main.go:125: TURN 13 20.78ms 0.00ms GC
+v7:timing.go:40: 2.12 UpdateSymmetryData: hashed
+v7:timing.go:27: 2.25 UpdateSymmetryData
+v7:main.go:125: TURN 14 20.99ms 1.66ms GC
+v7:timing.go:40: 0.41 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.50 UpdateSymmetryData
+v7:main.go:125: TURN 15 18.23ms 0.00ms GC
+v7:timing.go:40: 0.44 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.57 UpdateSymmetryData
+v7:main.go:125: TURN 16 19.97ms 0.00ms GC
+v7:timing.go:40: 0.45 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.49 UpdateSymmetryData
+v7:main.go:125: TURN 17 22.51ms 1.93ms GC
+v7:timing.go:40: 0.48 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.59 UpdateSymmetryData
+v7:main.go:125: TURN 18 17.63ms 0.00ms GC
+v7:timing.go:40: 0.49 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.60 UpdateSymmetryData
+v7:main.go:125: TURN 19 20.23ms 0.00ms GC
+v7:timing.go:40: 0.47 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.64 UpdateSymmetryData
+v7:main.go:125: TURN 20 19.83ms 0.00ms GC
+v7:timing.go:40: 0.42 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.51 UpdateSymmetryData
+v7:main.go:125: TURN 21 42.29ms 0.00ms GC
+v7:timing.go:40: 2.37 UpdateSymmetryData: hashed
+v7:timing.go:27: 2.46 UpdateSymmetryData
+v7:main.go:125: TURN 22 21.25ms 1.87ms GC
+v7:timing.go:40: 0.49 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.61 UpdateSymmetryData
+v7:main.go:125: TURN 23 18.67ms 0.00ms GC
+v7:timing.go:40: 0.50 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.58 UpdateSymmetryData
+v7:main.go:125: TURN 24 19.89ms 0.00ms GC
+v7:timing.go:40: 0.42 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.51 UpdateSymmetryData
+v7:main.go:125: TURN 25 22.17ms 1.70ms GC
+v7:timing.go:40: 0.42 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.51 UpdateSymmetryData
+v7:main.go:125: TURN 26 20.35ms 0.00ms GC
+v7:timing.go:40: 0.53 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.69 UpdateSymmetryData
+v7:main.go:125: TURN 27 22.11ms 0.00ms GC
+v7:timing.go:40: 0.39 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.48 UpdateSymmetryData
+v7:main.go:125: TURN 28 22.18ms 1.69ms GC
+v7:timing.go:40: 0.35 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.42 UpdateSymmetryData
+v7:main.go:125: TURN 29 19.01ms 0.00ms GC
+v7:timing.go:40: 0.40 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.49 UpdateSymmetryData
+v7:main.go:125: TURN 30 34.56ms 1.66ms GC
+v7:timing.go:40: 0.42 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.50 UpdateSymmetryData
+v7:main.go:125: TURN 31 19.40ms 0.00ms GC
+v7:timing.go:40: 0.47 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.53 UpdateSymmetryData
+v7:main.go:125: TURN 32 21.67ms 1.77ms GC
+v7:timing.go:40: 0.40 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.45 UpdateSymmetryData
+v7:main.go:125: TURN 33 17.65ms 0.00ms GC
+v7:timing.go:40: 0.67 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.88 UpdateSymmetryData
+v7:main.go:125: TURN 34 20.66ms 0.00ms GC
+v7:timing.go:40: 0.25 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.31 UpdateSymmetryData
+v7:main.go:125: TURN 35 20.63ms 0.00ms GC
+v7:timing.go:40: 0.30 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.34 UpdateSymmetryData
+v7:main.go:125: TURN 36 33.71ms 1.72ms GC
+v7:timing.go:40: 0.26 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.33 UpdateSymmetryData
+v7:main.go:125: TURN 37 18.20ms 0.00ms GC
+v7:timing.go:40: 0.28 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.35 UpdateSymmetryData
+v7:main.go:125: TURN 38 21.38ms 0.00ms GC
+v7:timing.go:40: 0.26 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.32 UpdateSymmetryData
+v7:main.go:125: TURN 39 21.53ms 0.00ms GC
+v7:timing.go:40: 0.31 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.41 UpdateSymmetryData
+v7:main.go:125: TURN 40 24.36ms 1.82ms GC
+v7:timing.go:40: 0.32 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.45 UpdateSymmetryData
+v7:main.go:125: TURN 41 20.32ms 0.00ms GC
+v7:timing.go:40: 0.32 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.39 UpdateSymmetryData
+v7:main.go:125: TURN 42 21.28ms 0.00ms GC
+v7:timing.go:40: 0.36 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.46 UpdateSymmetryData
+v7:main.go:125: TURN 43 22.98ms 1.79ms GC
+v7:timing.go:40: 0.35 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.43 UpdateSymmetryData
+v7:main.go:125: TURN 44 19.20ms 0.00ms GC
+v7:timing.go:40: 0.38 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.50 UpdateSymmetryData
+v7:main.go:125: TURN 45 21.72ms 0.00ms GC
+v7:timing.go:40: 0.28 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.34 UpdateSymmetryData
+v7:main.go:125: TURN 46 33.03ms 1.75ms GC
+v7:timing.go:40: 0.36 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.48 UpdateSymmetryData
+v7:main.go:125: TURN 47 20.40ms 0.00ms GC
+v7:timing.go:40: 0.30 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.37 UpdateSymmetryData
+v7:main.go:125: TURN 48 21.33ms 0.00ms GC
+v7:timing.go:40: 2.21 UpdateSymmetryData: hashed
+v7:timing.go:27: 2.29 UpdateSymmetryData
+v7:main.go:125: TURN 49 36.22ms 1.88ms GC
+v7:timing.go:40: 0.23 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.28 UpdateSymmetryData
+v7:main.go:125: TURN 50 30.41ms 0.00ms GC
+v7:timing.go:40: 0.24 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.28 UpdateSymmetryData
+v7:main.go:125: TURN 51 32.32ms 0.00ms GC
+v7:timing.go:40: 0.24 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.27 UpdateSymmetryData
+v7:main.go:125: TURN 52 34.48ms 1.75ms GC
+v7:timing.go:40: 0.27 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.33 UpdateSymmetryData
+v7:main.go:125: TURN 53 19.36ms 0.00ms GC
+v7:timing.go:40: 0.22 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.27 UpdateSymmetryData
+v7:main.go:125: TURN 54 33.66ms 0.00ms GC
+v7:timing.go:40: 0.23 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.29 UpdateSymmetryData
+v7:main.go:125: TURN 55 23.36ms 1.96ms GC
+v7:timing.go:40: 0.27 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.35 UpdateSymmetryData
+v7:main.go:125: TURN 56 19.30ms 0.00ms GC
+v7:timing.go:40: 0.21 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.29 UpdateSymmetryData
+v7:main.go:125: TURN 57 20.98ms 0.00ms GC
+v7:timing.go:40: 0.26 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.35 UpdateSymmetryData
+v7:main.go:125: TURN 58 31.99ms 0.00ms GC
+turn   58 bot 0 ignored actions:
+o 24 17 s # move blocked
+v7:timing.go:40: 0.24 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.37 UpdateSymmetryData
+v7:main.go:125: TURN 59 34.07ms 1.90ms GC
+v7:timing.go:40: 0.26 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.36 UpdateSymmetryData
+v7:main.go:125: TURN 60 18.95ms 0.00ms GC
+v7:timing.go:40: 0.30 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.38 UpdateSymmetryData
+v7:main.go:125: TURN 61 21.70ms 0.00ms GC
+v7:timing.go:40: 0.28 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.37 UpdateSymmetryData
+v7:main.go:125: TURN 62 34.18ms 1.99ms GC
+v7:timing.go:40: 0.27 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.34 UpdateSymmetryData
+v7:main.go:125: TURN 63 19.14ms 0.00ms GC
+v7:timing.go:40: 0.29 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.37 UpdateSymmetryData
+v7:main.go:125: TURN 64 33.13ms 0.00ms GC
+v7:timing.go:40: 0.31 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.40 UpdateSymmetryData
+v7:main.go:125: TURN 65 32.39ms 0.00ms GC
+v7:timing.go:40: 0.36 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.47 UpdateSymmetryData
+v7:main.go:125: TURN 66 34.21ms 2.08ms GC
+v7:timing.go:40: 0.35 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.46 UpdateSymmetryData
+v7:main.go:125: TURN 67 29.43ms 0.00ms GC
+v7:timing.go:40: 0.38 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.57 UpdateSymmetryData
+v7:main.go:125: TURN 68 20.75ms 0.00ms GC
+v7:timing.go:40: 0.32 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.43 UpdateSymmetryData
+v7:main.go:125: TURN 69 32.55ms 0.00ms GC
+v7:timing.go:40: 0.29 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.35 UpdateSymmetryData
+v7:main.go:125: TURN 70 34.56ms 2.04ms GC
+v7:timing.go:40: 0.37 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.52 UpdateSymmetryData
+v7:main.go:125: TURN 71 31.32ms 0.00ms GC
+v7:timing.go:40: 0.31 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.38 UpdateSymmetryData
+v7:main.go:125: TURN 72 43.64ms 0.00ms GC
+v7:timing.go:40: 0.33 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.49 UpdateSymmetryData
+v7:main.go:125: TURN 73 33.71ms 2.04ms GC
+v7:timing.go:40: 0.32 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.48 UpdateSymmetryData
+v7:main.go:125: TURN 74 31.14ms 0.00ms GC
+v7:timing.go:40: 0.33 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.44 UpdateSymmetryData
+v7:main.go:125: TURN 75 42.50ms 0.00ms GC
+v7:timing.go:40: 0.31 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.44 UpdateSymmetryData
+v7:main.go:125: TURN 76 34.56ms 1.94ms GC
+v7:timing.go:40: 0.33 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.51 UpdateSymmetryData
+v7:main.go:125: TURN 77 44.01ms 0.00ms GC
+v7:timing.go:40: 0.36 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.53 UpdateSymmetryData
+v7:main.go:125: TURN 78 33.55ms 0.00ms GC
+v7:timing.go:40: 0.39 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.54 UpdateSymmetryData
+v7:main.go:125: TURN 79 45.79ms 2.00ms GC
+v7:timing.go:40: 0.30 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.37 UpdateSymmetryData
+v7:main.go:125: TURN 80 31.43ms 0.00ms GC
+v7:timing.go:40: 0.29 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.40 UpdateSymmetryData
+v7:main.go:125: TURN 81 43.35ms 0.00ms GC
+v7:timing.go:40: 0.30 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.38 UpdateSymmetryData
+v7:main.go:125: TURN 82 46.44ms 1.97ms GC
+v7:timing.go:40: 0.38 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.53 UpdateSymmetryData
+v7:main.go:125: TURN 83 42.51ms 0.00ms GC
+v7:timing.go:40: 0.32 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.52 UpdateSymmetryData
+v7:main.go:125: TURN 84 55.46ms 0.00ms GC
+v7:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.15 UpdateSymmetryData
+v7:main.go:125: TURN 85 45.52ms 2.04ms GC
+v7:timing.go:40: 0.10 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.25 UpdateSymmetryData
+v7:main.go:125: TURN 86 31.35ms 0.00ms GC
+v7:timing.go:40: 0.10 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.28 UpdateSymmetryData
+v7:main.go:125: TURN 87 44.99ms 0.00ms GC
+v7:timing.go:40: 0.10 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.22 UpdateSymmetryData
+v7:main.go:125: TURN 88 35.55ms 2.15ms GC
+v7:timing.go:40: 0.11 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.29 UpdateSymmetryData
+v7:main.go:125: TURN 89 32.19ms 0.00ms GC
+v7:timing.go:40: 0.11 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.25 UpdateSymmetryData
+v7:main.go:125: TURN 90 32.50ms 0.00ms GC
+v7:timing.go:40: 0.12 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.29 UpdateSymmetryData
+v7:main.go:125: TURN 91 35.12ms 2.21ms GC
+v7:timing.go:40: 0.10 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.26 UpdateSymmetryData
+v7:main.go:125: TURN 92 29.96ms 0.00ms GC
+v7:timing.go:40: 0.13 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.34 UpdateSymmetryData
+v7:main.go:125: TURN 93 33.67ms 0.00ms GC
+v7:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.21 UpdateSymmetryData
+v7:main.go:125: TURN 94 35.01ms 2.29ms GC
+v7:timing.go:40: 0.13 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.33 UpdateSymmetryData
+v7:main.go:125: TURN 95 32.62ms 0.00ms GC
+v7:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.28 UpdateSymmetryData
+v7:main.go:125: TURN 96 33.80ms 0.00ms GC
+v7:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.24 UpdateSymmetryData
+v7:main.go:125: TURN 97 44.93ms 2.12ms GC
+v7:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.22 UpdateSymmetryData
+v7:main.go:125: TURN 98 31.10ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.17 UpdateSymmetryData
+v7:main.go:125: TURN 99 32.65ms 0.00ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.14 UpdateSymmetryData
+v7:main.go:125: TURN 100 38.47ms 2.20ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.15 UpdateSymmetryData
+v7:main.go:125: TURN 101 31.57ms 0.00ms GC
+v7:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.21 UpdateSymmetryData
+v7:main.go:125: TURN 102 44.35ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.17 UpdateSymmetryData
+v7:main.go:125: TURN 103 36.30ms 2.27ms GC
+v7:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.20 UpdateSymmetryData
+v7:main.go:125: TURN 104 29.82ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.17 UpdateSymmetryData
+v7:main.go:125: TURN 105 36.60ms 2.13ms GC
+v7:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.17 UpdateSymmetryData
+v7:main.go:125: TURN 106 32.13ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.17 UpdateSymmetryData
+v7:main.go:125: TURN 107 66.51ms 0.00ms GC
+v7:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.20 UpdateSymmetryData
+v7:main.go:125: TURN 108 35.76ms 2.22ms GC
+v7:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.18 UpdateSymmetryData
+v7:main.go:125: TURN 109 33.37ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.12 UpdateSymmetryData
+v7:main.go:125: TURN 110 34.32ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.24 UpdateSymmetryData
+v7:main.go:125: TURN 111 36.83ms 2.23ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.12 UpdateSymmetryData
+v7:main.go:125: TURN 112 30.96ms 0.00ms GC
+v7:timing.go:40: 0.13 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.28 UpdateSymmetryData
+v7:main.go:125: TURN 113 33.84ms 0.00ms GC
+v7:timing.go:40: 0.12 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.31 UpdateSymmetryData
+v7:main.go:125: TURN 114 36.67ms 2.22ms GC
+v7:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.18 UpdateSymmetryData
+v7:main.go:125: TURN 115 30.93ms 0.00ms GC
+v7:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.17 UpdateSymmetryData
+v7:main.go:125: TURN 116 35.59ms 2.16ms GC
+v7:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.25 UpdateSymmetryData
+v7:main.go:125: TURN 117 32.83ms 0.00ms GC
+v7:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.20 UpdateSymmetryData
+v7:main.go:125: TURN 118 34.08ms 0.00ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.12 UpdateSymmetryData
+v7:main.go:125: TURN 119 36.61ms 2.36ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.09 UpdateSymmetryData
+v7:main.go:125: TURN 120 30.72ms 0.00ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.13 UpdateSymmetryData
+v7:main.go:125: TURN 121 35.85ms 0.00ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.10 UpdateSymmetryData
+v7:main.go:125: TURN 122 37.81ms 2.27ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.11 UpdateSymmetryData
+v7:main.go:125: TURN 123 32.68ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.13 UpdateSymmetryData
+v7:main.go:125: TURN 124 34.35ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.14 UpdateSymmetryData
+v7:main.go:125: TURN 125 48.18ms 2.31ms GC
+v7:timing.go:40: 0.12 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.25 UpdateSymmetryData
+v7:main.go:125: TURN 126 28.82ms 0.00ms GC
+v7:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.21 UpdateSymmetryData
+v7:main.go:125: TURN 127 36.23ms 0.00ms GC
+v7:timing.go:40: 0.12 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.26 UpdateSymmetryData
+v7:main.go:125: TURN 128 36.80ms 2.55ms GC
+v7:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.14 UpdateSymmetryData
+v7:main.go:125: TURN 129 35.18ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.11 UpdateSymmetryData
+v7:main.go:125: TURN 130 47.22ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.14 UpdateSymmetryData
+v7:main.go:125: TURN 131 38.75ms 2.38ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.12 UpdateSymmetryData
+v7:main.go:125: TURN 132 32.58ms 0.00ms GC
+v7:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.22 UpdateSymmetryData
+v7:main.go:125: TURN 133 36.76ms 0.00ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 2.51 UpdateSymmetryData
+v7:main.go:125: TURN 134 47.48ms 2.37ms GC
+v7:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.26 UpdateSymmetryData
+v7:main.go:125: TURN 135 33.83ms 0.00ms GC
+v7:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.21 UpdateSymmetryData
+v7:main.go:125: TURN 136 68.46ms 2.37ms GC
+v7:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.20 UpdateSymmetryData
+v7:main.go:125: TURN 137 33.86ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.19 UpdateSymmetryData
+v7:main.go:125: TURN 138 48.65ms 2.24ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.09 UpdateSymmetryData
+v7:main.go:125: TURN 139 36.56ms 0.00ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.12 UpdateSymmetryData
+v7:main.go:125: TURN 140 35.20ms 0.00ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.10 UpdateSymmetryData
+v7:main.go:125: TURN 141 60.53ms 2.37ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 142 33.93ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 143 48.11ms 2.24ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.08 UpdateSymmetryData
+v7:main.go:125: TURN 144 32.23ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 145 47.48ms 3.97ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.14 UpdateSymmetryData
+v7:main.go:125: TURN 146 35.83ms 0.00ms GC
+v7:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.17 UpdateSymmetryData
+v7:main.go:125: TURN 147 40.01ms 3.98ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.06 UpdateSymmetryData
+v7:main.go:125: TURN 148 35.47ms 3.51ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.04 UpdateSymmetryData
+v7:main.go:125: TURN 149 30.80ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 150 40.91ms 4.07ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.10 UpdateSymmetryData
+v7:main.go:125: TURN 151 31.18ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.13 UpdateSymmetryData
+v7:main.go:125: TURN 152 38.94ms 3.82ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.24 UpdateSymmetryData
+v7:main.go:125: TURN 153 31.75ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.21 UpdateSymmetryData
+v7:main.go:125: TURN 154 35.35ms 0.00ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.17 UpdateSymmetryData
+v7:main.go:125: TURN 155 39.28ms 4.19ms GC
+turn  155 bot 0 ignored actions:
+o 31 78 n # move blocked
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.17 UpdateSymmetryData
+v7:main.go:125: TURN 156 36.02ms 3.67ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.19 UpdateSymmetryData
+v7:main.go:125: TURN 157 43.01ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.21 UpdateSymmetryData
+v7:main.go:125: TURN 158 39.24ms 3.53ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.08 UpdateSymmetryData
+v7:main.go:125: TURN 159 29.63ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.14 UpdateSymmetryData
+v7:main.go:125: TURN 160 38.83ms 4.12ms GC
+v7:timing.go:40: 0.08 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.21 UpdateSymmetryData
+v7:main.go:125: TURN 161 31.41ms 0.00ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.08 UpdateSymmetryData
+v7:main.go:125: TURN 162 38.65ms 4.51ms GC
+v7:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.24 UpdateSymmetryData
+v7:main.go:125: TURN 163 35.62ms 0.00ms GC
+v7:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.24 UpdateSymmetryData
+v7:main.go:125: TURN 164 39.82ms 4.85ms GC
+v7:timing.go:40: 0.13 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.35 UpdateSymmetryData
+v7:main.go:125: TURN 165 41.51ms 0.00ms GC
+v7:timing.go:40: 0.11 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.33 UpdateSymmetryData
+v7:main.go:125: TURN 166 36.85ms 4.65ms GC
+v7:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.22 UpdateSymmetryData
+v7:main.go:125: TURN 167 41.60ms 0.00ms GC
+v7:timing.go:40: 0.09 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.25 UpdateSymmetryData
+v7:main.go:125: TURN 168 40.21ms 4.29ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.14 UpdateSymmetryData
+v7:main.go:125: TURN 169 31.08ms 0.00ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.13 UpdateSymmetryData
+v7:main.go:125: TURN 170 40.62ms 4.86ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.17 UpdateSymmetryData
+v7:main.go:125: TURN 171 31.63ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 172 38.76ms 4.80ms GC
+turn  172 bot 0 ignored actions:
+o 28 16 e # move blocked
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.08 UpdateSymmetryData
+v7:main.go:125: TURN 173 31.15ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 174 41.23ms 4.90ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.17 UpdateSymmetryData
+v7:main.go:125: TURN 175 44.83ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.19 UpdateSymmetryData
+v7:main.go:125: TURN 176 40.69ms 4.85ms GC
+v7:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.27 UpdateSymmetryData
+v7:main.go:125: TURN 177 41.72ms 0.00ms GC
+v7:timing.go:40: 0.10 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.31 UpdateSymmetryData
+v7:main.go:125: TURN 178 40.32ms 5.29ms GC
+v7:timing.go:40: 0.07 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.23 UpdateSymmetryData
+v7:main.go:125: TURN 179 40.96ms 0.00ms GC
+v7:timing.go:40: 0.06 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.23 UpdateSymmetryData
+v7:main.go:125: TURN 180 39.22ms 4.53ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.14 UpdateSymmetryData
+v7:main.go:125: TURN 181 45.07ms 3.25ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.10 UpdateSymmetryData
+v7:main.go:125: TURN 182 43.05ms 0.00ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.10 UpdateSymmetryData
+v7:main.go:125: TURN 183 39.76ms 4.88ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 184 40.97ms 0.00ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.13 UpdateSymmetryData
+v7:main.go:125: TURN 185 40.33ms 5.28ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.11 UpdateSymmetryData
+v7:main.go:125: TURN 186 44.72ms 3.57ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 187 42.46ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 188 40.26ms 4.46ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 189 39.56ms 0.00ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.10 UpdateSymmetryData
+v7:main.go:125: TURN 190 39.22ms 4.76ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.09 UpdateSymmetryData
+v7:main.go:125: TURN 191 44.65ms 4.28ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.12 UpdateSymmetryData
+v7:main.go:125: TURN 192 30.65ms 0.00ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.10 UpdateSymmetryData
+v7:main.go:125: TURN 193 38.42ms 3.92ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 194 30.73ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 195 39.26ms 5.12ms GC
+turn  195 bot 0 ignored actions:
+o 35 33 e # move blocked
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.06 UpdateSymmetryData
+v7:main.go:125: TURN 196 41.03ms 0.00ms GC
+v7:timing.go:40: 0.02 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.04 UpdateSymmetryData
+v7:main.go:125: TURN 197 39.28ms 5.14ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.09 UpdateSymmetryData
+v7:main.go:125: TURN 198 30.69ms 0.00ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.09 UpdateSymmetryData
+v7:main.go:125: TURN 199 37.62ms 5.11ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.12 UpdateSymmetryData
+v7:main.go:125: TURN 200 30.17ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 201 39.50ms 5.38ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 202 30.06ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.08 UpdateSymmetryData
+v7:main.go:125: TURN 203 40.40ms 5.33ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 204 40.27ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 205 39.00ms 5.54ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.06 UpdateSymmetryData
+v7:main.go:125: TURN 206 38.93ms 0.00ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.06 UpdateSymmetryData
+v7:main.go:125: TURN 207 40.70ms 5.46ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.04 UpdateSymmetryData
+v7:main.go:125: TURN 208 31.07ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 209 40.48ms 5.61ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 210 39.83ms 0.00ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.08 UpdateSymmetryData
+v7:main.go:125: TURN 211 40.99ms 5.56ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 212 42.11ms 0.00ms GC
+v7:timing.go:40: 0.02 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.04 UpdateSymmetryData
+v7:main.go:125: TURN 213 40.00ms 5.08ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.04 UpdateSymmetryData
+v7:main.go:125: TURN 214 32.08ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 215 41.97ms 4.88ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.08 UpdateSymmetryData
+v7:main.go:125: TURN 216 45.07ms 3.71ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.10 UpdateSymmetryData
+v7:main.go:125: TURN 217 43.69ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 218 38.97ms 5.17ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.08 UpdateSymmetryData
+v7:main.go:125: TURN 219 43.38ms 3.73ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.06 UpdateSymmetryData
+v7:main.go:125: TURN 220 40.02ms 0.00ms GC
+v7:timing.go:40: 0.05 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.11 UpdateSymmetryData
+v7:main.go:125: TURN 221 39.83ms 5.57ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.09 UpdateSymmetryData
+v7:main.go:125: TURN 222 43.20ms 3.92ms GC
+turn  222 bot 0 ignored actions:
+o 43 0 w # move blocked
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 223 41.54ms 0.00ms GC
+v7:timing.go:40: 0.02 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.04 UpdateSymmetryData
+v7:main.go:125: TURN 224 40.16ms 5.93ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 225 36.90ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 226 39.83ms 4.84ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.06 UpdateSymmetryData
+v7:main.go:125: TURN 227 29.67ms 0.00ms GC
+v7:timing.go:40: 0.02 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.04 UpdateSymmetryData
+v7:main.go:125: TURN 228 38.87ms 4.82ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.09 UpdateSymmetryData
+v7:main.go:125: TURN 229 2046.96ms 4.08ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 230 29.74ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 231 38.86ms 4.59ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 232 37.45ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.09 UpdateSymmetryData
+v7:main.go:125: TURN 233 2039.92ms 5.86ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 234 26.96ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 235 37.52ms 4.97ms GC
+v7:timing.go:40: 0.04 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.09 UpdateSymmetryData
+v7:main.go:125: TURN 236 27.65ms 0.00ms GC
+v7:timing.go:40: 0.02 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 237 37.09ms 5.88ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.05 UpdateSymmetryData
+v7:main.go:125: TURN 238 37.35ms 0.00ms GC
+v7:timing.go:40: 0.03 UpdateSymmetryData: hashed
+v7:timing.go:27: 0.07 UpdateSymmetryData
+v7:main.go:125: TURN 239 37.64ms 5.72ms GC

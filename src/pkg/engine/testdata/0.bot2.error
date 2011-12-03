@@ -1,0 +1,119 @@
+turn   50 bot 2 invalid actions:
+o 2 61 s # not player ant
+turn   65 bot 2 invalid actions:
+o 6 44 n # not player ant
+turn   66 bot 2 invalid actions:
+o 5 44 e # not player ant
+turn   67 bot 2 invalid actions:
+o 5 45 n # not player ant
+turn   68 bot 2 invalid actions:
+o 4 45 n # not player ant
+turn   69 bot 2 invalid actions:
+o 3 45 e # not player ant
+turn   70 bot 2 invalid actions:
+o 3 46 e # not player ant
+turn   71 bot 2 invalid actions:
+o 3 47 e # not player ant
+turn   85 bot 2 invalid actions:
+o 6 37 w # not player ant
+turn   86 bot 2 invalid actions:
+o 6 36 w # not player ant
+turn   87 bot 2 invalid actions:
+o 6 35 w # not player ant
+o 20 41 s # not player ant
+turn   88 bot 2 invalid actions:
+o 6 34 w # not player ant
+o 21 41 s # not player ant
+turn   89 bot 2 invalid actions:
+o 6 33 w # not player ant
+o 22 41 e # not player ant
+turn   90 bot 2 invalid actions:
+o 6 32 w # not player ant
+turn   91 bot 2 invalid actions:
+o 6 31 w # not player ant
+turn   92 bot 2 invalid actions:
+o 6 30 w # not player ant
+turn   93 bot 2 invalid actions:
+o 6 29 w # not player ant
+turn   94 bot 2 invalid actions:
+o 6 28 w # not player ant
+turn   95 bot 2 invalid actions:
+o 6 27 w # not player ant
+turn   96 bot 2 invalid actions:
+o 6 26 w # not player ant
+turn   97 bot 2 invalid actions:
+o 6 25 w # not player ant
+turn   98 bot 2 invalid actions:
+o 6 24 w # not player ant
+o 13 27 e # not player ant
+turn   99 bot 2 invalid actions:
+o 6 23 w # not player ant
+o 13 28 n # not player ant
+turn  100 bot 2 invalid actions:
+o 12 28 e # not player ant
+turn  101 bot 2 invalid actions:
+o 12 29 n # not player ant
+turn  102 bot 2 invalid actions:
+o 11 29 e # not player ant
+turn  103 bot 2 invalid actions:
+o 11 30 e # not player ant
+turn  104 bot 2 invalid actions:
+o 11 31 n # not player ant
+turn  105 bot 2 invalid actions:
+o 10 31 e # not player ant
+turn  106 bot 2 invalid actions:
+o 10 32 n # not player ant
+turn  107 bot 2 invalid actions:
+o 9 32 e # not player ant
+turn  108 bot 2 invalid actions:
+o 9 33 n # not player ant
+turn  109 bot 2 invalid actions:
+o 8 33 n # not player ant
+turn  110 bot 2 invalid actions:
+o 7 33 e # not player ant
+turn  111 bot 2 invalid actions:
+o 7 34 n # not player ant
+turn  112 bot 2 invalid actions:
+o 6 34 e # not player ant
+turn  113 bot 2 invalid actions:
+o 6 35 e # not player ant
+turn  114 bot 2 invalid actions:
+o 6 36 n # not player ant
+turn  115 bot 2 invalid actions:
+o 5 36 n # not player ant
+turn  116 bot 2 invalid actions:
+o 4 36 e # not player ant
+turn  117 bot 2 invalid actions:
+o 4 37 n # not player ant
+turn  118 bot 2 invalid actions:
+o 3 37 e # not player ant
+turn  119 bot 2 invalid actions:
+o 3 38 n # not player ant
+turn  120 bot 2 invalid actions:
+o 2 38 e # not player ant
+turn  121 bot 2 invalid actions:
+o 2 39 n # not player ant
+turn  122 bot 2 invalid actions:
+o 1 39 n # not player ant
+turn  123 bot 2 invalid actions:
+o 0 39 e # not player ant
+turn  124 bot 2 invalid actions:
+o 0 40 n # not player ant
+turn  125 bot 2 invalid actions:
+o 63 40 e # not player ant
+turn  126 bot 2 invalid actions:
+o 63 41 n # not player ant
+turn  170 bot 2 invalid actions:
+o 11 48 s # not player ant
+turn  171 bot 2 invalid actions:
+o 12 48 w # not player ant
+turn  172 bot 2 invalid actions:
+o 12 47 w # not player ant
+turn  173 bot 2 invalid actions:
+o 12 46 w # not player ant
+turn  174 bot 2 invalid actions:
+o 12 45 w # not player ant
+turn  175 bot 2 invalid actions:
+o 12 44 s # not player ant
+turn  176 bot 2 invalid actions:
+o 13 44 w # not player ant

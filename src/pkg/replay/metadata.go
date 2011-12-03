@@ -125,10 +125,7 @@ func (r *Replay) FoodLocations(m *maps.Map, tmin, tmax int) [][]torus.Location {
 	sort.Sort(foodSlice(r.Food))
 
 	for _, f := range r.Food {
-		gather := f.Gather
-		if gather == 0 {
-			gather = tmax
-		}
+		gather := f.Gather - 1
 		if f.Spawn <= tmax && gather >= tmin {
 			loc := m.ToLocation(torus.Point{f.Row, f.Col})
 			for i := MaxV(f.Spawn-tmin, 0); i <= MinV(tmax, gather)-tmin; i++ {
