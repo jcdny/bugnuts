@@ -95,8 +95,6 @@ func TestMapFillSeedNN(t *testing.T) {
 
 // Benchmark the version which does not maintain a seed array
 // but allocates per fill
-//var benchFile string = "../maps/testdata/maps/mmaze_05p_01.map"
-
 func getBenchMap() (*Map, map[Location]int) {
 	return getBenchReplay()
 }
@@ -117,7 +115,7 @@ func getBenchReplay() (*Map, map[Location]int) {
 	return m, l
 }
 func getBenchFile() (*Map, map[Location]int) {
-	file := "../maps/testdata/maps/cell_maze_p06_01.map"
+	file := MapFile("cell_maze_p06_01")
 	m, err := MapLoadFile(file)
 	if m == nil || err != nil {
 		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
@@ -190,7 +188,7 @@ func TestMapFillDist(t *testing.T) {
 	defer out.Close()
 
 	for _, name := range AllMaps {
-		filename := "../maps/testdata/maps/" + name + ".map"
+		filename := MapFile(name)
 		m, err := MapLoadFile(filename)
 		if m == nil || err != nil {
 			log.Panicf("Error: failed to read %s: %v", filename, err)
@@ -240,7 +238,7 @@ func TestMapFillDist(t *testing.T) {
 // Take a map and generate montecarlo ant densities...
 func TestMonteCarloPathing(t *testing.T) {
 	for _, name := range AllMaps {
-		filename := "../maps/testdata/maps/" + name + ".map"
+		filename := MapFile(name)
 		m, err := MapLoadFile(filename)
 		if m == nil || err != nil {
 			log.Panicf("Error: failed to read %s: %v", filename, err)

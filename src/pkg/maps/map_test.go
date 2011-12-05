@@ -52,7 +52,7 @@ func TestMapId(t *testing.T) {
 	defer out.Close()
 
 	for _, name := range AllMaps {
-		file := "testdata/maps/" + name + ".map"
+		file := MapFile(name)
 		m, err := MapLoadFile(file)
 		if m == nil || err != nil {
 			log.Panicf("Error reading %s: err %v map: %v", file, err, m)

@@ -49,7 +49,7 @@ func BenchmarkTransMap(b *testing.B) {
 
 func TestTile(t *testing.T) {
 	// See end of file for expected data...
-	m := mapMeBaby("testdata/sym.map")
+	m := mapMeBaby("./testdata/sym.map")
 	s := m.Tile(0)
 	sym := s.MinHash
 	smap := s.Hashes
@@ -101,7 +101,13 @@ func TestTile(t *testing.T) {
 	}
 }
 
-func mapMeBaby(file string) *Map {
+func mapMeBaby(name string) *Map {
+	var file string
+	if name[0] != '.' {
+		file = MapFile(name)
+	} else {
+		file = name
+	}
 	m, err := MapLoadFile(file)
 	if m == nil || err != nil {
 		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
@@ -110,20 +116,22 @@ func mapMeBaby(file string) *Map {
 	return m
 }
 
+var benchMap string = "mmaze_05p_01"
+
 func BenchmarkTile0(b *testing.B) {
-	m := mapMeBaby("testdata/maps/mmaze_05p_01.map")
+	m := mapMeBaby(benchMap)
 	for i := 0; i < b.N; i++ {
 		m.Tile(0)
 	}
 }
 func BenchmarkTile4(b *testing.B) {
-	m := mapMeBaby("testdata/maps/mmaze_05p_01.map")
+	m := mapMeBaby(benchMap)
 	for i := 0; i < b.N; i++ {
 		m.Tile(4)
 	}
 }
 func BenchmarkTile8(b *testing.B) {
-	m := mapMeBaby("testdata/maps/mmaze_05p_01.map")
+	m := mapMeBaby(benchMap)
 	for i := 0; i < b.N; i++ {
 		m.Tile(8)
 	}
@@ -136,7 +144,7 @@ func TestSym(t *testing.T) {
 	AllMaps := []string{"cell_maze_p06_01"}
 	for _, name := range AllMaps {
 		log.Printf("***************************  %s ***************************************************", name)
-		m := mapMeBaby("testdata/maps/" + name + ".map")
+		m := mapMeBaby(name)
 		if m == nil {
 			t.Error("Map nil")
 		}
