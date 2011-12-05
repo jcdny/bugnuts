@@ -23,4 +23,12 @@ var ParameterSets = map[string]*Parameters{
 		DefendDistance:   16,
 		RiskOffThreshold: .3,
 	},
+	"v8": &Parameters{
+		ExpireFood:       -1,
+		PriorityMap:      &defaultPriMap,
+		Outbound:         80,
+		MinHorizon:       20,
+		DefendDistance:   16,
+		RiskOffThreshold: .3,
+	},
 }

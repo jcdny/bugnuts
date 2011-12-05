@@ -57,8 +57,12 @@ func Permute5() *[5]Direction {
 	return &Perm5[rand.Intn(120)]
 }
 
+// Perm4G is the directions permuted with the NoMovement guard.
+// The ordering here is relevant since NPathInString uses the perm flag to index into this 
+// in order to generate bounding paths.
 var Perm4G = [...][5]Direction{
 	{0, 1, 2, 3, 4},
+	{3, 2, 1, 0, 4},
 	{0, 1, 3, 2, 4},
 	{0, 2, 1, 3, 4},
 	{0, 2, 3, 1, 4},
@@ -81,7 +85,6 @@ var Perm4G = [...][5]Direction{
 	{3, 1, 0, 2, 4},
 	{3, 1, 2, 0, 4},
 	{3, 2, 0, 1, 4},
-	{3, 2, 1, 0, 4},
 }
 var Perm4 = [...][4]Direction{
 	{0, 1, 2, 3},

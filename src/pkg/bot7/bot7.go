@@ -99,7 +99,7 @@ func (bot *BotV7) GenerateTargets(s *State) *TargetSet {
 
 func (bot *BotV7) DoTurn(s *State) os.Error {
 
-	bot.Explore.UpdateSeen(s, 1)
+	bot.Explore.RemoveSeen(s, 1)
 	tset := bot.GenerateTargets(s)
 
 	if float64(bot.StaticAnts[s.Turn-1])/float64(len(s.Ants[0])) > bot.P.RiskOffThreshold {

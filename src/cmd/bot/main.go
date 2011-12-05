@@ -22,6 +22,7 @@ import (
 	_ "bugnuts/bot5"
 	_ "bugnuts/bot6"
 	_ "bugnuts/bot7"
+	_ "bugnuts/bot8"
 )
 
 var runBot string

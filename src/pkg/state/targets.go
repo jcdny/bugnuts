@@ -253,7 +253,7 @@ func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist 
 	}
 }
 
-func (tset *TargetSet) UpdateSeen(s *State, count int) {
+func (tset *TargetSet) RemoveSeen(s *State, count int) {
 	for loc := range *tset {
 		if s.Met.Seen[loc] == s.Turn {
 			(*tset).Remove(loc)

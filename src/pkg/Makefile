@@ -18,6 +18,7 @@ DIRS=\
 	bot5\
 	bot6\
 	bot7\
+	bot8\
 	statbot\
 	MyBot\
 	debug\
