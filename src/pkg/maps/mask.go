@@ -211,6 +211,39 @@ func MakeMoveMask(r2 int, cols int) []*MoveMask {
 	return mm
 }
 
+// ApplyMask applies a precomputed mask centered on location loc
+func (m *Map) ApplyMask(loc Location, mask *Mask, x func(loc Location)) {
+	if m.BorderDist[loc] > mask.R {
+		for _, loff := range mask.Loc {
+			x(loc + loff)
+		}
+	} else {
+		ap := m.ToPoint(loc)
+		for _, op := range mask.P {
+			l := m.ToLocation(m.PointAdd(ap, op))
+			x(l)
+		}
+	}
+}
+// ApplyMaskBreak applies a precomputed mask centered on location loc via function x, if x returns false the apply is aborted.
+func (m *Map) ApplyMaskBreak(loc Location, mask *Mask, x func(loc Location) bool) {
+	if m.BorderDist[loc] > mask.R {
+		for _, loff := range mask.Loc {
+			if !x(loc + loff) {
+				return
+			}
+		}
+	} else {
+		ap := m.ToPoint(loc)
+		for _, op := range mask.P {
+			l := m.ToLocation(m.PointAdd(ap, op))
+			if !x(l) {
+				return
+			}
+		}
+	}
+}
+
 func (mm *MoveMask) String() string {
 	s := fmt.Sprintf("free %d pstep: %d stride %d\n*** minpr:", mm.NFree, mm.PStep, mm.Stride)
 	stride := int(2*mm.R + 3)
