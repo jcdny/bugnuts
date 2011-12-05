@@ -2,7 +2,6 @@ package maps
 
 import (
 	"log"
-	. "bugnuts/util"
 	. "bugnuts/torus"
 	. "bugnuts/debug"
 )
@@ -142,8 +141,8 @@ func (m *Map) Tile(minBits uint8) *SymData {
 
 func (s *SymData) UpdateSymmetryData() {
 
-	TPush("UpdateSymmetryData")
-	defer TPop()
+	//TPush("UpdateSymmetryData")
+	//defer TPop()
 
 	check := make(map[SymHash]bool, 100)
 	for l, item := range s.TGrid {
@@ -162,7 +161,7 @@ func (s *SymData) UpdateSymmetryData() {
 		maxlen = len(s.Map.SMap)
 	}
 
-	TMark("hashed")
+	//TMark("hashed")
 
 	for minhash := range check {
 		tile := s.Tiles[minhash]

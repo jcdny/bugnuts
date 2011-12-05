@@ -9,7 +9,6 @@ import (
 )
 
 func TestEngine(t *testing.T) {
-
 	match, err := replay.Load("testdata/0.replay")
 
 	if err != nil || match == nil {
@@ -19,9 +18,9 @@ func TestEngine(t *testing.T) {
 
 	g := NewGame(&match.GameInfo, m)
 
-	tout := g.Replay(match.Replay, 0, match.GameLength, true)
+	g.Replay(match.Replay, 0, match.GameLength, true)
 
-	for i := range tout[0] {
+	for i := range g.PlayerInput[0] {
 		filein := fmt.Sprint("testdata/0.bot", i, ".input")
 		fileout := filein + ".tmp"
 		out, err := os.Create(fileout)
@@ -30,14 +29,14 @@ func TestEngine(t *testing.T) {
 			log.Panic("open failed for ", fileout, ":", err)
 		}
 		fmt.Fprintf(out, "turn 0\n%v\nready\n", g.GameInfo)
-		for turn := range tout {
-			if len(tout[turn][i].A) > 0 && turn < match.GameLength {
+		for turn := range g.PlayerInput {
+			if len(g.PlayerInput[turn][i].A) > 0 && turn < match.GameLength {
 				fmt.Fprint(out, "turn ", turn+1, "\n")
 			} else {
 				fmt.Fprint(out, "end\n")
 			}
-			fmt.Fprint(out, tout[turn][i], "\ngo\n")
-			if len(tout[turn][i].A) == 0 {
+			fmt.Fprint(out, g.PlayerInput[turn][i], "\ngo\n")
+			if len(g.PlayerInput[turn][i].A) == 0 {
 				break
 			}
 		}

@@ -20,7 +20,7 @@ type Metrics struct {
 	HBorder  []Location // List of border points
 	Land     []int      // Count of land tiles visible from a given tile
 	PrFood   []int      // Count of Turn * Land adjusted for # that see it.
-	Unknown  []int      // Count of Unknown
+	Unknown  []int      // Count of Unknown visible from a given location
 	VisSum   []int      // sum of count of visibles for overlap.
 	Runs     [][4]uint8 // What is the run distance in a given direction for a location
 	// Fills

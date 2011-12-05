@@ -14,10 +14,12 @@ include $(GOROOT)/src/Make.inc
 all: install
 
 DIRS=\
-	MyBot\
 	bot6\
 	bot7\
+	statbot\
+	MyBot\
 	debug\
+	engine\
 	game\
 	maps\
 	parameters\

@@ -62,7 +62,6 @@ func (s *State) ProcessTurn(t *Turn) {
 	s.ProcessFood(t.F, s.Turn)
 	s.ProcessAnts(t.A, 0, s.Turn)
 	s.ProcessHills(t.H, 0, s.Turn)
-	s.ProcessDeadAnts(t.D, 0, s.Turn)
 
 	if s.Turn == 1 {
 		s.Turn1()
@@ -283,17 +282,6 @@ func (s *State) ResetGrid() {
 			s.Map.Grid[i] = LAND
 		}
 	}
-}
-
-func (s *State) ProcessDeadAnts(deadants []PlayerLoc, player, turn int) {
-	for _, pl := range deadants {
-		if s.Stats.Dead[pl.Player] == nil {
-			s.Stats.Dead[pl.Player] = make(map[Location]int)
-		}
-		s.Stats.Dead[pl.Player][pl.Loc]++
-		s.Stats.Died[pl.Player]++
-	}
-	// TODO track suicides/sacrifices and who the killer was.
 }
 
 func (s *State) UpdateHillMaps() {

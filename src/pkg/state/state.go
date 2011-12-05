@@ -12,11 +12,6 @@ const (
 	MaxPlayers int = 10
 )
 
-type Statistics struct {
-	Dead []map[Location]int // Death count per location by player
-	Died [MaxPlayers]int    // Chronicle of a Death Foretold
-}
-
 type Hill struct {
 	Location Location //
 	Player   int      // The owner of the hill
@@ -44,8 +39,7 @@ type State struct {
 	InitialHills int                // Number of hills per player from Turn 1
 	NHills       [MaxPlayers]int    // Count of live hills per player
 	Hills        map[Location]*Hill // Hill list
-
-	Stats *Statistics
+	Stats        *Statistics
 
 	// Map Metrics
 	Met     *Metrics
@@ -59,7 +53,9 @@ func NewState(g *GameInfo) *State {
 		GameInfo: g,
 		Map:      m,
 		Met:      NewMetrics(m),
+		Stats:    NewStatistics(g),
 	}
+
 	// Mask Cache
 
 	s.ViewMask = MakeMask(s.ViewRadius2, s.Rows, s.Cols)
@@ -74,9 +70,6 @@ func NewState(g *GameInfo) *State {
 	s.Food = make(map[Location]int)
 	s.Ants = make([]map[Location]int, MaxPlayers)
 	s.Hills = make(map[Location]*Hill)
-	s.Stats = &Statistics{
-		Dead: make([]map[Location]int, MaxPlayers),
-	}
 
 	return s
 }

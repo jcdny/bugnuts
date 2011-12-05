@@ -9,7 +9,8 @@ cp `find . -name \*.go \
   -a ! -name \*_test\*.go \
   -a ! -path \*/replay/\* \
   -a ! -path \*/engine/\* \
-  -a ! -path \*/bot[345]/\* \
+  -a ! -path \*/statbot/\* \
+  -a ! -path \*/bot[3456]/\* \
   -print` $DEST/tmp
 cp ../cmd/bot/main.go $DEST/tmp
 cd $DEST/tmp || exit 1

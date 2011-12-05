@@ -8,6 +8,7 @@ GOFILES=\
 	process.go\
 	query.go\
 	state.go\
+	statistics.go\
 	targets.go\
 
 include $(GOROOT)/src/Make.pkg

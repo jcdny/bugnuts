@@ -15,6 +15,7 @@ type Player struct {
 	Seen    []bool
 	Visible []bool
 	IdMap   []int
+	InvMap  []int
 	Threat  []int
 }
 
@@ -25,16 +26,18 @@ type Game struct {
 	AttackMask *maps.Mask
 	Turn       int
 	Players    []*Player
-	Threat     []int
-	AntCount   []int
-	PlayerMap  []int
+	// Following used in combat resolution
+	Threat    []int // total Threat sum for all ants
+	AntCount  []int // count of ants at a given location
+	PlayerMap []int // player# at each location
+	// Replay results
+	PlayerInput [][]*game.Turn
+	// PlayerOutput [][]*game.Moves
 }
 
 var _minusone [maps.MAXMAPSIZE]int
 var _zero [maps.MAXMAPSIZE]int
 var _false [maps.MAXMAPSIZE]bool
-
-var dloc torus.Location
 
 func init() {
 	for i := range _minusone {
@@ -50,11 +53,10 @@ func NewGame(gi *game.GameInfo, m *maps.Map) *Game {
 		Map:       m,
 		GameInfo:  gi,
 		Players:   make([]*Player, m.Players),
-		Threat:    make([]int, m.Size()),
 		PlayerMap: make([]int, m.Size()),
 		AntCount:  make([]int, m.Size()),
+		Threat:    make([]int, m.Size()),
 	}
-	dloc = g.ToLocation(torus.Point{R: 32, C: 14})
 
 	g.ViewMask = maps.MakeMask(g.ViewRadius2, g.Rows, g.Cols)
 	g.AttackMask = maps.MakeMask(g.AttackRadius2, g.Rows, g.Cols)
@@ -64,22 +66,30 @@ func NewGame(gi *game.GameInfo, m *maps.Map) *Game {
 		g.Players[i] = &Player{
 			Hills:   m.Hills(i),
 			IdMap:   make([]int, m.Players),
+			InvMap:  make([]int, m.Players),
 			Seen:    make([]bool, m.Size()),
 			Visible: make([]bool, m.Size()),
 			Threat:  threat[i*m.Size() : (i+1)*m.Size()],
 		}
 		for j := range g.Players[i].IdMap {
 			g.Players[i].IdMap[j] = -1
+			g.Players[i].InvMap[j] = -1
 		}
-		g.Players[i].IdMap[i] = 0
+
+		g.Players[i].AddIdMap(i)
 	}
 
 	return g
 }
 
+func (p *Player) AddIdMap(np int) {
+	p.IdMap[np] = util.Max(p.IdMap) + 1
+	p.InvMap[p.IdMap[np]] = np
+}
+
 // Replay a game, returns turns for all players between turn tmin and tmax inclusive.
 // Assumes Game is in initial state.
-func (g *Game) Replay(r *replay.Replay, tmin, tmax int, canonicalorder bool) [][]*game.Turn {
+func (g *Game) Replay(r *replay.Replay, tmin, tmax int, canonicalorder bool) {
 	tout := make([][]*game.Turn, 0, tmax-tmin+1)
 
 	// Extract the location data from the replay.
@@ -90,12 +100,15 @@ func (g *Game) Replay(r *replay.Replay, tmin, tmax int, canonicalorder bool) [][
 
 	for i := 0; i <= tmax; i++ {
 		tset := g.GenerateTurn(ants[i], spawn[i], hills[i], food[i], canonicalorder)
+		for j := range tset {
+			tset[j].Turn = i + tmin + 1
+		}
 		if i >= tmin {
 			tout = append(tout, tset)
 		}
 	}
 
-	return tout
+	g.PlayerInput = tout
 }
 
 func (p *Player) UpdateVisibility(g *Game, ants []torus.Location) []torus.Location {
@@ -183,9 +196,6 @@ func (g *Game) ResolveCombat(ants [][]torus.Location) []game.PlayerLoc {
 			loc := ants[np][i]
 
 			t := g.Threat[loc] - g.Players[np].Threat[loc]
-			if loc == dloc {
-				// log.Printf("p %d net threat at dloc %d", np, t)
-			}
 			if t > 0 {
 				ap := g.ToPoint(loc)
 				for _, op := range g.AttackMask.P {
@@ -248,7 +258,7 @@ func (g *Game) GenerateTurn(ants [][]torus.Location, spawn, hills []game.PlayerL
 			for i := range ants[np] {
 				if p.Visible[ants[np][i]] {
 					if p.IdMap[np] < 0 {
-						p.IdMap[np] = util.Max(p.IdMap) + 1
+						p.AddIdMap(np)
 					}
 					t.A = append(t.A, game.PlayerLoc{Loc: ants[np][i], Player: p.IdMap[np]})
 				}
@@ -259,7 +269,7 @@ func (g *Game) GenerateTurn(ants [][]torus.Location, spawn, hills []game.PlayerL
 		for _, d := range dead {
 			if p.Visible[d.Loc] || d.Player == i {
 				if p.IdMap[d.Player] < 0 {
-					p.IdMap[d.Player] = util.Max(p.IdMap) + 1
+					p.AddIdMap(d.Player)
 				}
 				t.D = append(t.D, game.PlayerLoc{Loc: d.Loc, Player: p.IdMap[d.Player]})
 			}
@@ -269,7 +279,7 @@ func (g *Game) GenerateTurn(ants [][]torus.Location, spawn, hills []game.PlayerL
 		for _, h := range hills {
 			if p.Visible[h.Loc] {
 				if p.IdMap[h.Player] < 0 {
-					p.IdMap[h.Player] = util.Max(p.IdMap) + 1
+					p.AddIdMap(h.Player)
 				}
 				t.H = append(t.H, game.PlayerLoc{Loc: h.Loc, Player: p.IdMap[h.Player]})
 			}
