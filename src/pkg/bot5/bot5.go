@@ -35,7 +35,7 @@ type BotV5 struct {
 	Explore *TargetSet
 
 	IdleAnts []int
-	Primap   []int
+	PriMap   *[256]int
 }
 
 func init() {
@@ -43,7 +43,7 @@ func init() {
 }
 
 func (bot *BotV5) Priority(i Item) int {
-	return bot.Primap[i]
+	return bot.PriMap[i]
 }
 
 //NewBot creates a new instance of your bot
@@ -52,6 +52,7 @@ func NewBotV5(s *State, p *Parameters) Bot {
 		P:        p,
 		IdleAnts: make([]int, 0, s.Turns),
 	}
+	mb.PriMap = mb.P.MakePriMap()
 
 	mb.Explore = MakeExplorers(s, .8, 1, mb.Priority(EXPLORE))
 	return mb
@@ -121,7 +122,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 		f, _, _ := MapFill(s.Map, tset.Active(), 0)
 
 		// Build list of locations sorted by depth
-		ccl := make([]Location, len(ants))
+		ccl := make([]Location, 0, len(ants))
 		for loc := range ants {
 			ccl = append(ccl, loc)
 		}
@@ -132,6 +133,9 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 		STEP:
 			// Perm here so our bots are not biased to move in particular directions
 			for _, d := range rand.Perm(4) {
+				if Debug[DBG_Iterations] {
+					log.Printf("Allocating ant %d dir %d", loc, d)
+				}
 				// find a direction we can step in thats stepable.
 				np := s.Map.PointAdd(p, Steps[d])
 				nl := s.Map.ToLocation(np)
@@ -193,6 +197,9 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 					break STEP
 				}
 			}
+		}
+		if Debug[DBG_Iterations] {
+			log.Printf("Done allocating ants, Pending %d, ants %d", tset.Pending(), len(ants))
 		}
 
 		// TODO If we have more ants than targets we have bored ants, try to expand viewable area, slice
