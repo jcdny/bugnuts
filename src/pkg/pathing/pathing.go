@@ -59,6 +59,55 @@ OUT:
 	return loc, -(steps + 1)
 }
 
+func (f *Fill) NPathInString(start Location, steps int, perm int) string {
+	if steps == 0 {
+		return "-"
+	} else if steps < -1 {
+		steps = -1
+	}
+	if perm >= len(Perm4G) {
+		log.Panic("perm cannot be greater than len(Perm4G)")
+	}
+	loc := start
+	depth := f.Depth[loc]
+	out := ""
+OUT:
+	for {
+		var d Direction
+		var permv *[5]Direction
+		if perm < 0 {
+			permv = Permute4G()
+		} else {
+			permv = &Perm4G[perm]
+		}
+		for _, d = range permv {
+			nl := f.LocStep[loc][d]
+			nd := f.Depth[nl]
+			//log.Printf("steps %d New Loc %d Dir %s Depth %d", steps, nl, d, nd)
+			if nd < depth && nd > 0 {
+				loc = nl
+				depth = nd
+				steps--
+				out += d.String()
+				if steps == 0 {
+					break OUT
+				} else {
+					break
+				}
+			}
+		}
+		if d == NoMovement {
+			break
+		}
+	}
+
+	if Debug[DBG_PathIn] && WS.Watched(loc, -1, 0) {
+		log.Printf("step from %v to %v depth %d to %d, steps %d, str %s\n", f.ToPoint(start), f.ToPoint(loc), f.Depth[start], f.Depth[loc], steps, out)
+	}
+
+	return out
+}
+
 // MontePathIn computes montecarlo distribution and flow for pathing
 // in to the set minimum depth, N samples per start location.
 func (f *Fill) MontePathIn(m *Map, start []Location, N int, MinDepth uint16) (dist []int, flow [][4]int) {
