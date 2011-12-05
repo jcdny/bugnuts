@@ -25,7 +25,7 @@ if [ "$END" = "" -o "$GAME" = "" ]; then
     echo "FATAL: game range error end: \"$END\" start: \"$GAME\""
     exit 1
 fi
-if [ "$END" -lt "$GAME" ]; then
+if [ "$GAME" -gt "$END" ]; then
     echo "FATAL: end before start, End: \"$END\" Start: \"$GAME\""
     exit 1
 fi
@@ -45,14 +45,15 @@ while [ $GAME -lt $END ]; do
         mkdir -p $D
     DEST="$D/replay.$GAME"
     SOURCE=${URLBASE}.$GAME
-    if [ -f $D/replay.$GAME ]; then
+    if [ -f $D/replay.$GAME -o -f $D/replay.${GAME}.gz ]; then
         echo "INFO: found game $DEST"
     else
         echo "INFO: getting $SOURCE"
         curl --create-dirs -o $D/replay.$GAME ${URLBASE}.$GAME || echo Ouch
         if [ -s $DEST ]; then
-            chmod 444 $DEST
-            ls -1l $DEST
+            gzip $DEST
+            chmod 444 ${DEST}.gz
+            ls -1l ${DEST}.gz
         fi
         sleep `expr $RANDOM % 10 + 10`
     fi
