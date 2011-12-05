@@ -25,7 +25,7 @@ import (
 )
 
 var runBot string
-var mapFile string
+var mapName string
 var watchPoints string
 var debugLevel int
 
@@ -42,7 +42,7 @@ func init() {
 	flag.StringVar(&runBot, "b", "v7", "Which bot to run\n\t"+strings.Join(BotList(), "\n\t"))
 	flag.StringVar(&vizList, "V", "", vizHelp)
 	flag.IntVar(&debugLevel, "d", 0, "Debug level")
-	flag.StringVar(&mapFile, "m", "", "Map file -- Used to validate generated map, hill guessing etc.")
+	flag.StringVar(&mapName, "m", "", "Map file -- Used to validate generated map, hill guessing etc.")
 	flag.StringVar(&watchPoints, "w", "", "Watch points \"T1:T2@R,C,N[;T1:T2...]\", \":\" will watch everything")
 	flag.Parse()
 
@@ -60,8 +60,8 @@ func init() {
 func main() {
 
 	var refmap *Map
-	if mapFile != "" {
-		refmap, _ = MapLoadFile("testdata/maps/" + mapFile)
+	if mapName != "" {
+		refmap, _ = MapLoadFile(MapFile(mapName))
 	}
 
 	in := bufio.NewReader(os.Stdin)

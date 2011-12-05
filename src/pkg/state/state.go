@@ -3,6 +3,7 @@ package state
 import (
 	"log"
 	"rand"
+	"sort"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 	. "bugnuts/game"
@@ -85,9 +86,10 @@ func (s *State) Turn1() {
 // if the bot plays itself it has 2 different seeds but the game is 
 // still deterministic.
 func (s *State) hillHash(seed int64) int64 {
-	for _, loc := range s.HillLocations(0) {
-		seed ^= int64(loc) * 1327 // 10 less than 1337
-	}
+	seed = seed >> 16
+	locs := s.HillLocations(0)
+	sort.Sort(LocationSlice(locs))
+	seed ^= int64(locs[0]) * 1327 // 10 less than 1337
 
 	return seed
 }
