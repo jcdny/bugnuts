@@ -53,10 +53,22 @@ func SetViz(vizList string, Viz map[string]bool) {
 	}
 }
 
+func VizPath(m *Map, p Point, steps string, color int) {
+	if color == 1 {
+		fmt.Fprintf(os.Stdout, "v slc 255 0 0 .5\n")
+	} else if color == 2 {
+		fmt.Fprintf(os.Stdout, "v slc 0 255 0 .5\n")
+	}
+	fmt.Fprintf(os.Stdout, "v rp %d %d %s\n", p.R, p.C, steps)
+	if color > 0 {
+		fmt.Fprintf(os.Stdout, "v slc 0 0 0 1.0\n")
+	}
+}
+
 func VizLine(m *Map, p1, p2 Point, arrow bool) {
-	ltype := "line"
+	ltype := "l"
 	if arrow {
-		ltype = "arrow"
+		ltype = "a"
 	}
 
 	if Abs(p1.R-p2.R) > m.Rows/2 {
@@ -81,7 +93,7 @@ func Visualize(s *State) {
 	if Viz["horizon"] {
 		for _, loc := range s.Met.HBorder {
 			p := s.ToPoint(Location(loc))
-			fmt.Fprintf(os.Stdout, "v tileBorder %d %d MM\n", p.R, p.C)
+			fmt.Fprintf(os.Stdout, "v tb %d %d MM\n", p.R, p.C)
 		}
 	}
 
@@ -90,14 +102,14 @@ func Visualize(s *State) {
 		for i, threat := range s.ThreatMap(s.Turn) {
 			if threat > 0 {
 				if lthreat != threat {
-					fmt.Fprintf(os.Stdout, "v setFillColor 255 0 0 %.1f\n", float64(threat)*.2)
+					fmt.Fprintf(os.Stdout, "v sfc 255 0 0 %.1f\n", float64(threat)*.2)
 					lthreat = threat
 				}
 				p := s.ToPoint(Location(i))
-				fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.R, p.C)
+				fmt.Fprintf(os.Stdout, "v t %d %d\n", p.R, p.C)
 			}
 		}
-		fmt.Fprintf(os.Stdout, "v setFillColor 0 0 0 1.0\n")
+		fmt.Fprintf(os.Stdout, "v sfc 0 0 0 1.0\n")
 	}
 
 	if Viz["vcount"] {
@@ -108,34 +120,34 @@ func Visualize(s *State) {
 					nvis = 8
 				}
 				if nvis != lnvis {
-					fmt.Fprintf(os.Stdout, "v setFillColor 255 255 255 %.1f\n", float64(nvis)*.1)
+					fmt.Fprintf(os.Stdout, "v sfc 255 255 255 %.1f\n", float64(nvis)*.1)
 					lnvis = nvis
 				}
 
 				p := s.ToPoint(Location(i))
-				fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.R, p.C)
+				fmt.Fprintf(os.Stdout, "v t %d %d\n", p.R, p.C)
 			}
 		}
-		fmt.Fprintf(os.Stdout, "v setFillColor 0 0 0 1.0\n")
+		fmt.Fprintf(os.Stdout, "v sfc 0 0 0 1.0\n")
 	}
 
 	if Viz["monte"] {
 		VizMCPaths(s)
 	}
 	if Viz["sym"] {
-		log.Printf("Visalizing symmetry")
+		log.Printf("Visualizing symmetry")
 		m := s.Map
 		if len(m.SMap) > 0 {
 			for _, item := range []Item{WATER, LAND} {
 				if item == WATER {
-					fmt.Fprintf(os.Stdout, "v setFillColor 0 0 128 .3\n")
+					fmt.Fprintf(os.Stdout, "v sfc 0 0 128 .3\n")
 				} else {
-					fmt.Fprintf(os.Stdout, "v setFillColor 0 128 0 .3\n")
+					fmt.Fprintf(os.Stdout, "v sfc 0 128 0 .3\n")
 				}
 				for i, gitem := range m.Grid {
 					if item == gitem && m.TGrid[i] != gitem {
 						p := s.ToPoint(Location(i))
-						fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.R, p.C)
+						fmt.Fprintf(os.Stdout, "v t %d %d\n", p.R, p.C)
 					}
 				}
 			}
@@ -146,7 +158,7 @@ func Visualize(s *State) {
 func VizTargets(s *State, tset *TargetSet) {
 	for loc, target := range *tset {
 		p := s.ToPoint(loc)
-		fmt.Fprintf(os.Stdout, "v star %d %d .3 1 %d true\n", p.R, p.C, target.Count+2)
+		fmt.Fprintf(os.Stdout, "v s %d %d .3 1 %d true\n", p.R, p.C, target.Count+2)
 	}
 }
 
@@ -159,14 +171,14 @@ func VizMCPaths(s *State) {
 		if val > 0 {
 			vout := val * 64 / (s.Met.MCDistMax + 1)
 			if val == s.Met.MCDistMax {
-				fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
+				fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
 					0, 0, 255, .75)
 			} else {
-				fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
+				fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
 					heat64[vout].R, heat64[vout].G, heat64[vout].B, .4)
 			}
 			p := s.ToPoint(Location(i))
-			fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.R, p.C)
+			fmt.Fprintf(os.Stdout, "v t %d %d\n", p.R, p.C)
 		}
 	}
 }
@@ -201,14 +213,14 @@ func VizMCHillIn(s *State) {
 				if val > 0 {
 					vout := val * 64 / (maxdist + 1)
 					if val == maxdist {
-						fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
+						fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
 							0, 0, 255, .75)
 					} else {
-						fmt.Fprintf(os.Stdout, "v setFillColor %d %d %d %.1f\n",
+						fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
 							heat64[vout].R, heat64[vout].G, heat64[vout].B, .5)
 					}
 					p := s.ToPoint(Location(i))
-					fmt.Fprintf(os.Stdout, "v tile %d %d\n", p.R, p.C)
+					fmt.Fprintf(os.Stdout, "v t %d %d\n", p.R, p.C)
 				}
 			}
 		}
