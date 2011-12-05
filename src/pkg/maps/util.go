@@ -47,11 +47,42 @@ func Permute4() *[4]Direction {
 	return &Perm4[rand.Intn(24)]
 }
 
+// Returns a permute4 + guard used in eg NPathIn
+func Permute4G() *[5]Direction {
+	return &Perm4G[rand.Intn(24)]
+}
+
 // Draw from the arrays with rand.Intn(120) for a random permutation of directions including NoMovement
 func Permute5() *[5]Direction {
 	return &Perm5[rand.Intn(120)]
 }
 
+var Perm4G = [...][5]Direction{
+	{0, 1, 2, 3, 4},
+	{0, 1, 3, 2, 4},
+	{0, 2, 1, 3, 4},
+	{0, 2, 3, 1, 4},
+	{0, 3, 1, 2, 4},
+	{0, 3, 2, 1, 4},
+	{1, 0, 2, 3, 4},
+	{1, 0, 3, 2, 4},
+	{1, 2, 0, 3, 4},
+	{1, 2, 3, 0, 4},
+	{1, 3, 0, 2, 4},
+	{1, 3, 2, 0, 4},
+	{2, 0, 1, 3, 4},
+	{2, 0, 3, 1, 4},
+	{2, 1, 0, 3, 4},
+	{2, 1, 3, 0, 4},
+	{2, 3, 0, 1, 4},
+	{2, 3, 1, 0, 4},
+	{3, 0, 1, 2, 4},
+	{3, 0, 2, 1, 4},
+	{3, 1, 0, 2, 4},
+	{3, 1, 2, 0, 4},
+	{3, 2, 0, 1, 4},
+	{3, 2, 1, 0, 4},
+}
 var Perm4 = [...][4]Direction{
 	{0, 1, 2, 3},
 	{0, 1, 3, 2},

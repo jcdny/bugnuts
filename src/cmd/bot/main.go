@@ -41,9 +41,9 @@ func init() {
 
 	flag.StringVar(&runBot, "b", "v7", "Which bot to run\n\t"+strings.Join(BotList(), "\n\t"))
 	flag.StringVar(&vizList, "V", "", vizHelp)
-	flag.IntVar(&debugLevel, "d", 0, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
-	flag.StringVar(&mapFile, "m", "", "Map file, used to validate generated map, hill guessing etc.")
-	flag.StringVar(&watchPoints, "w", "", "Watch points \"T1:T2@R,C,N[;T1:T2...]\", \":\" will watch all")
+	flag.IntVar(&debugLevel, "d", 0, "Debug level")
+	flag.StringVar(&mapFile, "m", "", "Map file -- Used to validate generated map, hill guessing etc.")
+	flag.StringVar(&watchPoints, "w", "", "Watch points \"T1:T2@R,C,N[;T1:T2...]\", \":\" will watch everything")
 	flag.Parse()
 
 	if BotGet(runBot) == nil {
@@ -58,6 +58,7 @@ func init() {
 }
 
 func main() {
+
 	var refmap *Map
 	if mapFile != "" {
 		refmap, _ = MapLoadFile("testdata/maps/" + mapFile)
@@ -85,20 +86,24 @@ func main() {
 
 	bot := NewBot(runBot, s)
 	if bot == nil {
-		log.Printf("Bot \"%s\" failed to create", runBot)
+		log.Printf("Failed to create bot \"%s\"", runBot)
 		return
 	}
 
+	// TODO this is a hack
 	if runBot == "v7" {
 		s.Testing = true
 	}
 
 	// Send go to tell server we are ready to process turns
 	fmt.Fprintf(os.Stdout, "go\n")
+
+	// Timing
 	btime := time.Nanoseconds()
 	etime, stime := btime, btime
 	egc := runtime.MemStats.PauseTotalNs
 	sgc := egc
+
 	for {
 		// READ TURN INFO FROM SERVER]
 		var t *Turn
@@ -112,6 +117,7 @@ func main() {
 		turns = append(turns, t)
 
 		s.ProcessTurn(t)
+		s.UpdateStatistics(t)
 
 		if refmap != nil {
 			count, out := MapValidate(refmap, s.Map)
@@ -123,7 +129,7 @@ func main() {
 		// Generate order list
 		bot.DoTurn(s)
 
-		// Timing hohah
+		// Timing hoohah
 		stime, etime = etime, time.Nanoseconds()
 		sgc, egc = egc, runtime.MemStats.PauseTotalNs
 		if Debug[DBG_TurnTime] {

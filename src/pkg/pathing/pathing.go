@@ -19,22 +19,26 @@ func (f *Fill) PathIn(loc Location) (Location, int) {
 // NPathIn computes an N step path to a minima.  If steps == -1 then
 // go to minima and return steps taken; if steps == 0 it's a noop, more for
 // clean logic elsewhere.
-func (f *Fill) NPathIn(loc Location, steps int) (Location, int) {
+func (f *Fill) NPathIn(start Location, steps int) (Location, int) {
 	if steps == 0 {
-		return loc, steps
+		return start, steps
 	} else if steps < -1 {
 		steps = -1
 	}
 
-	origloc := loc
+	loc := start
+	depth := f.Depth[loc]
 
 OUT:
 	for {
-		depth := f.Depth[loc]
-		for _, d := range Permute4() {
+		var d Direction
+		for _, d = range Permute4G() {
 			nl := f.LocStep[loc][d]
-			if f.Depth[nl] < depth && f.Depth[nl] > 0 {
+			nd := f.Depth[nl]
+			// log.Printf("steps %d New Loc %d Dir %s Depth %d", steps, nl, d, nd)
+			if nd < depth && nd > 0 {
 				loc = nl
+				depth = nd
 				steps--
 				if steps == 0 {
 					break OUT
@@ -43,10 +47,13 @@ OUT:
 				}
 			}
 		}
+		if d == NoMovement {
+			break
+		}
 	}
 
 	if Debug[DBG_PathIn] && WS.Watched(loc, -1, 0) {
-		log.Printf("step from %v to %v depth %d to %d, steps %d\n", f.ToPoint(origloc), f.ToPoint(loc), f.Depth[origloc], f.Depth[loc], steps)
+		log.Printf("step from %v to %v depth %d to %d, steps %d\n", f.ToPoint(start), f.ToPoint(loc), f.Depth[start], f.Depth[loc], steps)
 	}
 
 	return loc, -(steps + 1)
@@ -90,7 +97,6 @@ func (f *Fill) Closest(slice []Location) []Location {
 	if len(slice) < 1 {
 		return slice
 	}
-	log.Printf("Closest slice %v", slice)
 
 	for _, loc := range slice {
 		depth := int(f.Depth[loc])

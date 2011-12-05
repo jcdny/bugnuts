@@ -14,7 +14,14 @@ dist:
 	zip dist/dist.$(shell date +%Y%m%d-%H%M).zip $(GOFILES)
 
 test: $(TARG)
-	./bot -V none -d=1 < i.tmp 2>&1 > /dev/null
+	./bot -b sb -V none -d 3 < i.tmp 2>&1 > /dev/null
+
+testall: $(TARG)
+	./bot -b v7 -V none -d 0 < i.tmp 2>&1 > /dev/null
+	./bot -b v6 -V none -d 0 < i.tmp 2>&1 > /dev/null
+	./bot -b v5 -V none -d 0 < i.tmp 2>&1 > /dev/null
+	./bot -b v3 -V none -d 0 < i.tmp 2>&1 > /dev/null
+	./bot -b sb -V none -d 0 < i.tmp 2>&1 > /dev/null
 
 #	./bot -V none -d=1 -w 195:@88,36 < i.tmp 2>&1 > /dev/null
 
