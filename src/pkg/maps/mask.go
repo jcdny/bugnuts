@@ -17,21 +17,20 @@ type Mask struct {
 	// Locations added or removed for a step in each direction
 	Add    [][]Point
 	Remove [][]Point
-	// Support
-	Sup [][]Point
 
 	// Union of points in all directions
 	Union    []Point
 	UnionLoc []Location
+
 	// Max and Min Threat cache
 	MM []*MoveMask
 }
 
 type MoveMask struct {
 	R      uint8 // Radius
-	NFree  int
+	NFree  int   // Degrees of freedom
 	PStep  int
-	Stride int
+	Stride int // Cols used to generate loc offsets.
 	MinPr  []uint16
 	MaxPr  []uint16
 	Loc    []Location
@@ -289,6 +288,7 @@ func (m *Map) FreedomKey(loc Location) int {
 	return key
 }
 
+// Compute degrees of freedom taking into account threat, returned value can be used to index into mask.MM
 func (m *Map) FreedomKeyThreat(loc Location, t []int8, nsup [4]int8) int {
 	key := 0
 	for i, l := range m.LocStep[loc] {
