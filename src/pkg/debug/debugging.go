@@ -30,12 +30,12 @@ var debugLevels = [][]int{
 	0: {0},
 	1: {DBG_TurnTime},
 	2: {DBG_Iterations, DBG_Symmetry},
-	3: {DBG_Targets},
+	3: {DBG_Targets, DBG_Threat},
 }
 
 func SetDebugLevel(dlev int) {
-	if dlev > len(debugLevels) {
-		log.Panicf("Max defined debug level is %d", len(debugLevels))
+	if dlev >= len(debugLevels) {
+		log.Panicf("Max defined debug level is %d", len(debugLevels)-1)
 	}
 	for d := 0; d <= dlev; d++ {
 		for _, dbg := range debugLevels[d] {
