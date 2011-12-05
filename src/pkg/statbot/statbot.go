@@ -45,13 +45,20 @@ func (bot *StatBot) SetTrueState(g *engine.Game, np int) {
 
 func (bot *StatBot) StatHeader() string {
 	s := "Turn,"
-	for i := range bot.G.Players {
-		s += fmt.Sprint("Ntrue", i, ",")
+	if bot.G != nil {
+		for i := range bot.G.Players {
+			s += fmt.Sprint("Ntrue", i, ",")
+		}
+		bot.NP = len(bot.G.Players)
+	} else {
+		bot.NP = MaxPlayers
 	}
+
 	s += "Unknown,Horizon,HorizonMax,HorizonMaxTurn,DiedTotAll,Food,"
 
 	s += "PSeen,"
-	for i := range bot.G.Players {
+
+	for i := 0; i < bot.NP; i++ {
 		s += fmt.Sprint("Nseen", i, ",")
 	}
 
@@ -63,16 +70,17 @@ func (bot *StatBot) StatLine(turn int, s *Statistics) string {
 
 	out := ""
 	out = fmt.Sprint(turn, ",")
-	for i := range bot.G.Players {
-		nant := 0
-		np := bot.G.Players[bot.NP].InvMap[i]
-		for _, pl := range bot.G.PlayerInput[turn-1][np].A {
-			if pl.Player == 0 {
-				nant++
+	if bot.G != nil {
+		for i := range bot.G.Players {
+			nant := 0
+			np := bot.G.Players[bot.NP].InvMap[i]
+			for _, pl := range bot.G.PlayerInput[turn-1][np].A {
+				if pl.Player == 0 {
+					nant++
+				}
 			}
+			out += fmt.Sprint(nant) + ","
 		}
-
-		out += fmt.Sprint(nant) + ","
 	}
 
 	out += fmt.Sprint(ts.Unknown, ",",
@@ -82,7 +90,7 @@ func (bot *StatBot) StatLine(turn int, s *Statistics) string {
 		s.DiedTotAll, ",",
 		ts.Food, ",")
 	out += fmt.Sprint(-1, ",")
-	for i := 0; i < len(bot.G.Players); i++ {
+	for i := 0; i < bot.NP; i++ {
 		out += fmt.Sprint(ts.Seen[i], ",")
 	}
 	return out
