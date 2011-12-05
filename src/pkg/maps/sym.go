@@ -175,7 +175,7 @@ func (s *SymData) UpdateSymmetryData() {
 			smap, valid := s.TransMapValidate(tile.Offset)
 			if valid {
 				if Debug[DBG_Symmetry] {
-					log.Printf("Valid symmetry map len %d found", len(s.Map.SMap[0]))
+					log.Printf("Valid symmetry map len %d found", len(smap[0]))
 				}
 				maxlen = len(equiv)
 				s.Map.SMap = smap
