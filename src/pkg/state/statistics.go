@@ -37,7 +37,7 @@ func NewStatistics(g *GameInfo) *Statistics {
 		//StaticMap: make([]int, g.Rows*g.Cols),
 		//PlayerMap: make([]int, g.Rows*g.Cols),
 		TStats:     make([]TurnStatistics, g.Turns+2),
-		HorizonMax: MAXMAPSIZE + 1,
+		HorizonMax: MAXMAPSIZE,
 	}
 
 	return stats
