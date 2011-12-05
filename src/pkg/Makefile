@@ -14,6 +14,8 @@ include $(GOROOT)/src/Make.inc
 all: install
 
 DIRS=\
+	bot3\
+	bot5\
 	bot6\
 	bot7\
 	statbot\

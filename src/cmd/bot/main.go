@@ -16,6 +16,10 @@ import (
 	. "bugnuts/state"
 	. "bugnuts/game"
 	. "bugnuts/MyBot"
+	// import bots to get their init() to register them.
+	_ "bugnuts/statbot"
+	_ "bugnuts/bot3"
+	_ "bugnuts/bot5"
 	_ "bugnuts/bot6"
 	_ "bugnuts/bot7"
 )
@@ -34,14 +38,19 @@ func init() {
 	for flag := range Viz {
 		vizHelp += "," + flag
 	}
-	flag.StringVar(&vizList, "V", "", vizHelp)
 
+	flag.StringVar(&runBot, "b", "v7", "Which bot to run\n\t"+strings.Join(BotList(), "\n\t"))
+	flag.StringVar(&vizList, "V", "", vizHelp)
 	flag.IntVar(&debugLevel, "d", 0, "Debug level 0 none 1 game 2 per turn 3 per ant 4 excessive")
-	flag.StringVar(&runBot, "b", "v7", "Which bot to run")
 	flag.StringVar(&mapFile, "m", "", "Map file, used to validate generated map, hill guessing etc.")
 	flag.StringVar(&watchPoints, "w", "", "Watch points \"T1:T2@R,C,N[;T1:T2...]\", \":\" will watch all")
-
 	flag.Parse()
+
+	if BotGet(runBot) == nil {
+		log.Printf("Unrecognized bot \"%s\", Registered bots:\n\t%s\n", runBot, strings.Join(BotList(), "\n\t"))
+		return
+	}
+
 	log.SetPrefix(runBot + ":")
 
 	SetDebugLevel(debugLevel)
@@ -76,8 +85,7 @@ func main() {
 
 	bot := NewBot(runBot, s)
 	if bot == nil {
-		log.Printf("Unkown bot %s", runBot)
-		log.Printf("Bots:\n%s\n", strings.Join(BotList(), "\n"))
+		log.Printf("Bot \"%s\" failed to create", runBot)
 		return
 	}
 

@@ -1,4 +1,4 @@
-package main
+package bot5
 // The v5 Bot -- Marginally less Terrible!!!!
 //
 // Leson from v4: if you run out of goals don't have your ants just go
@@ -10,14 +10,23 @@ package main
 // Also adds enemy ant avoidance though still no combat besides the
 // willingness to sacrfice.
 //
-// Does not match v5 on aichallenge.org since I uploaded before I wanted to 
+// Does not match v5 on aichallenge.org since I uploaded before I wanted to
 // make a BotV6.go but the git tag matches what was uploaded.
-
+//
+// Subsequently modified to work in a package.
 import (
 	"fmt"
 	"os"
 	"rand"
 	"log"
+	. "bugnuts/maps"
+	. "bugnuts/pathing"
+	. "bugnuts/torus"
+	. "bugnuts/state"
+	. "bugnuts/parameters"
+	. "bugnuts/MyBot"
+	. "bugnuts/debug"
+	. "bugnuts/viz"
 )
 
 type BotV5 struct {
@@ -29,14 +38,18 @@ type BotV5 struct {
 	Primap   []int
 }
 
+func init() {
+	RegisterABot(ABot{Key: "v5", Desc: "V5 - goal seeker", PKey: "v5", NewBot: NewBotV5})
+}
+
 func (bot *BotV5) Priority(i Item) int {
 	return bot.Primap[i]
 }
 
 //NewBot creates a new instance of your bot
-func NewBotV5(s *State) Bot {
+func NewBotV5(s *State, p *Parameters) Bot {
 	mb := &BotV5{
-		P:        ParameterSets["V5"],
+		P:        p,
 		IdleAnts: make([]int, 0, s.Turns),
 	}
 
@@ -47,7 +60,7 @@ func NewBotV5(s *State) Bot {
 func (bot *BotV5) ExploreUpdate(s *State) {
 	// Any explore point which is visible should be nuked
 	for loc := range *bot.Explore {
-		if s.Map.Seen[loc] == s.Turn {
+		if s.Met.Seen[loc] == s.Turn {
 			bot.Explore.Remove(loc)
 		} else {
 			(*bot.Explore)[loc].Count = 1
@@ -56,8 +69,6 @@ func (bot *BotV5) ExploreUpdate(s *State) {
 }
 
 func (bot *BotV5) DoTurn(s *State) os.Error {
-	// TODO this still seems clunky.  need to figure out a better way
-	s.FoodUpdate(bot.P.ExpireFood)
 	bot.ExploreUpdate(s)
 
 	tset := TargetSet{}
@@ -175,7 +186,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 							ants[loc] = 0, false
 
 							if Viz["path"] {
-								fmt.Fprintf(os.Stdout, "v line %d %d %d %d\n", p.r, p.c, ep.r, ep.c)
+								fmt.Fprintf(os.Stdout, "v line %d %d %d %d\n", p.R, p.C, ep.R, ep.C)
 							}
 						}
 					}
@@ -209,7 +220,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 	for loc, d := range moves {
 		if d < 5 {
 			p := s.Map.ToPoint(loc)
-			fmt.Fprintf(os.Stdout, "o %d %d %s\n", p.r, p.c, DirectionChar[d])
+			fmt.Fprintf(os.Stdout, "o %d %d %s\n", p.R, p.C, DirectionChar[d])
 		}
 	}
 

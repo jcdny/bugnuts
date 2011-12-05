@@ -1,3 +1,4 @@
+bot3.install: MyBot.install debug.install maps.install parameters.install state.install torus.install util.install
 bot6.install: MyBot.install debug.install maps.install parameters.install pathing.install state.install torus.install viz.install
 bot7.install: MyBot.install debug.install maps.install parameters.install pathing.install state.install torus.install viz.install
 statbot.install: MyBot.install engine.install parameters.install state.install

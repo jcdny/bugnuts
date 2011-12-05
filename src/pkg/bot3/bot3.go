@@ -1,4 +1,4 @@
-package main
+package bot3
 // The v3 Bot -- Terrible!!!!
 
 import (
@@ -7,23 +7,28 @@ import (
 	"math"
 	"os"
 	"rand"
+	. "bugnuts/maps"
+	. "bugnuts/torus"
+	. "bugnuts/state"
+	. "bugnuts/parameters"
+	. "bugnuts/MyBot"
+	. "bugnuts/debug"
+	. "bugnuts/util"
 )
 
 type BotV3 struct {
+	// This space intentionally left blank
+}
 
+func init() {
+	RegisterABot(ABot{Key: "v3", Desc: "V3 - diffusion bot", PKey: "", NewBot: NewBotV3})
 }
 
 //NewBot creates a new instance of your bot
-func NewBotV3(s *State) Bot {
-	mb := &BotV3{
-	//do any necessary initialization here
-	}
+func NewBotV3(s *State, p *Parameters) Bot {
+	mb := &BotV3{}
 
 	return mb
-}
-
-func (bot *BotV3) Priority(i Item) int {
-	return 1
 }
 
 func (bot *BotV3) DoTurn(s *State) os.Error {
@@ -37,7 +42,7 @@ func (bot *BotV3) DoTurn(s *State) os.Error {
 				if false && rand.Intn(8) == 0 {
 					score[d] = 500
 				} else {
-					score[d] = bot.Score(s, p, tp, s.viewMask.Add[d])
+					score[d] = bot.Score(s, p, tp, s.ViewMask.Add[d])
 				}
 				if score[d] > best {
 					best = score[d]
@@ -63,7 +68,7 @@ func (bot *BotV3) DoTurn(s *State) os.Error {
 			tp := s.PointAdd(p, Steps[bestd[pp]])
 			s.Map.Grid[s.ToLocation(tp)] = MY_ANT
 			s.Map.Grid[s.ToLocation(p)] = LAND
-			fmt.Fprintf(os.Stdout, "o %d %d %c\n", p.r, p.c, ([4]byte{'n', 's', 'e', 'w'})[bestd[pp]])
+			fmt.Fprintf(os.Stdout, "o %d %d %c\n", p.R, p.C, ([4]byte{'n', 's', 'e', 'w'})[bestd[pp]])
 		}
 	}
 	fmt.Fprintf(os.Stdout, "go\n")
@@ -76,7 +81,7 @@ func (bot *BotV3) Score(s *State, p, tp Point, pv []Point) int {
 
 	// Score for explore
 	for _, op := range pv {
-		seen := s.Map.Seen[s.ToLocation(s.PointAdd(p, op))]
+		seen := s.Met.Seen[s.ToLocation(s.PointAdd(p, op))]
 		switch {
 		case seen < 1:
 			score += 2
@@ -91,13 +96,13 @@ func (bot *BotV3) Score(s *State, p, tp Point, pv []Point) int {
 	}
 
 	// Score for nearby items
-	for _, op := range s.viewMask.P {
+	for _, op := range s.ViewMask.P {
 		item := s.Map.Grid[s.ToLocation(s.PointAdd(tp, op))]
 		inc := 0
 		iname := ""
 		if item != LAND && item != WATER {
 			//log.Printf("%v %v %d %d",p, tp, op, d, item)
-			d := Abs(op.c) + Abs(op.r)
+			d := Abs(op.C) + Abs(op.R)
 
 			if item == MY_HILL {
 				iname = "my hill"

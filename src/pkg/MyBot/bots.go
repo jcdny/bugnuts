@@ -1,7 +1,6 @@
 package MyBot
 
 import (
-	"log"
 	. "bugnuts/state"
 	. "bugnuts/parameters"
 )
@@ -32,13 +31,13 @@ func BotList() []string {
 	return bl
 }
 
-func BotGet(k string) ABot {
+func BotGet(k string) *ABot {
 	b, ok := botList[k]
 	if !ok {
-		log.Panicf("Invalid bot %s", k)
+		return nil
 	}
 
-	return b
+	return &b
 }
 
 func NewBot(k string, s *State) Bot {
