@@ -1,6 +1,6 @@
+// StatBot - Dummy bot that simply outputs the statistics generated out of
+// state.UpdateStatistics().
 package statbot
-
-// The v7 Bot -- Now with combat (eventually)
 
 import (
 	"os"
@@ -12,9 +12,10 @@ import (
 )
 
 type StatBot struct {
-	P  *Parameters
-	G  *engine.Game
-	NP int
+	P    *Parameters
+	G    *engine.Game
+	PMax int
+	NP   int
 }
 
 func init() {
@@ -33,6 +34,7 @@ func NewStatBot(s *State, pset *Parameters) Bot {
 func (bot *StatBot) SetTrueState(g *engine.Game, np int) {
 	bot.G = g
 	bot.NP = np
+	bot.PMax = len(bot.G.Players)
 
 	// have to add an inverse map for players we never saw during the actual game
 	for i, invp := range bot.G.Players[np].InvMap {
@@ -49,16 +51,16 @@ func (bot *StatBot) StatHeader() string {
 		for i := range bot.G.Players {
 			s += fmt.Sprint("Ntrue", i, ",")
 		}
-		bot.NP = len(bot.G.Players)
 	} else {
-		bot.NP = MaxPlayers
+		bot.NP = 0
+		bot.PMax = MaxPlayers
 	}
 
 	s += "Unknown,Horizon,HorizonMax,HorizonMaxTurn,DiedTotAll,Food,"
 
 	s += "PSeen,"
 
-	for i := 0; i < bot.NP; i++ {
+	for i := 0; i < bot.PMax; i++ {
 		s += fmt.Sprint("Nseen", i, ",")
 	}
 
@@ -73,8 +75,8 @@ func (bot *StatBot) StatLine(turn int, s *Statistics) string {
 	if bot.G != nil {
 		for i := range bot.G.Players {
 			nant := 0
-			np := bot.G.Players[bot.NP].InvMap[i]
-			for _, pl := range bot.G.PlayerInput[turn-1][np].A {
+			pnum := bot.G.Players[bot.NP].InvMap[i]
+			for _, pl := range bot.G.PlayerInput[turn-1][pnum].A {
 				if pl.Player == 0 {
 					nant++
 				}
@@ -90,7 +92,7 @@ func (bot *StatBot) StatLine(turn int, s *Statistics) string {
 		s.DiedTotAll, ",",
 		ts.Food, ",")
 	out += fmt.Sprint(-1, ",")
-	for i := 0; i < bot.NP; i++ {
+	for i := 0; i < bot.PMax; i++ {
 		out += fmt.Sprint(ts.Seen[i], ",")
 	}
 	return out

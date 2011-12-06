@@ -19,12 +19,6 @@ func statMe(in, out, user string) {
 		log.Print("Read error for ", in, ":", err)
 		return
 	}
-	fd, err := os.Create(out)
-	if err != nil {
-		log.Print("Create error for ", out, ":", err)
-		return
-	}
-	defer fd.Close()
 	unum := -1
 	for i, pn := range match.PlayerNames {
 		if user == pn {
@@ -37,10 +31,18 @@ func statMe(in, out, user string) {
 		return
 	}
 
+	fd, err := os.Create(out)
+	if err != nil {
+		log.Print("Create error for ", out, ":", err)
+		return
+	}
+	defer fd.Close()
+
 	m := match.GetMap()
 	g := NewGame(&match.GameInfo, m)
 	g.Replay(match.Replay, 0, match.GameLength, true)
 	replay := g.PlayerInput
+
 	s := NewState(&match.GameInfo)
 	bot := NewBot("sb", s)
 
@@ -64,10 +66,10 @@ func statMe(in, out, user string) {
 
 func TestStatBot(t *testing.T) {
 	replays, _ := ioutil.ReadFile("testdata/bugnuts.tmp")
-	for _, file := range strings.Split(string(replays), "\n") {
-		in := "/Users/davis/ai/data/ants.fluxid.pl/" + file
+	for _, file := range strings.Split(string(replays), "\n")[:10] {
+		in := "testdata/" + file
 		t := strings.Split(file, "/")
-		out := "testdata/" + t[len(t)-1] + ".tmp"
+		out := "testdata/tmp/" + t[len(t)-1] + ".csv"
 		user := "bugnutsv5"
 		log.Print("Read ", in, " write ", out, " for ", user)
 		statMe(in, out, user)
