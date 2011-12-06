@@ -135,7 +135,6 @@ func Visualize(s *State) {
 		VizMCPaths(s)
 	}
 	if Viz["sym"] {
-		log.Printf("Visualizing symmetry")
 		m := s.Map
 		if len(m.SMap) > 0 {
 			for _, item := range []Item{WATER, LAND} {
@@ -225,4 +224,30 @@ func VizMCHillIn(s *State) {
 			}
 		}
 	}
+}
+
+func vizCircle(p Point, r float64, fill bool) {
+	fmt.Fprintf(os.Stdout, "v c %d %d %f %s\n",
+		p.R, p.C, r, fill)
+}
+
+func VizFrenemies(s *State, f, e map[Location]int) {
+	if len(f) > 0 {
+		fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
+			0, 255, 0, .75)
+		for loc := range f {
+			p := s.ToPoint(loc)
+			vizCircle(p, 1.5, false)
+		}
+	}
+	if len(e) > 0 {
+		fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
+			255, 0, 0, .75)
+		for loc := range e {
+			p := s.ToPoint(loc)
+			vizCircle(p, 1.5, false)
+		}
+	}
+	fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
+		0, 0, 0, 1.0)
 }
