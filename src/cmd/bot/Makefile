@@ -14,7 +14,7 @@ dist:
 	zip dist/dist.$(shell date +%Y%m%d-%H%M).zip $(GOFILES)
 
 test: $(TARG)
-	./bot -b sb -V none -d 3 < i.tmp 2>&1 > /dev/null
+	./bot -b v7 -V none -d 1 < i.tmp 2>&1 > /dev/null
 
 testall: $(TARG)
 	./bot -b v7 -V none -d 0 < i.tmp 2>&1 > /dev/null

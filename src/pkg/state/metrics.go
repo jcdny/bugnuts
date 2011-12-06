@@ -49,10 +49,12 @@ func NewMetrics(m *Map) *Metrics {
 		Runs:     make([][4]uint8, size),
 		HBorder:  make([]Location, 0, 1000),
 	}
+
 	for i := 0; i < NTHREAT; i++ {
 		met.Threat = append(met.Threat, make([]int8, size))
 		met.PThreat = append(met.PThreat, make([]uint16, size))
 	}
+
 	for i := range met.Unknown {
 		met.Unknown[i] = 999
 	}

@@ -207,7 +207,7 @@ func VizMCHillIn(s *State) {
 			if paths > 32 {
 				paths = 32
 			}
-			dist, _ := f.MontePathIn(s.Map, ants, paths, 1)
+			dist, _ := f.MontePathIn(s.Rand, ants, paths, 1)
 			maxdist := Max(dist)
 			for i, val := range dist {
 				if val > 0 {

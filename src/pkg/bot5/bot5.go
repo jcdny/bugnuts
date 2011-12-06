@@ -17,7 +17,6 @@ package bot5
 import (
 	"fmt"
 	"os"
-	"rand"
 	"log"
 	. "bugnuts/maps"
 	. "bugnuts/pathing"
@@ -138,7 +137,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 			p := s.Map.ToPoint(loc)
 		STEP:
 			// Perm here so our bots are not biased to move in particular directions
-			for _, d := range rand.Perm(4) {
+			for _, d := range Permute4(s.Rand) {
 				if Debug[DBG_Iterations] {
 					log.Printf("Allocating ant %d dir %d", loc, d)
 				}
@@ -171,7 +170,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 						ants[loc] = 0, false
 						tset[nl].Count = 0
 					} else {
-						endloc, steps := f.PathIn(nl)
+						endloc, steps := f.PathIn(s.Rand, nl)
 						ep := s.Map.ToPoint(endloc)
 
 						tgt, ok := tset[endloc]
@@ -217,7 +216,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 			//log.Printf("%d ants with nothing to do", len(ants))
 
 			fexp, _, _ := MapFill(s.Map, s.Ants[0], 1)
-			loc, N := fexp.Sample(len(ants), 14, 14)
+			loc, N := fexp.Sample(s.Rand, len(ants), 14, 14)
 			for i := range loc {
 				bot.Explore.Add(EXPLORE, loc[i], N[i], bot.Priority(EXPLORE))
 				tset.Add(EXPLORE, loc[i], N[i], bot.Priority(EXPLORE))

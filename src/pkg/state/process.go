@@ -47,7 +47,6 @@ func (s *State) ProcessFood(food []Location, turn int) {
 
 func (s *State) ProcessTurn(t *Turn) {
 	s.ResetGrid()
-
 	s.Turn++
 	s.SSID = s.Map.SID
 
@@ -302,7 +301,7 @@ func (s *State) UpdateHillMaps() {
 
 	outbound := make(map[Location]int)
 	R := MinV(MaxV(MinV(s.Rows, s.Cols)/s.NHills[0]/2, 8), 16)
-	samples, _ := s.Met.FHill.Sample(0, R, R)
+	samples, _ := s.Met.FHill.Sample(s.Rand, 0, R, R)
 
 	if false {
 		log.Printf("Updating hill fill for player 0 %#v", lend)

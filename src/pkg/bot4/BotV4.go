@@ -7,7 +7,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"rand"
 	"sort"
 	_ "log"
 )
@@ -64,7 +63,7 @@ func (bot *BotV4) DoTurn(s *State) os.Error {
 	for _, depth := range dl {
 		for _, loc := range ll[depth] {
 			p := s.Map.ToPoint(loc)
-			dir := rand.Perm(4)
+			dir := s.Permute4()
 			for _, d := range dir {
 				np := s.Map.PointAdd(s.Map.ToPoint(loc), sv[d])
 				nl := s.Map.ToLocation(np)

@@ -51,20 +51,19 @@ func LocationsToOffsets(locs []Location, cols int) Offsets {
 }
 
 // Draw from the arrays with rand.Intn(24) for a random permutation of directions.
-func Permute4() *[4]Direction {
-	return &Perm4[rand.Intn(24)]
+func Permute4(r *rand.Rand) *[4]Direction {
+	return &Perm4[r.Intn(24)]
 }
 
 // Returns a permute4 + guard used in eg NPathIn
-func Permute4G() *[5]Direction {
-	return &Perm4G[rand.Intn(24)]
+func Permute4G(r *rand.Rand) *[5]Direction {
+	return &Perm4G[r.Intn(24)]
 }
 
 // Draw from the arrays with rand.Intn(120) for a random permutation of directions including NoMovement
-func Permute5() *[5]Direction {
-	return &Perm5[rand.Intn(120)]
+func Permute5(r *rand.Rand) *[5]Direction {
+	return &Perm5[r.Intn(120)]
 }
-
 // Perm4G is the directions permuted with the NoMovement guard.
 // The ordering here is relevant since NPathInString uses the perm flag to index into this 
 // in order to generate bounding paths.

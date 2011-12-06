@@ -1,7 +1,6 @@
 package state
 
 import (
-	"log"
 	"rand"
 	"sort"
 	. "bugnuts/maps"
@@ -29,6 +28,7 @@ type State struct {
 	// Game parameter set
 	*GameInfo
 	*Map
+	Rand *rand.Rand
 	SSID int // The sym id at turn start
 	Turn int //current turn number
 
@@ -78,8 +78,8 @@ func NewState(g *GameInfo) *State {
 func (s *State) Turn1() {
 	s.InitialHills = len(s.HillLocations(0))
 	seed := s.hillHash(s.PlayerSeed)
-	log.Printf("TURN 1 Seed %v (Player Seed %v and hillHash)", seed, s.PlayerSeed)
-	rand.Seed(seed)
+	s.Rand = rand.New(rand.NewSource(seed))
+	// log.Printf("TURN 1 Seed used %v (Player Seed %v and hillHash)", seed, s.PlayerSeed)
 }
 
 // Compute the PlayerSeed XORed with the hill locations so 

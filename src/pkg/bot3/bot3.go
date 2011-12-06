@@ -6,7 +6,6 @@ import (
 	"log"
 	"math"
 	"os"
-	"rand"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 	. "bugnuts/state"
@@ -39,7 +38,7 @@ func (bot *BotV3) DoTurn(s *State) os.Error {
 		for d, op := range Steps {
 			tp := s.PointAdd(p, op)
 			if bot.validPoint(s, tp) {
-				if false && rand.Intn(8) == 0 {
+				if false && s.Rand.Intn(8) == 0 {
 					score[d] = 500
 				} else {
 					score[d] = bot.Score(s, p, tp, s.ViewMask.Add[d].P)
@@ -63,7 +62,7 @@ func (bot *BotV3) DoTurn(s *State) os.Error {
 					bestd = append(bestd, d)
 				}
 			}
-			pp := rand.Perm(len(bestd))[0]
+			pp := s.Rand.Perm(len(bestd))[0]
 			// Swap the current and target cells
 			tp := s.PointAdd(p, Steps[bestd[pp]])
 			s.Map.Grid[s.ToLocation(tp)] = MY_ANT

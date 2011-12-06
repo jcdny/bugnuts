@@ -40,7 +40,7 @@ func (s *State) MonteCarloDensity() {
 			for paths*len(ants) > 2048 {
 				paths = paths >> 1
 			}
-			s.Met.MCDist, s.Met.MCFlow = f.MontePathIn(s.Map, ants, paths, 1)
+			s.Met.MCDist, s.Met.MCFlow = f.MontePathIn(s.Rand, ants, paths, 1)
 			s.Met.MCDistMax = Max(s.Met.MCDist)
 			s.Met.MCPaths = paths
 		} else {

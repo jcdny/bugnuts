@@ -148,7 +148,7 @@ func (s *State) AddBorderTargets(N int, tset *TargetSet, explore *TargetSet, pri
 	// Generate a target list for unseen areas and exploration
 	// tset.Add(RALLY, s.Map.ToLocation(Point{58, 58}), len(ants), bot.Priority(RALLY))
 	fexp, _, _ := MapFill(s.Map, s.Ants[0], 1)
-	loc, n := fexp.Sample(N, 14, 20)
+	loc, n := fexp.Sample(s.Rand, N, 14, 20)
 	added := 0
 	for i := range loc {
 		if s.Met.Seen[loc[i]] < s.Turn-1 {
@@ -194,7 +194,7 @@ func (s *State) AddMCBlock(tset *TargetSet, priority int, DefendDist int) {
 
 		f, _, _ := MapFill(s.Map, hills, 0)
 
-		loclist, _ := f.Sample(0, 2, 8)
+		loclist, _ := f.Sample(s.Rand, 0, 2, 8)
 		Def := make([]DefScore, len(loclist))
 		for i, loc := range loclist {
 			(*tset).Remove(loc)
@@ -224,7 +224,7 @@ func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist 
 			// TODO: use seed rather than PathIn
 			steps := int(f.Depth[Location(loc)] - 1)
 			if steps < DefendDist {
-				tloc, _ := f.NPathIn(loc, MaxV(steps-8, steps/2))
+				tloc, _ := f.NPathIn(s.Rand, loc, MaxV(steps-8, steps/2))
 				if Debug[DBG_PathInDefense] {
 					log.Printf("Enemy Pathin: defense: %v @ %v", s.ToPoint(loc), s.ToPoint(tloc))
 				}

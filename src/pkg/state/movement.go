@@ -2,7 +2,6 @@ package state
 
 import (
 	"log"
-	"rand"
 	"fmt"
 	"sort"
 	"os"
@@ -115,7 +114,7 @@ func (s *State) AntStep(loc Location, riskOff bool) *AntStep {
 		Steps:   make([]int, 0, 4),
 		N:       make([]*Neighborhood, 5),
 		NFree:   1,
-		Perm:    rand.Int(),
+		Perm:    s.Rand.Int(),
 	}
 	nh := new([5]Neighborhood)
 	for i := range as.N {
@@ -123,7 +122,7 @@ func (s *State) AntStep(loc Location, riskOff bool) *AntStep {
 	}
 
 	// Populate the neighborhood info
-	permute := Permute5()
+	permute := Permute5(s.Rand)
 	for d := 0; d < 5; d++ {
 		nloc := s.Map.LocStep[loc][d]
 		s.Neighborhood(nloc, as.N[d], Direction(d))
@@ -209,7 +208,7 @@ func (s *State) GenerateMoves(antsIn []*AntStep) {
 		lastants = stuck
 
 		// Recompute perm and nfree
-		perm := Permute5()
+		perm := Permute5(s.Rand)
 		for _, ant := range ants {
 			for i, N := range ant.N {
 				N.Perm = int(perm[i])
