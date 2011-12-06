@@ -28,9 +28,12 @@ func PointsToOffsets(pv []Point, cols int) Offsets {
 		L: make([]Location, len(pv), len(pv)),
 	}
 	copy(out.P, pv)
+	R := 0
 	for i, p := range pv {
+		R = MaxV(Abs(p.R), Abs(p.C), R)
 		out.L[i] = Location(p.R*cols + p.C)
 	}
+	out.R = uint8(R)
 
 	return out
 }

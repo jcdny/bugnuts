@@ -22,6 +22,15 @@ var ByteToDirection [256]Direction
 var DirectionMap = map[string]Point{"n": {-1, 0}, "e": {0, -1}, "s": {1, 0}, "w": {0, 1}, "-": {0, 0}}
 var DirectionOffset = [5]Point{North: {-1, 0}, East: {0, 1}, South: {1, 0}, West: {0, -1}, NoMovement: {0, 0}}
 var Steps = [4]Point{North: {-1, 0}, East: {0, 1}, South: {1, 0}, West: {0, -1}} // exclude no move
+var Steps2 = []Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1},                           // one step moves
+	{-2, 0}, {-1, 1}, {0, 2}, {1, 1}, {2, 0}, {1, -1}, {0, -2}, {-1, -1}, // two step moves
+}
+var Steps3 = []Point{{-1, 0}, {0, 1}, {1, 0}, {0, -1}, // one step moves
+	{-2, 0}, {-1, 1}, {0, 2}, {1, 1}, {2, 0}, {1, -1}, {0, -2}, {-1, -1}, // two step moves
+	{-3, 0}, {-2, 1}, {-1, 2}, {0, 3}, {1, 2}, {2, 1}, // 3 steps
+	{3, 0}, {2, -1}, {1, -2}, {0, -3}, {-1, -2}, {-2, -1},
+}
+
 var DirectionChar = [5]string{"n", "e", "s", "w", "-"}
 
 func init() {

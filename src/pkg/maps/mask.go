@@ -8,34 +8,36 @@ import (
 )
 
 type Offsets struct {
+	R uint8 // Bounding Radius
 	P []Point
 	L []Location
 }
 
 type Mask struct {
-	R      uint8 // Radius
-	Stride int   // Cols
-
+	Stride int // Cols
 	Offsets
 	// Locations added or removed for a step in each direction
 	Union  Offsets     // Union is the one step out in any direction
 	Add    []Offsets   // Points added for step in dir d
 	Remove []Offsets   // Points removed for step in dir d
 	MM     []*MoveMask // See FreedomKey for how to index into this 
+	MM2O   Offsets
+	MM2    []*MoveMask // See FreedomKey for how to index into this 
 }
 
 // MoveMask is generated for a given number of degrees of freedom
 type MoveMask struct {
-	R      uint8    // Radius
-	NFree  int      // Degrees of freedom
-	PStep  int      // Probability denom
-	Stride int      // Cols used to generate loc offsets.
-	MinPr  []uint16 // Pr numerator, matches Offsets order
-	MaxPr  []uint16 // Pr numerator, matches Offsets order
 	Offsets
+	NFree  int   // Degrees of freedom
+	PStep  int   // Probability denom
+	PTot   int   // Probability denom
+	Stride int   // Cols used to generate loc offsets.
+	MinPr  []int // Pr numerator, matches Offsets order
+	MaxPr  []int // Pr numerator, matches Offsets order
 }
 
 const MoveMaskPStep = 60
+const MoveMaskPStep2 = 27720
 
 func maskCircle(r2 int) []Point {
 	if r2 < 0 {
@@ -126,17 +128,17 @@ func MakeMask(r2, rows, cols int) *Mask {
 	}
 	uniono := PointsToOffsets(union, cols)
 
-	r := uint8(math.Sqrt(float64(r2)))
 	m := &Mask{
-		R:      r,
 		Stride: cols,
 		Add:    addo,
 		Remove: remo,
 		Union:  uniono,
 
-		MM: MakeMoveMask(r2, cols),
+		MM:  MakeMoveMask(r2, cols),
+		MM2: MakeMoveMask2(r2, cols),
 	}
 
+	m.MM2O = PointsToOffsets(Steps2, cols)
 	m.Offsets = PointsToOffsets(p, cols)
 
 	return m
@@ -183,8 +185,8 @@ func MakeMoveMask(r2 int, cols int) []*MoveMask {
 
 		// Given maxpr Generate the location offsets and point offsets for the masks
 		mpt := make([]Point, 0, len(pr))
-		minpr := make([]uint16, 0, len(pr))
-		maxpr := make([]uint16, 0, len(pr))
+		minpr := make([]int, 0, len(pr))
+		maxpr := make([]int, 0, len(pr))
 
 		off := rad + 1
 		for r := 0; r < stride; r++ {
@@ -192,16 +194,16 @@ func MakeMoveMask(r2 int, cols int) []*MoveMask {
 				p := pr[r*stride+c]
 				if p > 0 {
 					mpt = append(mpt, Point{R: r - off, C: c - off})
-					minpr = append(minpr, uint16(60-p))
-					maxpr = append(maxpr, uint16(p))
+					minpr = append(minpr, MoveMaskPStep-p)
+					maxpr = append(maxpr, p)
 				}
 			}
 		}
 
 		mask := MoveMask{
-			R:      uint8(rad),
 			NFree:  nfree,
 			PStep:  pstep,
+			PTot:   MoveMaskPStep,
 			Stride: cols, // This is for the Locations, not lstride we use internally here
 			MinPr:  minpr,
 			MaxPr:  maxpr,
@@ -213,31 +215,31 @@ func MakeMoveMask(r2 int, cols int) []*MoveMask {
 	return mm
 }
 
-// ApplyMask applies a precomputed mask centered on location loc
-func (m *Map) ApplyMask(loc Location, mask *Mask, x func(loc Location)) {
-	if m.BorderDist[loc] > mask.R {
-		for _, loff := range mask.L {
+// ApplyOffsets applies a precomputed mask centered on location loc
+func (m *Map) ApplyOffsets(loc Location, o *Offsets, x func(loc Location)) {
+	if m.BorderDist[loc] > o.R {
+		for _, loff := range o.L {
 			x(loc + loff)
 		}
 	} else {
 		ap := m.ToPoint(loc)
-		for _, op := range mask.P {
+		for _, op := range o.P {
 			l := m.ToLocation(m.PointAdd(ap, op))
 			x(l)
 		}
 	}
 }
-// ApplyMaskBreak applies a precomputed mask centered on location loc via function x, if x returns false the apply is aborted.
-func (m *Map) ApplyMaskBreak(loc Location, mask *Mask, x func(loc Location) bool) {
-	if m.BorderDist[loc] > mask.R {
-		for _, loff := range mask.L {
+// ApplyOffsetsBreak applies a precomputed mask centered on location loc via function x, if x returns false the apply is aborted.
+func (m *Map) ApplyOffsetsBreak(loc Location, o *Offsets, x func(loc Location) bool) {
+	if m.BorderDist[loc] > o.R {
+		for _, loff := range o.L {
 			if !x(loc + loff) {
 				return
 			}
 		}
 	} else {
 		ap := m.ToPoint(loc)
-		for _, op := range mask.P {
+		for _, op := range o.P {
 			l := m.ToLocation(m.PointAdd(ap, op))
 			if !x(l) {
 				return
@@ -247,15 +249,19 @@ func (m *Map) ApplyMaskBreak(loc Location, mask *Mask, x func(loc Location) bool
 }
 
 func (mm *MoveMask) String() string {
+	fstr := "%3d"
+	if mm.PTot > 100 {
+		fstr = "%7d"
+	}
 	s := fmt.Sprintf("free %d pstep: %d stride %d\n*** minpr:", mm.NFree, mm.PStep, mm.Stride)
-	stride := int(2*mm.R + 3)
+	stride := int(2*mm.Offsets.R + 1)
 
-	minpr := make([]uint16, stride*stride)
+	minpr := make([]int, stride*stride)
 	for i := range minpr {
-		minpr[i] = MoveMaskPStep
+		minpr[i] = mm.PTot
 	}
 
-	maxpr := make([]uint16, stride*stride)
+	maxpr := make([]int, stride*stride)
 	off := stride * stride / 2
 	for i, p := range mm.P {
 		minpr[p.R*stride+p.C+off] = mm.MinPr[i]
@@ -265,26 +271,38 @@ func (mm *MoveMask) String() string {
 	for r := 0; r < stride; r++ {
 		s += "\n"
 		for c := 0; c < stride; c++ {
-			s += fmt.Sprintf("%3d", minpr[r*stride+c])
+			s += fmt.Sprintf(fstr, minpr[r*stride+c])
 		}
 	}
 	s += "\n*** maxpr"
 	for r := 0; r < stride; r++ {
 		s += "\n"
 		for c := 0; c < stride; c++ {
-			s += fmt.Sprintf("%3d", maxpr[r*stride+c])
+			s += fmt.Sprintf(fstr, maxpr[r*stride+c])
 		}
 	}
 
 	return s
 }
 
+func (m *Map) FreedomKeyOff(loc Location, o *Offsets) int {
+	key := 0
+	i := 0
+	m.ApplyOffsets(loc, o, func(l Location) {
+		if StepableItem[m.Grid[l]] {
+			key += 1 << uint(i)
+		}
+		i++
+	})
+
+	return key
+}
+
 func (m *Map) FreedomKey(loc Location) int {
 	key := 0
-	for i, l := range m.LocStep[loc] {
-		// skip no move
-		if l != loc && StepableItem[m.Grid[l]] {
-			key += 1 << uint(i)
+	for i := uint(0); i < 4; i++ {
+		if StepableItem[m.Grid[m.LocStep[loc][i]]] {
+			key += 1 << i
 		}
 	}
 
@@ -301,4 +319,83 @@ func (m *Map) FreedomKeyThreat(loc Location, t []int8, nsup [4]int8) int {
 	}
 
 	return key
+}
+
+func MakeMoveMask2(r2 int, cols int) []*MoveMask {
+	if r2 < 0 {
+		log.Panic("Radius must be > 0")
+	}
+	rad := int(math.Sqrt(float64(r2)))
+	stride := 2*(rad+2) + 1
+	size := stride * stride
+	center := Location(size / 2)
+
+	// generate a mask for the given radius
+	off := PointsToOffsets(maskCircle(r2), stride)
+	states := 1 << uint(len(Steps2))
+	log.Print("len(steps2) ", states)
+	mm := make([]*MoveMask, states)
+
+	// loop over possible states
+	for i := 0; i < states; i++ {
+		pr := make([]int, size)
+		nfree := 0
+		// degrees of freedom
+		for bit := uint(0); bit < uint(len(Steps2)); bit++ {
+			if i&(1<<bit) > 0 {
+				nfree++
+			}
+		}
+
+		// pstep prob
+		pstep := MoveMaskPStep2 / (nfree + 1)
+		bits := i + 1<<uint(len(Steps2))
+		// now generate the actual probabilities
+
+		// TODO fix this for non steppable points.
+		// i.e. points where all intermediates are nonsteppable.
+		for bit := uint(0); bit < uint(len(Steps2)+1); bit++ {
+			offset := Location(0)
+			if bits&(1<<bit) > 0 {
+				if bit < uint(len(Steps2)) {
+					offset = Location(Steps2[bit].R*stride + Steps2[bit].C)
+				}
+				for _, l := range off.L {
+					loc := center + offset + l
+					pr[loc] += pstep
+				}
+			}
+		}
+
+		// Given maxpr Generate the location offsets and point offsets for the masks
+		mpt := make([]Point, 0, len(pr))
+		minpr := make([]int, 0, len(pr))
+		maxpr := make([]int, 0, len(pr))
+
+		off := rad + 2
+		for r := 0; r < stride; r++ {
+			for c := 0; c < stride; c++ {
+				p := pr[r*stride+c]
+				if p > 0 {
+					mpt = append(mpt, Point{R: r - off, C: c - off})
+					minpr = append(minpr, MoveMaskPStep2-p)
+					maxpr = append(maxpr, p)
+				}
+			}
+		}
+
+		mask := MoveMask{
+			NFree:  nfree,
+			PStep:  pstep,
+			PTot:   MoveMaskPStep2,
+			Stride: cols, // This is for the Locations, not lstride we use internally here
+			MinPr:  minpr,
+			MaxPr:  maxpr,
+		}
+
+		mask.Offsets = PointsToOffsets(mpt, cols)
+		mm[i] = &mask
+	}
+
+	return mm
 }

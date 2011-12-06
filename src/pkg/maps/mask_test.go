@@ -79,9 +79,22 @@ func TestMoveMask(t *testing.T) {
 	if len(mm) != 16 {
 		t.Errorf("MoveMask size wrong")
 	}
-	if false {
+	if true {
 		// dump masks
 		for i := 0; i < 16; i++ {
+			log.Printf("%v", mm[i])
+		}
+	}
+}
+
+func TestMoveMask2(t *testing.T) {
+	mm := MakeMoveMask2(5, 100)
+	if len(mm) != 4096 {
+		t.Error("MoveMask size wrong:", len(mm))
+	}
+	if true {
+		// dump masks
+		for i := 0; i < 2; i++ {
 			log.Printf("%v", mm[i])
 		}
 	}
