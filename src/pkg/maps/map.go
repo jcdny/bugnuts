@@ -239,10 +239,6 @@ func (m *Map) Hills(player int) []Location {
 	return hills
 }
 
-func (m *Map) Item(l Location) Item {
-	return m.Grid[l]
-}
-
 func (m *Map) TApply() {
 	// Takes the current TGrid and SMap and updates Grid
 	for i := 0; i < m.Size(); i++ {

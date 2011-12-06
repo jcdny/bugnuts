@@ -145,7 +145,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 				// find a direction we can step in thats stepable.
 				np := s.Map.PointAdd(p, Steps[d])
 				nl := s.Map.ToLocation(np)
-				item := s.Item(nl)
+				item := s.Map.Grid[nl]
 				nthreat := s.Threat(s.Turn, nl)
 				// TODO clean up risk aversion...
 				// TODO Parameterize willingness to sacrifice

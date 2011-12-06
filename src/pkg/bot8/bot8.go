@@ -27,7 +27,6 @@ type BotV8 struct {
 
 func init() {
 	RegisterABot(ABot{Key: "v8", Desc: "V8 - combat bot", PKey: "v8", NewBot: NewBotV8})
-
 }
 
 //NewBot creates a new instance of your bot
@@ -318,11 +317,17 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 				log.Printf("MOVE: %v %s d:%s :: %#v", s.ToPoint(ant.Source), ant.Move, ant.N[d].D, ant.N[d])
 			}
 		}
+
 		if ant.Move > 3 || ant.Move < 0 {
 			bot.StaticAnts[s.Turn]++
 		}
 	}
+
+	// Lets combat a bit.
+	CombatMeUp(s, endants)
+
 	s.EmitMoves(endants)
+
 	Visualize(s)
 	fmt.Fprintf(os.Stdout, "go\n") // TODO Flush ??
 

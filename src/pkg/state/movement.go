@@ -63,7 +63,7 @@ func (s *State) GenerateAnts(tset *TargetSet, riskOff bool) (ants map[Location]*
 		hill, ok := s.Hills[loc]
 		if ok && hill.Player == 0 {
 			for _, nloc := range s.Map.LocStep[loc] {
-				if nloc != loc && s.Map.Item(nloc).IsEnemyAnt(0) {
+				if nloc != loc && s.Map.Grid[nloc].IsEnemyAnt(0) {
 					fixed = true
 					break
 				}
@@ -74,7 +74,7 @@ func (s *State) GenerateAnts(tset *TargetSet, riskOff bool) (ants map[Location]*
 		// someone already paused for this food.
 		if ants[loc].Foodp && ants[loc].Steptot == 0 {
 			for _, nloc := range s.Map.LocStep[loc] {
-				if s.Map.Item(nloc) == FOOD && (*tset)[nloc].Count > 0 {
+				if s.Map.Grid[nloc] == FOOD && (*tset)[nloc].Count > 0 {
 					(*tset)[nloc].Count = 0
 					s.SetOccupied(nloc) // food cant move but it will be gone.
 					fixed = true
@@ -124,33 +124,34 @@ func (s *State) AntStep(loc Location, riskOff bool) *AntStep {
 
 	// Populate the neighborhood info
 	permute := Permute5()
-	for d := 0; d < 4; d++ {
+	for d := 0; d < 5; d++ {
 		nloc := s.Map.LocStep[loc][d]
 		s.Neighborhood(nloc, as.N[d], Direction(d))
 		as.N[d].Perm = int(permute[d])
 
-		if s.Map.Item(nloc) == FOOD {
+		if s.Map.Grid[nloc] == FOOD {
 			as.Foodp = true
 		}
-		if s.ValidStep(nloc) {
+		if nloc == loc {
+			as.N[d].Valid = true
+		} else if s.ValidStep(nloc) {
 			as.N[d].Valid = true
 			as.NFree++
 		}
 	}
-	s.Neighborhood(loc, as.N[4], Direction(4))
-	as.N[4].Perm = int(permute[4])
-	as.N[4].Valid = true
 
-	// Compute the min threat moves.
 	if riskOff {
+		// Risk Off so decrement threat.
 		for i := 0; i < 5; i++ {
-			as.N[i].Threat -= 4
+			as.N[i].Threat -= 3
 			if as.N[i].Threat <= 0 {
 				as.N[i].Threat = 0
 				as.N[i].PThreat = 0
 			}
 		}
 	}
+
+	// Compute the min threat moves and flag as safest.
 	minthreat := as.N[4].Threat*100 + as.N[4].PThreat
 	for i := 0; i < 4; i++ {
 		nt := as.N[i].Threat*100 + as.N[i].PThreat
@@ -172,7 +173,7 @@ func (s *State) EmitMoves(ants []*AntStep) {
 			fmt.Fprintf(os.Stdout, "o %d %d %s\n", p.R, p.C, DirectionChar[ant.Move])
 		} else if ant.Move != NoMovement {
 			p := s.ToPoint(ant.Source)
-			log.Printf("Invalid move %d %d %d\n", p.R, p.C, int(ant.Move))
+			log.Printf("Encountered Invalid move %d %d turn %d\n", p.R, p.C, s.Turn)
 		}
 	}
 }

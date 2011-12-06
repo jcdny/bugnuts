@@ -26,17 +26,25 @@ type Watches struct {
 	Turns int
 	dirty bool
 	// the cache of watches reduced to:
-	turns  []bool     // turns for all locs
-	locs   []bool     // locs for all turns
-	wturns [][]*Watch // turn/region restricted watches slice of turns
+	turns   []bool     // turns for all locs
+	locs    []bool     // locs for all turns
+	wturns  [][]*Watch // turn/region restricted watches slice of turns
+	Watched func(Location, int, int) bool
 }
 
 func NewWatches(rows, cols, turns int) *Watches {
-	ws := Watches{Torus: Torus{Rows: rows, Cols: cols}, Turns: turns}
+	ws := Watches{
+		Torus: Torus{Rows: rows, Cols: cols},
+		Turns: turns,
+	}
+	ws.Watched = ws.NullWatcher()
+
 	return &ws
 }
 
 func (ws *Watches) Load(wlist []string) {
+	ws.Watched = ws.GetWatcher()
+
 	for _, s := range wlist {
 		w, err := ws.Parse(s)
 		if err != nil {
@@ -47,54 +55,62 @@ func (ws *Watches) Load(wlist []string) {
 	}
 }
 
-func (ws *Watches) Watched(l Location, turn, player int) bool {
-	if len(ws.W) == 0 {
+func (ws *Watches) NullWatcher() func(Location, int, int) bool {
+	return func(Location, int, int) bool {
 		return false
 	}
-	if ws.dirty {
-		ws.update()
-	}
+}
 
-	// Fast check for turns for all locations
-	if turn >= 0 && ws.turns[turn] {
-		return true
-	}
-	// and locations for all turns
-	if ws.locs[l] {
-		return true
-	}
+func (ws *Watches) GetWatcher() func(Location, int, int) bool {
+	return func(l Location, turn, player int) bool {
+		if len(ws.W) == 0 {
+			return false
+		}
+		if ws.dirty {
+			ws.update()
+		}
 
-	if turn >= 0 {
-		r, c := int(l)/ws.Cols, int(l)%ws.Cols
-		for _, w := range ws.wturns[turn] {
-			// only check for locations in a region since
-			// above we checked for locations with no turn
-			// restriction
-			d := c - w.C
-			if d < 0 {
-				d = -d
-			}
-			if d > (ws.Cols+1)/2 {
-				d = ws.Cols - d
-			}
-			if d > w.N {
-				continue
-			}
-			d = r - w.R
-			if d < 0 {
-				d = -d
-			}
-			if d > (ws.Rows+1)/2 {
-				d = ws.Rows - d
-			}
-			if d > w.N {
-				continue
-			}
+		// Fast check for turns for all locations
+		if turn >= 0 && ws.turns[turn] {
 			return true
 		}
-	}
+		// and locations for all turns
+		if ws.locs[l] {
+			return true
+		}
 
-	return false
+		if turn >= 0 {
+			r, c := int(l)/ws.Cols, int(l)%ws.Cols
+			for _, w := range ws.wturns[turn] {
+				// only check for locations in a region since
+				// above we checked for locations with no turn
+				// restriction
+				d := c - w.C
+				if d < 0 {
+					d = -d
+				}
+				if d > (ws.Cols+1)/2 {
+					d = ws.Cols - d
+				}
+				if d > w.N {
+					continue
+				}
+				d = r - w.R
+				if d < 0 {
+					d = -d
+				}
+				if d > (ws.Rows+1)/2 {
+					d = ws.Rows - d
+				}
+				if d > w.N {
+					continue
+				}
+				return true
+			}
+		}
+
+		return false
+	}
 }
 
 func (ws *Watches) update() {
