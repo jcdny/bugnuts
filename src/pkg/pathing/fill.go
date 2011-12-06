@@ -158,12 +158,12 @@ func MapFillSlow(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint1
 // use map value
 func MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	f := NewFill(m)
-	return f.MapFill(m, origin, pri)
+	return f.MapFill(origin, pri)
 }
 
 func MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	f := NewFill(m)
-	return f.MapFillSeed(m, origin, pri)
+	return f.MapFillSeed(origin, pri)
 }
 
 func (f *Fill) slowReset() {
@@ -181,12 +181,9 @@ func (f *Fill) Reset() {
 
 // Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
 // use origin map value
-func (f *Fill) MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
-	if f.Rows != m.Rows || f.Cols != m.Cols {
-		log.Panicf("Map and fill mismatch")
-	}
-
+func (f *Fill) MapFill(origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	q := make([]Location, 0, 200+len(origin)*2)
+	m := f.Map
 
 	for loc, opri := range origin {
 		// log.Printf("Q loc %v pri %d", f.ToPoint(loc), pri)
@@ -221,13 +218,9 @@ func (f *Fill) MapFill(m *Map, origin map[Location]int, pri uint16) (*Fill, int,
 
 // Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
 // use origin map value
-func (f *Fill) MapFillSeed(m *Map, origin map[Location]int, pri uint16) (*Fill, int, uint16) {
-	if f.Rows != m.Rows || f.Cols != m.Cols {
-		log.Panicf("Map and fill mismatch")
-	}
-
+func (f *Fill) MapFillSeed(origin map[Location]int, pri uint16) (*Fill, int, uint16) {
 	f.Seed = make([]Location, len(f.Depth))
-
+	m := f.Map
 	q := make([]Location, 0, 200+len(origin)*2)
 
 	for loc, opri := range origin {
@@ -284,14 +277,19 @@ func (nn Neighbors) Add(s1, s2, l1, l2 Location, steps int) {
 	nn[s1][s2] = Neighbor{L: [4]Location{s1, l1, l2, s2}, Steps: steps}
 }
 
+func (nn Neighbors) doubleNN() {
+	for s1 := range nn {
+		for s2, n := range nn[s1] {
+			nn[s2][s1] = Neighbor{L: [4]Location{n.L[3], n.L[2], n.L[1], n.L[0]}, Steps: n.Steps}
+		}
+	}
+}
+
 // MapFillSeedNN computes a flood fill BFS.  If pri is > 0 then use it for the point pri otherwise
 // use map value.  Returns the fill together with the q size and max depth.
-func (f *Fill) MapFillSeedNN(m *Map, origin map[Location]int, pri uint16) (*Fill, Neighbors) {
-	if f.Rows != m.Rows || f.Cols != m.Cols {
-		log.Panicf("Map and fill mismatch")
-	}
-
+func (f *Fill) MapFillSeedNN(origin map[Location]int, pri uint16) (*Fill, Neighbors) {
 	f.Seed = make([]Location, len(f.Depth))
+	m := f.Map
 
 	q := make([]Location, 0, 100+len(origin)*4)
 
@@ -355,6 +353,9 @@ func (f *Fill) MapFillSeedNN(m *Map, origin map[Location]int, pri uint16) (*Fill
 			}
 		}
 	}
+
+	// add max/min pair.
+	nn.doubleNN()
 
 	return f, nn
 }
