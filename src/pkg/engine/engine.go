@@ -116,7 +116,7 @@ func (p *Player) UpdateVisibility(g *Game, ants []torus.Location) []torus.Locati
 
 	seen := make([]torus.Location, 0, 100)
 	for _, loc := range ants {
-		g.ApplyMask(loc, g.ViewMask, func(l torus.Location) {
+		g.ApplyOffsets(loc, &g.ViewMask.Offsets, func(l torus.Location) {
 			p.Visible[l] = true
 			if !p.Seen[l] {
 				p.Seen[l] = true
@@ -150,7 +150,7 @@ func (g *Game) ComputeThreat(ants [][]torus.Location) {
 			}
 
 			if g.AntCount[loc] < 2 {
-				g.ApplyMask(loc, g.AttackMask, func(nloc torus.Location) {
+				g.ApplyOffsets(loc, &g.AttackMask.Offsets, func(nloc torus.Location) {
 					g.Threat[nloc] += inc
 					g.Players[np].Threat[nloc] += inc
 				})
@@ -192,7 +192,7 @@ func (g *Game) ResolveCombat(ants [][]torus.Location) []game.PlayerLoc {
 
 			t := g.Threat[loc] - g.Players[np].Threat[loc]
 			if t > 0 {
-				g.ApplyMaskBreak(loc, g.AttackMask, func(nloc torus.Location) bool {
+				g.ApplyOffsetsBreak(loc, &g.AttackMask.Offsets, func(nloc torus.Location) bool {
 					ntp := g.PlayerMap[nloc]
 					if ntp >= 0 && ntp != np && t >= g.Threat[nloc]-g.Players[ntp].Threat[nloc] {
 						dead = append(dead, game.PlayerLoc{Loc: ants[np][i], Player: np})

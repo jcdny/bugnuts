@@ -288,9 +288,9 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	if s.NHills[0] < 3 {
 		fa, _, _ := MapFillSeed(s.Map, tp, 0)
 		for _, ant := range endants {
-			ant.N[4].PrFood = s.Met.ComputePrFood(ant.Source, ant.Source, s.Turn, s.ViewMask, fa)
+			ant.N[4].PrFood = s.Met.ComputePrFood(ant.Source, ant.Source, s.Turn, &s.ViewMask.Offsets, fa)
 			for d := 0; d < 4; d++ {
-				ant.N[d].PrFood = s.Met.ComputePrFood(s.Map.LocStep[ant.Source][d], ant.Source, s.Turn, s.ViewMask, fa)
+				ant.N[d].PrFood = s.Met.ComputePrFood(s.Map.LocStep[ant.Source][d], ant.Source, s.Turn, &s.ViewMask.Offsets, fa)
 			}
 			if !ant.Goalp && s.Met.FDownhill.Depth[ant.Source] > 1 {
 				dh := int(s.Met.FHill.Depth[ant.Source])
@@ -324,7 +324,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	}
 
 	// Lets combat a bit.
-	//CombatMeUp(s, endants)
+	Combat(s, endants)
 
 	s.EmitMoves(endants)
 
