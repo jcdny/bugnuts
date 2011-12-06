@@ -15,7 +15,7 @@ type Metrics struct {
 	Seen     []int      // Turn on which cell was last visible.
 	VisCount []int      // How many ants see this cell.
 	Threat   [][]int8   // how much threat is there on a given cell
-	PThreat  [][]uint16 // Prob of n threat
+	PThreat  [][]int    // Prob of n threat
 	Horizon  []bool     // Inside the event horizon.  false means there could be an ant there we have not seen
 	HBorder  []Location // List of border points
 	Land     []int      // Count of land tiles visible from a given tile
@@ -52,7 +52,7 @@ func NewMetrics(m *Map) *Metrics {
 
 	for i := 0; i < NTHREAT; i++ {
 		met.Threat = append(met.Threat, make([]int8, size))
-		met.PThreat = append(met.PThreat, make([]uint16, size))
+		met.PThreat = append(met.PThreat, make([]int, size))
 	}
 
 	for i := range met.Unknown {
@@ -139,9 +139,9 @@ func (m *Metrics) UpdateRuns() {
 	}
 }
 
-func (m *Metrics) UpdateCounts(loc Location, mask *Mask) {
+func (m *Metrics) UpdateCounts(loc Location, o *Offsets) {
 	var nunknown, nland int
-	m.Map.ApplyMask(loc, mask, func(nloc Location) {
+	m.Map.ApplyOffsets(loc, o, func(nloc Location) {
 		if m.TGrid[nloc] == UNKNOWN {
 			nunknown++
 		}
@@ -153,17 +153,17 @@ func (m *Metrics) UpdateCounts(loc Location, mask *Mask) {
 	m.Land[loc] = nland
 }
 
-func (m *Metrics) SumVisCount(loc Location, mask *Mask) {
+func (m *Metrics) SumVisCount(loc Location, o *Offsets) {
 	nvis := 0
-	m.Map.ApplyMask(loc, mask, func(nloc Location) { nvis += m.VisCount[nloc] })
+	m.Map.ApplyOffsets(loc, o, func(nloc Location) { nvis += m.VisCount[nloc] })
 	m.VisSum[loc] = nvis
 }
 
-func (m *Metrics) ComputePrFood(loc, sloc Location, turn int, mask *Mask, f *Fill) int {
+func (m *Metrics) ComputePrFood(loc, sloc Location, turn int, o *Offsets, f *Fill) int {
 	prfood := 0
 	turn++
 
-	m.Map.ApplyMask(loc, mask, func(nloc Location) {
+	m.Map.ApplyOffsets(loc, o, func(nloc Location) {
 		var horizonwt int
 
 		if sloc == f.Seed[nloc] &&
@@ -194,7 +194,7 @@ func (m *Metrics) ComputePrFood(loc, sloc Location, turn int, mask *Mask, f *Fil
 
 // Compute the threat for N turns out (currently only n = 0 or 1)
 // if player > -1 then sum players not including player
-func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8, pthreat []uint16) {
+func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8, pthreat []int) {
 	if turn > 1 || turn < 0 {
 		log.Panicf("Illegal turns out = %d", turn)
 	}

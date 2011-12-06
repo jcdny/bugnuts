@@ -94,12 +94,12 @@ func (s *State) ProcessTurn(t *Turn) {
 
 	for loc := range s.Ants[0] {
 		// Update the one step land count and unseen count for my ants
-		s.Met.SumVisCount(loc, s.ViewMask)
+		s.Met.SumVisCount(loc, &s.ViewMask.Offsets)
 		for _, nloc := range s.Map.LocStep[loc] {
 			if loc != nloc {
-				s.Met.SumVisCount(nloc, s.ViewMask)
+				s.Met.SumVisCount(nloc, &s.ViewMask.Offsets)
 				if s.Met.Unknown[nloc] > 0 {
-					s.Met.UpdateCounts(nloc, s.ViewMask)
+					s.Met.UpdateCounts(nloc, &s.ViewMask.Offsets)
 				}
 			}
 		}

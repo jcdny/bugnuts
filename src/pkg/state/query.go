@@ -45,7 +45,7 @@ func (s *State) Threat(turn int, l Location) int8 {
 	return s.Met.Threat[i][l]
 }
 
-func (s *State) PThreat(turn int, l Location) uint16 {
+func (s *State) PThreat(turn int, l Location) int {
 	i := len(s.Met.PThreat) - turn + s.Turn - 1
 	if i < 0 {
 		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Met.Threat))
