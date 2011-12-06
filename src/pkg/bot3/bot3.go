@@ -42,7 +42,7 @@ func (bot *BotV3) DoTurn(s *State) os.Error {
 				if false && rand.Intn(8) == 0 {
 					score[d] = 500
 				} else {
-					score[d] = bot.Score(s, p, tp, s.ViewMask.Add[d])
+					score[d] = bot.Score(s, p, tp, s.ViewMask.Add[d].P)
 				}
 				if score[d] > best {
 					best = score[d]

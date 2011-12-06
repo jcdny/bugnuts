@@ -21,22 +21,30 @@ func (p IntSlice) Len() int           { return len(p) }
 func (p IntSlice) Less(i, j int) bool { return p[i] < p[j] }
 func (p IntSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
-// Convert a set of points to location offsets
-func ToOffsets(pv []Point, cols int) []Location {
-	out := make([]Location, len(pv), len(pv))
-
+// PointsToOffsets convert a set of points to location offsets
+func PointsToOffsets(pv []Point, cols int) Offsets {
+	out := Offsets{
+		P: make([]Point, len(pv), len(pv)),
+		L: make([]Location, len(pv), len(pv)),
+	}
+	copy(out.P, pv)
 	for i, p := range pv {
-		out[i] = Location(p.R*cols + p.C)
+		out.L[i] = Location(p.R*cols + p.C)
 	}
 
 	return out
 }
 
-// Convert a list of location offsets back to signed Points.
-func ToOffsetPoints(loc []Location, cols int) (out []Point) {
-	out = make([]Point, len(loc))
-	for i, l := range loc {
-		out[i] = Point{R: int(l) / cols, C: int(l) % cols}
+//  LocationsToOffsets takes a list of location offsets and returns a Points vector
+func LocationsToOffsets(locs []Location, cols int) Offsets {
+	out := Offsets{
+		P: make([]Point, len(locs), len(locs)),
+		L: make([]Location, len(locs), len(locs)),
+	}
+
+	copy(out.L, locs)
+	for i, l := range locs {
+		out.P[i] = Point{R: int(l) / cols, C: int(l) % cols}
 	}
 
 	return out

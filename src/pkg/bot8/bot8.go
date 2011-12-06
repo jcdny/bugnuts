@@ -324,7 +324,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	}
 
 	// Lets combat a bit.
-	CombatMeUp(s, endants)
+	//CombatMeUp(s, endants)
 
 	s.EmitMoves(endants)
 

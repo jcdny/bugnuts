@@ -129,7 +129,7 @@ func (s *State) ProcessVisible(antloc []PlayerLoc, player, turn int) {
 
 		if s.BorderDist[loc] > s.ViewMask.R {
 			// In interior of map so use loc offsets
-			for _, offset := range s.ViewMask.Loc {
+			for _, offset := range s.ViewMask.L {
 				s.Met.Seen[loc+offset] = turn
 				s.Met.VisCount[loc+offset]++
 				if unk {

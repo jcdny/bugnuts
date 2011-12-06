@@ -7,34 +7,32 @@ import (
 	. "bugnuts/torus"
 )
 
+type Offsets struct {
+	P []Point
+	L []Location
+}
+
 type Mask struct {
 	R      uint8 // Radius
 	Stride int   // Cols
 
-	P   []Point
-	Loc []Location
-
+	Offsets
 	// Locations added or removed for a step in each direction
-	Add    [][]Point
-	Remove [][]Point
-
-	// Union of points in all directions
-	Union    []Point
-	UnionLoc []Location
-
-	// Max and Min Threat cache
-	MM []*MoveMask
+	Union  Offsets     // Union is the one step out in any direction
+	Add    []Offsets   // Points added for step in dir d
+	Remove []Offsets   // Points removed for step in dir d
+	MM     []*MoveMask // See FreedomKey for how to index into this 
 }
 
+// MoveMask is generated for a given number of degrees of freedom
 type MoveMask struct {
-	R      uint8 // Radius
-	NFree  int   // Degrees of freedom
-	PStep  int
-	Stride int // Cols used to generate loc offsets.
-	MinPr  []uint16
-	MaxPr  []uint16
-	Loc    []Location
-	Point  []Point
+	R      uint8    // Radius
+	NFree  int      // Degrees of freedom
+	PStep  int      // Probability denom
+	Stride int      // Cols used to generate loc offsets.
+	MinPr  []uint16 // Pr numerator, matches Offsets order
+	MaxPr  []uint16 // Pr numerator, matches Offsets order
+	Offsets
 }
 
 const MoveMaskPStep = 60
@@ -118,21 +116,28 @@ func maskChange(r2 int, v []Point) (add, remove [][]Point, union []Point) {
 func MakeMask(r2, rows, cols int) *Mask {
 	p := maskCircle(r2)
 	add, rem, union := maskChange(r2, p)
+	addo := make([]Offsets, 0, len(add))
+	for _, pv := range add {
+		addo = append(addo, PointsToOffsets(pv, cols))
+	}
+	remo := make([]Offsets, 0, len(rem))
+	for _, pv := range rem {
+		remo = append(remo, PointsToOffsets(pv, cols))
+	}
+	uniono := PointsToOffsets(union, cols)
 
 	r := uint8(math.Sqrt(float64(r2)))
 	m := &Mask{
 		R:      r,
 		Stride: cols,
-		P:      p,
-		Add:    add,
-		Remove: rem,
-		Union:  union,
-
-		Loc:      ToOffsets(p, cols),
-		UnionLoc: ToOffsets(union, cols),
+		Add:    addo,
+		Remove: remo,
+		Union:  uniono,
 
 		MM: MakeMoveMask(r2, cols),
 	}
+
+	m.Offsets = PointsToOffsets(p, cols)
 
 	return m
 }
@@ -147,7 +152,7 @@ func MakeMoveMask(r2 int, cols int) []*MoveMask {
 	center := Location(size / 2)
 
 	// generate a mask for combat radius
-	mlocs := ToOffsets(maskCircle(r2), stride)
+	off := PointsToOffsets(maskCircle(r2), stride)
 
 	mm := make([]*MoveMask, 16)
 	// loop over possible states
@@ -169,7 +174,7 @@ func MakeMoveMask(r2 int, cols int) []*MoveMask {
 		for bit := uint(0); bit < 5; bit++ {
 			if (i+16)&(1<<bit) > 0 {
 				offset := Location(DirectionOffset[bit].R*stride + DirectionOffset[bit].C)
-				for _, l := range mlocs {
+				for _, l := range off.L {
 					loc := center + offset + l
 					pr[loc] += pstep
 				}
@@ -200,10 +205,8 @@ func MakeMoveMask(r2 int, cols int) []*MoveMask {
 			Stride: cols, // This is for the Locations, not lstride we use internally here
 			MinPr:  minpr,
 			MaxPr:  maxpr,
-			Loc:    ToOffsets(mpt, cols),
-			Point:  mpt,
 		}
-
+		mask.Offsets = PointsToOffsets(mpt, cols)
 		mm[i] = &mask
 	}
 
@@ -213,7 +216,7 @@ func MakeMoveMask(r2 int, cols int) []*MoveMask {
 // ApplyMask applies a precomputed mask centered on location loc
 func (m *Map) ApplyMask(loc Location, mask *Mask, x func(loc Location)) {
 	if m.BorderDist[loc] > mask.R {
-		for _, loff := range mask.Loc {
+		for _, loff := range mask.L {
 			x(loc + loff)
 		}
 	} else {
@@ -227,7 +230,7 @@ func (m *Map) ApplyMask(loc Location, mask *Mask, x func(loc Location)) {
 // ApplyMaskBreak applies a precomputed mask centered on location loc via function x, if x returns false the apply is aborted.
 func (m *Map) ApplyMaskBreak(loc Location, mask *Mask, x func(loc Location) bool) {
 	if m.BorderDist[loc] > mask.R {
-		for _, loff := range mask.Loc {
+		for _, loff := range mask.L {
 			if !x(loc + loff) {
 				return
 			}
@@ -254,7 +257,7 @@ func (mm *MoveMask) String() string {
 
 	maxpr := make([]uint16, stride*stride)
 	off := stride * stride / 2
-	for i, p := range mm.Point {
+	for i, p := range mm.P {
 		minpr[p.R*stride+p.C+off] = mm.MinPr[i]
 		maxpr[p.R*stride+p.C+off] = mm.MaxPr[i]
 	}

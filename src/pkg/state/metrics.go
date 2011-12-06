@@ -138,40 +138,32 @@ func (m *Metrics) UpdateRuns() {
 }
 
 func (m *Metrics) UpdateCounts(loc Location, mask *Mask) {
-	nunknown := 0
-	nland := 0
-	p := m.ToPoint(loc)
-	for _, op := range mask.P {
-		nloc := m.ToLocation(m.PointAdd(p, op))
+	var nunknown, nland int
+	m.Map.ApplyMask(loc, mask, func(nloc Location) {
 		if m.TGrid[nloc] == UNKNOWN {
 			nunknown++
 		}
 		if m.Grid[nloc] != WATER {
 			nland++
 		}
-	}
+	})
 	m.Unknown[loc] = nunknown
 	m.Land[loc] = nland
 }
 
 func (m *Metrics) SumVisCount(loc Location, mask *Mask) {
 	nvis := 0
-	p := m.ToPoint(loc)
-	for _, op := range mask.P {
-		nloc := m.ToLocation(m.PointAdd(p, op))
-		nvis += m.VisCount[nloc]
-	}
+	m.Map.ApplyMask(loc, mask, func(nloc Location) { nvis += m.VisCount[nloc] })
 	m.VisSum[loc] = nvis
 }
 
 func (m *Metrics) ComputePrFood(loc, sloc Location, turn int, mask *Mask, f *Fill) int {
 	prfood := 0
 	turn++
-	horizonwt := 0
-	p := m.ToPoint(loc)
 
-	for _, op := range mask.P {
-		nloc := m.ToLocation(m.PointAdd(p, op))
+	m.Map.ApplyMask(loc, mask, func(nloc Location) {
+		var horizonwt int
+
 		if sloc == f.Seed[nloc] &&
 			f.Distance(sloc, nloc) < 15 {
 			viewwt := MaxV(4-m.VisCount[nloc], 1)
@@ -192,7 +184,7 @@ func (m *Metrics) ComputePrFood(loc, sloc Location, turn int, mask *Mask, f *Fil
 
 			prfood += foodp * viewwt * horizonwt
 		}
-	}
+	})
 	m.PrFood[loc] = prfood
 
 	return prfood
@@ -209,21 +201,20 @@ func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8,
 		log.Panic("ComputeThreat slice size mismatch")
 	}
 
-	m := mask[0] // for 0 turns out we just use the 0 degree of freedom mask.
-
 	var mythreat []int8
 	if player >= 0 && turn > 0 && s.Testing {
 		mythreat = make([]int8, s.Map.Size())
 		for loc := range s.Ants[player] {
 			p := s.ToPoint(loc)
-			m = mask[s.FreedomKey(loc)]
-			for _, op := range m.Point {
+			m := mask[s.FreedomKey(loc)]
+			for _, op := range m.P {
 				mythreat[s.ToLocation(s.PointAdd(p, op))]++
 			}
 		}
 	}
 
 	//llist := make([]Location, len(mask[0].Point))
+	m := mask[0] // for 0 turns out we just use the 0 degree of freedom mask.
 	for i := range s.Ants {
 		if i != player {
 			for loc := range s.Ants[i] {
@@ -233,7 +224,7 @@ func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8,
 						m = mask[s.Map.FreedomKey(loc)]
 					} else {
 						var nsup [4]int8
-						for _, op := range mask[0].Point {
+						for _, op := range mask[0].P {
 							l := s.ToLocation(s.PointAdd(p, op))
 							if _, ok := s.Ants[i][l]; ok {
 								if op.R >= 0 {
@@ -254,7 +245,7 @@ func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8,
 						m = mask[s.Map.FreedomKeyThreat(loc, mythreat, nsup)]
 					}
 				}
-				for i, op := range m.Point {
+				for i, op := range m.P {
 					threat[s.ToLocation(s.PointAdd(p, op))]++
 					pthreat[s.ToLocation(s.PointAdd(p, op))] += m.MaxPr[i]
 				}
