@@ -54,7 +54,13 @@ func NewBotV5(s *State, p *Parameters) Bot {
 	}
 	mb.PriMap = mb.P.MakePriMap()
 
-	mb.Explore = MakeExplorers(s, .8, 1, mb.Priority(EXPLORE))
+	if mb.P.Explore {
+		mb.Explore = MakeExplorers(s, .8, 1, mb.PriMap[EXPLORE])
+	} else {
+		ts := make(TargetSet, 0)
+		mb.Explore = &ts
+	}
+
 	return mb
 }
 

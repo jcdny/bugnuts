@@ -14,6 +14,7 @@ type Parameters struct {
 	MinHorizon       int     // minimum horizon of mystery to our hill
 	DefendDistance   int     // How early to we consider an ant a threat to the hill
 	RiskOffThreshold float64 // if static ants > than this turn off risk aversion
+	Explore          bool    // Create initial explore points
 }
 
 func init() {

@@ -43,7 +43,7 @@ func NewBotV7(s *State, pset *Parameters) Bot {
 
 	mb.PriMap = mb.P.MakePriMap()
 
-	if true {
+	if mb.P.Explore {
 		mb.Explore = MakeExplorers(s, .8, 1, mb.PriMap[EXPLORE])
 	} else {
 		ts := make(TargetSet, 0)

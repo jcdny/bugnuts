@@ -6,6 +6,7 @@ var ParameterSets = map[string]*Parameters{
 	"v5": &Parameters{
 		ExpireFood:  12,
 		PriorityMap: &defaultPriMap,
+		Explore:     true,
 	},
 	"v6": &Parameters{
 		ExpireFood:       12,
@@ -14,6 +15,7 @@ var ParameterSets = map[string]*Parameters{
 		MinHorizon:       20,
 		DefendDistance:   16,
 		RiskOffThreshold: .33,
+		Explore:          true,
 	},
 	"v7": &Parameters{
 		ExpireFood:       -1,
@@ -22,6 +24,7 @@ var ParameterSets = map[string]*Parameters{
 		MinHorizon:       20,
 		DefendDistance:   16,
 		RiskOffThreshold: .3,
+		Explore:          true,
 	},
 	"v8": &Parameters{
 		ExpireFood:       -1,
@@ -30,5 +33,6 @@ var ParameterSets = map[string]*Parameters{
 		MinHorizon:       20,
 		DefendDistance:   16,
 		RiskOffThreshold: .3,
+		Explore:          true,
 	},
 }
