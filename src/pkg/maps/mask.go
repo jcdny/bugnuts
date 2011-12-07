@@ -333,7 +333,7 @@ func MakeMoveMask2(r2 int, cols int) []*MoveMask {
 	// generate a mask for the given radius
 	off := PointsToOffsets(maskCircle(r2), stride)
 	states := 1 << uint(len(Steps2))
-	log.Print("len(steps2) ", states)
+
 	mm := make([]*MoveMask, states)
 
 	// loop over possible states

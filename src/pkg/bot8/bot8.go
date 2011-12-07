@@ -209,6 +209,8 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 					if Viz["path"] {
 						VizPath(s.Map, s.ToPoint(seg.Src), f.NPathInString(nil, seg.Src, -1, 0), 1)
 						VizPath(s.Map, s.ToPoint(seg.Src), f.NPathInString(nil, seg.Src, -1, 1), 2)
+					}
+					if Viz["goals"] {
 						VizLine(s.Map, s.ToPoint(seg.Src), s.ToPoint(seg.End), false)
 					}
 					tgt.Count--

@@ -14,6 +14,7 @@ import (
 
 var Viz = map[string]bool{
 	"path":    false,
+	"goals":   false,
 	"vcount":  false,
 	"horizon": false,
 	"threat":  false,
@@ -21,6 +22,7 @@ var Viz = map[string]bool{
 	"targets": false,
 	"monte":   false,
 	"sym":     false,
+	"combat":  false,
 }
 
 func SetViz(vizList string, Viz map[string]bool) {
@@ -37,6 +39,8 @@ func SetViz(vizList string, Viz map[string]bool) {
 				}
 			case "useful":
 				Viz["path"] = true
+				Viz["goals"] = true
+				Viz["combat"] = true
 				Viz["horizon"] = true
 				Viz["targets"] = true
 				Viz["error"] = true
@@ -233,7 +237,7 @@ func vizCircle(p Point, r float64, fill bool) {
 
 func VizFrenemies(s *State, f, e map[Location]int) {
 	if len(f) > 0 {
-		fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
+		fmt.Fprintf(os.Stdout, "v slc %d %d %d %.1f\n",
 			0, 255, 0, .75)
 		for loc := range f {
 			p := s.ToPoint(loc)
@@ -241,13 +245,13 @@ func VizFrenemies(s *State, f, e map[Location]int) {
 		}
 	}
 	if len(e) > 0 {
-		fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
+		fmt.Fprintf(os.Stdout, "v slc %d %d %d %.1f\n",
 			255, 0, 0, .75)
 		for loc := range e {
 			p := s.ToPoint(loc)
 			vizCircle(p, 1.5, false)
 		}
 	}
-	fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
+	fmt.Fprintf(os.Stdout, "v slc %d %d %d %.1f\n",
 		0, 0, 0, 1.0)
 }

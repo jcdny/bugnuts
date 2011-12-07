@@ -46,8 +46,10 @@ func (s *State) ProcessFood(food []Location, turn int) {
 }
 
 func (s *State) ProcessTurn(t *Turn) {
+	//log.Printf("s.Turn is ", s.Turn, " t.Turn is ", t.Turn)
 	s.ResetGrid()
 	s.Turn++
+
 	s.SSID = s.Map.SID
 
 	if !s.TSet(WATER, t.W...) {

@@ -287,12 +287,14 @@ func (nn Neighbors) doubleNN() {
 
 // MapFillSeedNN computes a flood fill BFS.  If pri is > 0 then use it for the point pri otherwise
 // use map value.  Returns the fill together with the q size and max depth.
-func (f *Fill) MapFillSeedNN(origin map[Location]int, pri uint16) (*Fill, Neighbors) {
+func (f *Fill) MapFillSeedNN(origin map[Location]int, pri, maxDepth uint16) (*Fill, Neighbors) {
 	f.Seed = make([]Location, len(f.Depth))
 	m := f.Map
 
 	q := make([]Location, 0, 100+len(origin)*4)
-
+	if maxDepth == 0 {
+		maxDepth = 65535
+	}
 	for loc, opri := range origin {
 		q = append(q, loc)
 		f.Seed[loc] = loc
@@ -313,6 +315,9 @@ func (f *Fill) MapFillSeedNN(origin map[Location]int, pri uint16) (*Fill, Neighb
 		Depth := f.Depth[loc]
 		Seed := f.Seed[loc]
 		newDepth = Depth + 1
+		if newDepth > maxDepth {
+			break
+		}
 
 		for i := 0; i < 4; i++ {
 			floc := m.LocStep[loc][i]

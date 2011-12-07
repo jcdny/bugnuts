@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"strconv"
 	"reflect"
+	"rand"
 	"bugnuts/replay"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
@@ -71,26 +72,43 @@ func TestMapFillSeedNN(t *testing.T) {
 		l[hill] = 1
 	}
 	f := NewFill(m)
-	sfs, nn := f.MapFillSeedNN(m, l, 1)
+	sfs, nn := f.MapFillSeedNN(l, 1, 0)
 	if false {
 		log.Printf("MapFillSeedNN:\n%v\nNN:\n", sfs)
 	}
 
-	i := 0
-	for s1, m1 := range nn {
-		for s2, N := range m1 {
-			if len(expect) < i ||
-				expect[i].s1 != s1 ||
-				expect[i].s2 != s2 ||
-				expect[i].steps != N.Steps ||
-				!reflect.DeepEqual(N.L, expect[i].L) {
-				//log.Printf("%v %v (%d): %v", m.ToPoint(s1), m.ToPoint(s2), N.Steps, m.ToPoints(N.L[:]))
-				//log.Printf("%d,%v,%v,%d,%#v", i, s1, s2, N.Steps, N.L[:], expect[i])
-				t.Errorf("Mismatch\ngot:%v,%v,%d,%#v, expected %#v", s1, s2, N.Steps, N.L[:], expect[i])
-			}
-			i++
+	nnexp := make(Neighbors, 0)
+	for _, e := range expect {
+		if _, ok := nnexp[e.s1]; !ok {
+			nnexp[e.s1] = make(map[Location]Neighbor, 0)
 		}
+		if _, ok := nnexp[e.s2]; !ok {
+			nnexp[e.s2] = make(map[Location]Neighbor, 0)
+		}
+		nnexp[e.s1][e.s2] = Neighbor{L: e.L, Steps: e.steps}
+		nnexp[e.s2][e.s1] = Neighbor{L: [4]Location{e.L[3], e.L[2], e.L[1], e.L[0]}, Steps: e.steps}
 	}
+	if !reflect.DeepEqual(nn, nnexp) {
+		t.Errorf("Mismatch\ngot: %v, expected %v", nn, nnexp)
+	}
+
+	/* 
+		i := 0
+		for s1, m1 := range nn {
+				for s2, N := range m1 {
+					if len(expect) < i ||
+						expect[i].s1 != s1 ||
+						expect[i].s2 != s2 ||
+						expect[i].steps != N.Steps ||
+						!reflect.DeepEqual(N.L, expect[i].L) {
+						//log.Printf("%v %v (%d): %v", m.ToPoint(s1), m.ToPoint(s2), N.Steps, m.ToPoints(N.L[:]))
+						//log.Printf("%d,%v,%v,%d,%#v", i, s1, s2, N.Steps, N.L[:], expect[i])
+						t.Errorf("Mismatch\ngot:%v,%v,%d,%#v, expected %#v", s1, s2, N.Steps, N.L[:], expect[i])
+					}
+					i++
+				}
+			}
+	*/
 }
 
 // Benchmark the version which does not maintain a seed array
@@ -99,19 +117,22 @@ func getBenchMap() (*Map, map[Location]int) {
 	return getBenchReplay()
 }
 func getBenchReplay() (*Map, map[Location]int) {
+	// ai challenge game 148978 turn 100 236 ants, 300 506 ants
+	// see 161429 for mongo # of ants...
 	file := "testdata/replay.big.json.gz"
 	match, err := replay.Load(file)
 	if err != nil {
 		log.Panicf("Load of %s failed: %v", file, err)
 	}
 	m := match.GetMap()
-	al := match.AntLocations(m, 300, 300)
+	al, _ := match.AntLocations(m, 300, 300)
 	l := make(map[Location]int, len(al[0][0])*len(al[0]))
 	for p := range al[0] {
 		for _, loc := range al[0][p] {
 			l[loc] = 1
 		}
 	}
+
 	return m, l
 }
 func getBenchFile() (*Map, map[Location]int) {
@@ -135,7 +156,7 @@ func BenchmarkMapFillAlloc(b *testing.B) {
 	}
 }
 
-// Benchmark not reusing the fill struct.
+// Benchmark resetting the fill struct in a loop not with a copy
 func BenchmarkResetSlow(b *testing.B) {
 	m, _ := getBenchMap()
 
@@ -144,7 +165,7 @@ func BenchmarkResetSlow(b *testing.B) {
 		f.slowReset()
 	}
 }
-// Benchmark not reusing the fill struct.
+// Benchmark resetting the fill struct
 func BenchmarkReset(b *testing.B) {
 	m, _ := getBenchMap()
 
@@ -160,7 +181,7 @@ func BenchmarkMapFill(b *testing.B) {
 	f := NewFill(m)
 	for i := 0; i < b.N; i++ {
 		f.Reset()
-		f.MapFill(m, l, 1)
+		f.MapFill(l, 1)
 	}
 }
 
@@ -170,10 +191,36 @@ func BenchmarkMapFillSeedNN(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		f := NewFill(m)
-		f.MapFillSeedNN(m, l, 1)
+		f.MapFillSeedNN(l, 1, 0)
+	}
+}
+// Benchmark not reusing the fill struct.
+func BenchmarkMapFillSeedNNMD16(b *testing.B) {
+	m, l := getBenchMap()
+
+	for i := 0; i < b.N; i++ {
+		f := NewFill(m)
+		f.MapFillSeedNN(l, 1, 16)
 	}
 }
 
+func BenchmarkMapFillSeedNNMD8(b *testing.B) {
+	m, l := getBenchMap()
+
+	for i := 0; i < b.N; i++ {
+		f := NewFill(m)
+		f.MapFillSeedNN(l, 1, 8)
+	}
+}
+
+func BenchmarkMapFillSeedNNMD4(b *testing.B) {
+	m, l := getBenchMap()
+
+	for i := 0; i < b.N; i++ {
+		f := NewFill(m)
+		f.MapFillSeedNN(l, 1, 4)
+	}
+}
 // Benchmark allocating fill + computing seed.
 func BenchmarkMapFillSeed(b *testing.B) {
 	m, l := getBenchMap()
@@ -262,7 +309,8 @@ func TestMonteCarloPathing(t *testing.T) {
 
 		d := 10000 / len(lsrc)
 		pre := time.Nanoseconds()
-		paths, _ := f.MontePathIn(m, lsrc, d, 1)
+		rng := rand.New(rand.NewSource(1))
+		paths, _ := f.MontePathIn(rng, lsrc, d, 1)
 		post := time.Nanoseconds()
 		log.Printf("Montecarlo %d paths in %.2f ms", d*len(lsrc), float64(post-pre)/1000000)
 

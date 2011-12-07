@@ -1,6 +1,7 @@
 package bot8
 
 import (
+	"time"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 	. "bugnuts/state"
@@ -17,24 +18,25 @@ type AntMove struct {
 }
 
 type AntPartition struct {
-	Ants [][]AntMove
+	Ants       [][]AntMove
+	estSimTime int64
 }
 
 func CombatPartition(s *State) {
 	nant := 0
-	for player, ants := range s.Ants {
-		for loc := range ants {
-			nant++
-		}
+	for _, ants := range s.Ants {
+		nant += len(ants)
 	}
+
 	origin := make(map[Location]int, nant)
-	for player, ants := range s.Ants {
+	for _, ants := range s.Ants {
 		for loc := range ants {
 			origin[loc] = 1
 		}
 	}
 	f := NewFill(s.Map)
 	_, near := f.MapFillSeedNN(origin, 1)
+
 	enemy := make(map[Location]int, 30)
 	friend := make(map[Location]int, 30)
 	for loc := range s.Ants[0] {
@@ -51,7 +53,7 @@ func CombatPartition(s *State) {
 	for loc := range friend {
 		for floc, nn := range near[loc] {
 			if nn.Steps < 3 {
-				if _, ok := s.Ants[0][eloc]; ok {
+				if _, ok := s.Ants[0][floc]; ok {
 					// a close friend
 					friend[floc] = 0
 				}
@@ -62,7 +64,7 @@ func CombatPartition(s *State) {
 		for floc, nn := range near[loc] {
 			if nn.Steps < 3 {
 				if _, ok := s.Ants[0][floc]; !ok {
-					// a close not me
+					// a close not me ant
 					enemy[floc] = 0
 				}
 			}
@@ -70,10 +72,13 @@ func CombatPartition(s *State) {
 	}
 
 	// Now visualize the frenemies.
-	VizFrenemies(s, friend, enemy)
+	if Viz["combat"] {
+		VizFrenemies(s, friend, enemy)
+	}
 }
 
 func Combat(s *State, ants []*AntStep) {
+	var pants []*AntPartition
 	// partition by connectedness
 	CombatPartition(s)
 
@@ -85,7 +90,7 @@ func Combat(s *State, ants []*AntStep) {
 	if false {
 		for {
 			for _, ap := range pants {
-				if time.NanoSeconds()+ap.estSimTime > s.TurnEnd {
+				if time.Nanoseconds()+ap.estSimTime > 500 { // s.TurnEnd {
 					break
 				}
 				//s.Sim(ap)
