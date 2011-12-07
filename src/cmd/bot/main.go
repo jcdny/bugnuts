@@ -113,7 +113,7 @@ func main() {
 			break
 		}
 		if t.Turn != s.Turn+1 {
-			log.Printf("Turns out of order new is %d expected %d", t.Turn, s.Turn+1)
+			log.Printf("Turns out of order Turn parse is %d expected %d", t.Turn, s.Turn+1)
 		}
 		turns = append(turns, t)
 
