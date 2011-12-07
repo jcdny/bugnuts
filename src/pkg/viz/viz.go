@@ -235,7 +235,7 @@ func vizCircle(p Point, r float64, fill bool) {
 		p.R, p.C, r, fill)
 }
 
-func VizFrenemies(s *State, f, e map[Location]int) {
+func VizFrenemies(s *State, p Partitions, pmap map[Location][]Location) {
 	if len(f) > 0 {
 		fmt.Fprintf(os.Stdout, "v slc %d %d %d %.1f\n",
 			0, 255, 0, .75)
