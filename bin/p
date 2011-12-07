@@ -29,7 +29,7 @@ $TOOLS/playgame.py \
     --engine_seed 41 \
     --end_wait=2.0 \
     --log_dir ~/bot/log \
-    --turns 1000 \
+    --turns 200 \
     --map_file=$MAPFILE \
     --food_rate 5 11 \
     --food_turn 19 37 \
