@@ -3,6 +3,8 @@ package util
 import (
 	"time"
 	"log"
+	"os"
+	"os/signal"
 )
 
 var LMark []int64 = make([]int64, 0, 10)
@@ -40,4 +42,19 @@ func TMark(s string) int64 {
 	log.Printf("%.2f %s: %s", float64(diff)/1000000.0, ts, s)
 
 	return diff / 1000000
+}
+
+func TurnTimer() {
+	log.Print("Starting timing")
+	go func() {
+		for isig := range signal.Incoming {
+			sig := isig.(os.UnixSignal)
+			switch sig {
+			case os.SIGCONT:
+				log.Printf("Got SigCont")
+			default:
+				log.Printf("Unexpected signal %v", sig)
+			}
+		}
+	}()
 }

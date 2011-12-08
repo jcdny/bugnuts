@@ -316,6 +316,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	}
 
 	s.GenerateMoves(endants)
+
 	for _, ant := range endants {
 		if WS.Watched(ant.Source, s.Turn, 0) {
 			log.Printf("ANT: %#v", ant)

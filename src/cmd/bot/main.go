@@ -15,6 +15,7 @@ import (
 	. "bugnuts/debug"
 	. "bugnuts/state"
 	. "bugnuts/game"
+	. "bugnuts/util"
 	. "bugnuts/MyBot"
 	// import bots to get their init() to register them.
 	_ "bugnuts/statbot"
@@ -59,6 +60,7 @@ func init() {
 }
 
 func main() {
+	TurnTimer()
 
 	var refmap *Map
 	if mapName != "" {
@@ -93,7 +95,7 @@ func main() {
 
 	// TODO this is a hack
 	if runBot == "v7" {
-		s.Testing = true
+		s.Testing = false
 	}
 
 	// Send go to tell server we are ready to process turns
