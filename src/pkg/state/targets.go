@@ -253,6 +253,12 @@ func (s *State) AddEnemyPathinTargets(tset *TargetSet, priority int, DefendDist 
 	}
 }
 
+func (tset *TargetSet) Dump(s *State) {
+	for _, t := range *tset {
+		log.Printf("%v %s C=%d P=%d T=%v", s.ToPoint(t.Loc), t.Item, t.Count, t.Pri)
+	}
+}
+
 func (tset *TargetSet) RemoveSeen(s *State, count int) {
 	for loc := range *tset {
 		if s.Met.Seen[loc] == s.Turn {
