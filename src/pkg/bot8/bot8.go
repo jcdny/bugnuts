@@ -14,6 +14,7 @@ import (
 	. "bugnuts/debug"
 	. "bugnuts/pathing"
 	. "bugnuts/viz"
+	. "bugnuts/combat"
 )
 
 type BotV8 struct {
@@ -120,6 +121,9 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	iter := -1
 	maxiter := 50
 	nMove := 1
+	if s.Turn == 66 {
+		tset.Dump(s)
+	}
 	for len(ants) > 0 && tset.Pending() > 0 && nMove != 0 {
 		iter++
 		nMove = 0
@@ -252,7 +256,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 				eh := s.EnemyHillLocations(0)
 				nadded := 0
 				if idle > 2*len(eh) {
-					nadded = s.AddBorderTargets(idle-2*len(eh), tset, bot.Explore, 1)
+					nadded = s.AddBorderTargets(idle-2*len(eh), tset, bot.Explore, bot.PriMap[EXPLORE])
 				}
 				for _, loc := range eh {
 					(*tset)[loc].Count += (idle - nadded) / len(eh)
@@ -326,7 +330,11 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	}
 
 	// Lets combat a bit.
-	Combat(s, endants)
+	ap, pmap := CombatPartition(s)
+	// Now visualize the frenemies.
+	if Viz["combat"] {
+		VizFrenemies(s, ap, pmap)
+	}
 
 	s.EmitMoves(endants)
 
