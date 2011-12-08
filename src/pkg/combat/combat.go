@@ -1,4 +1,4 @@
-package bot8
+package combat
 
 import (
 	"time"
@@ -6,7 +6,6 @@ import (
 	. "bugnuts/torus"
 	. "bugnuts/state"
 	. "bugnuts/pathing"
-	. "bugnuts/viz"
 )
 
 type AntMove struct {
@@ -31,7 +30,7 @@ func NewAntPartition() *AntPartition {
 	return p
 }
 
-func CombatPartition(s *State) {
+func CombatPartition(s *State) (Partitions, map[Location][]Location) {
 	// how many ants are there
 	nant := 0
 	for _, ants := range s.Ants {
@@ -48,29 +47,65 @@ func CombatPartition(s *State) {
 	// will only find neighbors withing 2x8 steps.
 	_, near := f.MapFillSeedNN(origin, 1, 8)
 
-	ap := make(Partitions, 5)
+	parts := make(Partitions, 5)
 	// maps an ant to the partitions it belongs to.
 	pmap := make(map[Location][]Location, nant)
 
-	for loc := range s.Ants[0] {
-		if _, ok := pmap[loc]; !ok {
+	for ploc := range s.Ants[0] {
+		if _, ok := pmap[ploc]; !ok {
 			// for any of my ants not already in a partition
-			for eloc, nn := range near[loc] {
-				if nn.Steps < 8 {
+			for eloc, nn := range near[ploc] {
+				if nn.Steps < 7 {
 					if _, ok := s.Ants[0][eloc]; !ok {
 						// a close enemy ant, add it and it's nearest neighbors to the partition
-						if p, ok := ap[loc]; !ok {
-							p = NewAntPartition()
-							ap[loc] = p
+
+						ap, ok := parts[ploc] // ap = a partition
+						if !ok {
+							ap = NewAntPartition()
 						}
+						parts[ploc] = ap
+
 						for nloc, nn := range near[eloc] {
-							if nn.Steps < 10 {
-								p.Ants[nloc] = struct{}
+							if nn.Steps < 7 {
+								ap.Ants[nloc] = struct{}{}
+
 								pm, ok := pmap[nloc]
 								if !ok {
-									pm = make([]Location, 8)
+									pm = make([]Location, 0, 8)
 								}
-								pmap[nloc] = append(pm, loc)
+								pmap[nloc] = append(pm, ploc)
+							}
+						}
+						pm, ok := pmap[eloc]
+						if !ok {
+							pm = make([]Location, 0, 8)
+						}
+
+						pmap[eloc] = append(pm, ploc)
+						ap.Ants[eloc] = struct{}{}
+					}
+				}
+			}
+		}
+
+		if ap, ok := parts[ploc]; ok {
+			// If we created a partition centered on this ant add any
+			// close neighbors of the friendly ants already in the
+			// partition
+			for loc := range ap.Ants {
+				if _, ok := s.Ants[0][loc]; ok {
+					// one of our friendly ants, add any close neigbors of our friendly guy
+					for nloc, nn := range near[loc] {
+						if nn.Steps < 2 {
+							_, me := s.Ants[0][nloc]
+							_, in := ap.Ants[nloc]
+							if me && !in {
+								ap.Ants[nloc] = struct{}{}
+								pm, ok := pmap[nloc]
+								if !ok {
+									pm = make([]Location, 0, 8)
+								}
+								pmap[nloc] = append(pm, ploc)
 							}
 						}
 					}
@@ -92,10 +127,7 @@ func CombatPartition(s *State) {
 		}
 	*/
 
-	// Now visualize the frenemies.
-	if Viz["combat"] {
-		VizFrenemies(s, ap, pmap)
-	}
+	return parts, pmap
 }
 
 func Combat(s *State, ants []*AntStep) {
