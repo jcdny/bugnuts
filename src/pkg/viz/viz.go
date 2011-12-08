@@ -10,6 +10,7 @@ import (
 	. "bugnuts/util"
 	. "bugnuts/state"
 	. "bugnuts/pathing"
+	. "bugnuts/combat"
 )
 
 var Viz = map[string]bool{
@@ -59,13 +60,13 @@ func SetViz(vizList string, Viz map[string]bool) {
 
 func VizPath(m *Map, p Point, steps string, color int) {
 	if color == 1 {
-		fmt.Fprintf(os.Stdout, "v slc 255 0 0 .5\n")
+		slc(cRed, .5)
 	} else if color == 2 {
-		fmt.Fprintf(os.Stdout, "v slc 0 255 0 .5\n")
+		slc(cGreen, .5)
 	}
 	fmt.Fprintf(os.Stdout, "v rp %d %d %s\n", p.R, p.C, steps)
 	if color > 0 {
-		fmt.Fprintf(os.Stdout, "v slc 0 0 0 1.0\n")
+		slc(cBlack, 1.0)
 	}
 }
 
@@ -106,14 +107,14 @@ func Visualize(s *State) {
 		for i, threat := range s.ThreatMap(s.Turn) {
 			if threat > 0 {
 				if lthreat != threat {
-					fmt.Fprintf(os.Stdout, "v sfc 255 0 0 %.1f\n", float64(threat)*.2)
+					sfc(cRed, float64(threat)*.2)
 					lthreat = threat
 				}
 				p := s.ToPoint(Location(i))
 				fmt.Fprintf(os.Stdout, "v t %d %d\n", p.R, p.C)
 			}
 		}
-		fmt.Fprintf(os.Stdout, "v sfc 0 0 0 1.0\n")
+		sfc(cBlack, 1.0)
 	}
 
 	if Viz["vcount"] {
@@ -124,7 +125,7 @@ func Visualize(s *State) {
 					nvis = 8
 				}
 				if nvis != lnvis {
-					fmt.Fprintf(os.Stdout, "v sfc 255 255 255 %.1f\n", float64(nvis)*.1)
+					sfc(cWhite, float64(nvis)*.1)
 					lnvis = nvis
 				}
 
@@ -132,7 +133,7 @@ func Visualize(s *State) {
 				fmt.Fprintf(os.Stdout, "v t %d %d\n", p.R, p.C)
 			}
 		}
-		fmt.Fprintf(os.Stdout, "v sfc 0 0 0 1.0\n")
+		sfc(cBlack, 1.0)
 	}
 
 	if Viz["monte"] {
@@ -143,9 +144,9 @@ func Visualize(s *State) {
 		if len(m.SMap) > 0 {
 			for _, item := range []Item{WATER, LAND} {
 				if item == WATER {
-					fmt.Fprintf(os.Stdout, "v sfc 0 0 128 .3\n")
+					sfc(cBlue, .2)
 				} else {
-					fmt.Fprintf(os.Stdout, "v sfc 0 128 0 .3\n")
+					sfc(cGreen, .2)
 				}
 				for i, gitem := range m.Grid {
 					if item == gitem && m.TGrid[i] != gitem {
@@ -174,11 +175,9 @@ func VizMCPaths(s *State) {
 		if val > 0 {
 			vout := val * 64 / (s.Met.MCDistMax + 1)
 			if val == s.Met.MCDistMax {
-				fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
-					0, 0, 255, .75)
+				sfc(cBlue, .75)
 			} else {
-				fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
-					heat64[vout].R, heat64[vout].G, heat64[vout].B, .4)
+				sfc(heat64[vout], .4)
 			}
 			p := s.ToPoint(Location(i))
 			fmt.Fprintf(os.Stdout, "v t %d %d\n", p.R, p.C)
@@ -216,11 +215,9 @@ func VizMCHillIn(s *State) {
 				if val > 0 {
 					vout := val * 64 / (maxdist + 1)
 					if val == maxdist {
-						fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
-							0, 0, 255, .75)
+						sfc(cBlue, .75)
 					} else {
-						fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.1f\n",
-							heat64[vout].R, heat64[vout].G, heat64[vout].B, .5)
+						sfc(heat64[vout], .5)
 					}
 					p := s.ToPoint(Location(i))
 					fmt.Fprintf(os.Stdout, "v t %d %d\n", p.R, p.C)
@@ -231,27 +228,30 @@ func VizMCHillIn(s *State) {
 }
 
 func vizCircle(p Point, r float64, fill bool) {
-	fmt.Fprintf(os.Stdout, "v c %d %d %f %s\n",
+	fmt.Fprintf(os.Stdout, "v c %d %d %f %v\n",
 		p.R, p.C, r, fill)
 }
 
-func VizFrenemies(s *State, p Partitions, pmap map[Location][]Location) {
-	if len(f) > 0 {
-		fmt.Fprintf(os.Stdout, "v slc %d %d %d %.1f\n",
-			0, 255, 0, .75)
-		for loc := range f {
+func VizFrenemies(s *State, ap Partitions, pmap map[Location][]Location) {
+	i := 0
+	for ploc, p := range ap {
+		for loc := range p.Ants {
+			//log.Printf("ploc %v loc %v pmap %v", ploc, loc, pmap[loc])
+			slc(qual6[i%6], 1)
 			p := s.ToPoint(loc)
-			vizCircle(p, 1.5, false)
+			if loc == ploc {
+				sfc(qual6[i%6], .5)
+				vizCircle(p, 1, true)
+				sfc(cWhite, 1)
+			} else if pmap[loc][0] == ploc {
+				vizCircle(p, 1, false)
+			}
+			pp := s.ToPoint(ploc)
+			VizLine(s.Map, p, pp, false)
 		}
+		i++
 	}
-	if len(e) > 0 {
-		fmt.Fprintf(os.Stdout, "v slc %d %d %d %.1f\n",
-			255, 0, 0, .75)
-		for loc := range e {
-			p := s.ToPoint(loc)
-			vizCircle(p, 1.5, false)
-		}
+	if i > 0 {
+		slc(cBlack, 1.0)
 	}
-	fmt.Fprintf(os.Stdout, "v slc %d %d %d %.1f\n",
-		0, 0, 0, 1.0)
 }
