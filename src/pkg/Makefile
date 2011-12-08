@@ -21,6 +21,7 @@ DIRS=\
 	bot8\
 	statbot\
 	MyBot\
+	combat\
 	debug\
 	engine\
 	game\
