@@ -1,0 +1,566 @@
+# turn 1
+o 47 6 e
+o 39 56 e
+o 68 86 w
+# turn 2
+o 68 85 s
+o 47 7 s
+o 39 57 s
+# turn 3
+o 40 57 s
+o 69 85 s
+o 48 7 s
+# turn 4
+o 41 57 e
+o 70 85 s
+o 49 7 s
+# turn 5
+o 41 58 s
+o 50 7 s
+o 47 6 n
+o 71 85 s
+o 39 56 e
+# turn 6
+o 46 6 n
+o 51 7 e
+o 42 58 e
+o 72 85 e
+o 39 57 e
+# turn 7
+o 45 6 n
+o 51 8 e
+o 42 59 e
+o 39 58 e
+o 72 86 e
+# turn 8
+o 51 9 e
+o 72 87 s
+o 39 59 e
+o 39 56 n
+o 44 6 n
+o 68 86 s
+# turn 9
+o 73 87 s
+o 69 86 w
+o 47 6 w
+o 38 56 n
+o 39 60 s
+o 51 10 e
+o 43 6 s
+# turn 10
+o 39 56 n
+o 44 6 s
+o 37 56 n
+o 51 11 e
+o 68 86 s
+o 40 60 e
+o 74 87 s
+o 47 5 s
+o 69 85 w
+# turn 11
+o 48 5 w
+o 75 87 e
+o 45 6 s
+o 69 86 w
+o 69 84 w
+o 40 61 e
+o 38 56 n
+o 36 56 n
+o 51 12 e
+# turn 12
+o 35 56 n
+o 48 4 s
+o 69 83 w
+o 37 56 n
+o 46 6 s
+o 40 62 s
+o 69 85 w
+o 51 13 e
+o 75 88 e
+# turn 13
+o 69 84 w
+o 69 82 w
+o 47 6 e
+o 51 14 n
+o 41 62 e
+o 36 56 n
+o 34 56 n
+o 75 89 s
+o 49 4 s
+# turn 14
+o 35 56 n
+o 33 56 n
+o 76 89 w
+o 69 81 w
+o 50 14 n
+o 39 56 n
+o 50 4 w
+o 69 83 w
+o 47 7 e
+o 41 63 n
+o 42 60 s
+o 68 86 s
+# turn 15
+o 50 3 w
+o 43 60 w
+o 47 6 e
+o 34 56 e
+o 69 82 s
+o 76 88 w
+o 47 8 e
+o 69 86 s
+o 38 56 e
+o 49 14 n
+o 69 80 w
+o 32 56 e
+o 40 63 w
+# turn 16
+o 32 57 e
+o 68 86 s
+o 47 9 e
+o 43 59 s
+o 34 57 n
+o 70 86 w
+o 48 14 s
+o 70 82 w
+o 40 62 n
+o 69 79 w
+o 50 2 w
+o 39 56 e
+o 38 57 e
+o 47 7 w
+o 76 87 s
+# turn 17
+o 44 59 s
+o 70 85 s
+o 47 6 w
+o 70 81 s
+o 38 58 n
+o 32 58 n
+o 39 62 w
+o 69 86 s
+o 50 1 w
+o 39 57 n
+o 49 14 s
+o 77 87 s
+o 33 57 n
+o 39 56 n
+o 47 10 s
+o 69 78 s
+o 68 86 w
+# turn 18
+o 71 85 w
+o 32 57 e
+o 50 14 e
+o 70 78 s
+o 50 0 e
+o 70 86 s
+o 47 5 s
+o 78 87 w
+o 48 10 e
+o 37 58 n
+o 38 56 n
+o 39 61 e
+o 47 6 e
+o 45 59 s
+o 38 57 e
+o 71 81 s
+o 68 85 w
+# turn 19
+o 37 56 e
+o 68 86 w
+o 48 5 s
+o 38 58 n
+o 78 86 s
+o 71 84 w
+o 32 58 n
+o 36 58 n
+o 39 62 n
+o 50 1 n
+o 71 78 s
+o 48 11 e
+o 72 81 w
+o 71 86 s
+o 68 84 w
+o 46 59 w
+o 50 15 e
+o 47 7 s
+# turn 20
+o 38 62 e
+o 35 58 w
+o 72 78 s
+o 68 83 w
+o 71 83 w
+o 72 80 s
+o 48 7 e
+o 79 86 s
+o 50 16 e
+o 46 58 w
+o 37 58 n
+o 49 5 e
+o 72 86 s
+o 49 1 n
+o 31 58 n
+o 37 57 n
+o 68 85 w
+o 48 12 e
+# turn 21
+o 68 82 w
+o 48 8 e
+o 73 86 s
+o 48 1 e
+o 36 57 w
+o 73 78 s
+o 48 13 e
+o 80 86 s
+o 46 57 s
+o 38 63 n
+o 36 58 n
+o 35 57 n
+o 49 6 n
+o 71 82 w
+o 73 80 s
+o 68 84 w
+o 30 58 w
+o 39 56 s
+o 50 17 e
+# turn 22
+o 47 57 w
+o 50 18 n
+o 35 58 w
+o 48 6 e
+o 40 56 s
+o 68 83 w
+o 48 9 e
+o 48 2 e
+o 34 57 n
+o 48 14 e
+o 30 57 w
+o 74 86 s
+o 37 63 n
+o 71 81 w
+o 81 86 s
+o 74 80 s
+o 68 81 w
+o 74 78 s
+o 36 56 n
+# turn 23
+o 75 80 s
+o 82 86 s
+o 68 82 w
+o 71 80 n
+o 75 78 w
+o 30 56 w
+o 47 56 w
+o 75 86 s
+o 41 56 s
+o 48 7 s
+o 35 57 n
+o 48 10 s
+o 48 3 e
+o 68 80 w
+o 48 15 s
+o 36 63 e
+o 35 56 n
+o 33 57 n
+# turn 24
+o 32 57 w
+o 30 55 w
+o 83 86 s
+o 76 80 s
+o 34 56 n
+o 49 7 s
+o 34 57 n
+o 49 15 e
+o 42 56 s
+o 76 86 w
+o 47 55 w
+o 48 4 e
+o 49 10 s
+o 68 81 w
+o 75 77 s
+o 70 80 w
+o 36 64 e
+# turn 25
+o 33 56 w
+o 48 5 n
+o 47 54 w
+o 50 7 s
+o 43 56 w
+o 36 65 e
+o 84 86 s
+o 76 77 w
+o 77 80 s
+o 49 16 e
+o 70 79 w
+o 76 85 s
+o 68 80 w
+o 33 57 n
+o 30 54 w
+o 50 10 s
+# turn 26
+o 32 57 n
+o 76 76 s
+o 47 6 e
+o 49 17 s
+o 70 78 w
+o 47 53 w
+o 77 85 s
+o 36 66 n
+o 47 5 s
+o 51 7 e
+o 51 10 e
+o 78 80 s
+o 85 86 s
+o 32 56 n
+o 68 79 w
+# turn 27
+o 48 5 s
+o 51 8 w
+o 77 76 w
+o 31 56 w
+o 51 11 e
+o 47 52 w
+o 68 78 w
+o 86 86 s
+o 50 17 s
+o 47 7 s
+o 78 85 w
+o 79 80 s
+# turn 28
+o 80 80 s
+o 87 86 s
+o 31 57 w
+o 51 12 s
+o 78 84 w
+o 68 77 s
+o 48 7 w
+o 77 75 w
+o 51 7 w
+o 47 51 e
+o 49 5 s
+o 31 55 w
+# turn 29
+o 69 77 s
+o 31 54 w
+o 88 86 s
+o 81 80 s
+o 48 6 w
+o 78 83 s
+o 31 56 w
+o 50 5 s
+o 47 52 w
+o 77 74 w
+o 51 6 s
+# turn 30
+o 48 5 s
+o 51 5 w
+o 79 83 w
+o 82 80 s
+o 89 86 s
+o 47 51 n
+o 31 55 w
+o 70 77 s
+o 77 73 w
+# turn 31
+o 90 86 s
+o 77 72 w
+o 51 4 s
+o 79 82 s
+o 52 12 n
+o 49 5 s
+o 83 80 s
+o 71 77 s
+# turn 32
+o 72 77 w
+o 51 12 e
+o 52 6 e
+o 77 71 w
+o 50 5 s
+o 91 86 s
+o 80 82 s
+# turn 33
+o 92 86 s
+o 51 5 w
+o 52 7 w
+o 77 70 w
+o 81 82 w
+o 72 76 s
+# turn 34
+o 51 4 w
+o 93 86 s
+o 77 69 w
+o 81 81 w
+o 73 76 s
+# turn 35
+o 77 68 w
+o 94 86 s
+o 81 80 s
+o 74 76 s
+o 51 3 w
+# turn 36
+o 77 67 w
+o 82 80 s
+o 95 86 s
+o 75 76 s
+o 51 2 s
+# turn 37
+o 76 76 s
+o 96 86 s
+o 33 55 e
+o 43 55 e
+o 52 2 w
+# turn 38
+o 77 76 e
+o 97 86 s
+o 46 51 s
+o 43 56 e
+# turn 39
+o 98 86 s
+o 52 6 e
+o 47 51 e
+o 43 57 w
+# turn 40
+o 99 86 s
+o 47 52 e
+o 52 1 e
+o 52 7 n
+o 43 56 s
+o 52 4 n
+# turn 41
+o 0 86 s
+o 47 53 s
+o 51 7 n
+o 51 4 n
+o 44 56 s
+o 52 2 n
+# turn 42
+o 1 86 s
+o 45 56 s
+o 50 4 e
+o 50 7 e
+o 51 2 n
+o 48 53 s
+# turn 43
+o 50 2 e
+o 50 5 e
+o 46 56 s
+o 49 53 e
+o 2 86 s
+o 50 8 e
+# turn 44
+o 47 56 s
+o 50 9 e
+o 3 86 s
+o 50 6 n
+o 50 3 n
+# turn 45
+o 49 6 n
+o 50 10 n
+o 49 3 n
+o 48 56 s
+# turn 46
+o 48 6 n
+o 49 10 n
+o 48 3 e
+o 49 56 s
+# turn 47
+o 48 10 n
+o 48 4 e
+o 50 56 e
+o 47 6 e
+# turn 48
+o 48 5 e
+o 50 57 e
+o 47 10 e
+o 47 7 e
+# turn 49
+o 48 6 n
+o 47 11 e
+o 47 8 n
+# turn 50
+o 47 12 e
+o 47 6 e
+o 46 8 n
+# turn 51
+o 47 13 e
+o 47 7 n
+o 45 8 n
+# turn 52
+o 46 7 n
+o 44 8 e
+# turn 53
+o 45 7 w
+o 44 9 e
+# turn 54
+o 45 6 n
+# turn 55
+o 44 6 n
+# turn 56
+o 43 6 n
+# turn 57
+o 42 6 n
+# turn 58
+o 41 6 n
+# turn 59
+o 40 6 n
+# turn 60
+o 39 6 n
+# turn 61
+o 38 6 n
+# turn 62
+o 37 6 n
+# turn 63
+o 36 6 n
+# turn 64
+o 35 6 n
+# turn 65
+o 34 6 n
+# turn 66
+o 33 6 n
+# turn 67
+o 32 6 n
+# turn 68
+o 31 6 n
+# turn 69
+o 30 6 n
+# turn 70
+o 29 6 n
+# turn 71
+o 28 6 n
+# turn 72
+o 27 6 n
+# turn 73
+o 26 6 n
+# turn 74
+o 25 6 n
+# turn 75
+o 24 6 n
+# turn 76
+o 23 6 n
+# turn 77
+o 22 6 n
+# turn 78
+o 21 6 n
+# turn 79
+o 20 6 n
+# turn 80
+o 19 6 n
+# turn 81
+o 18 6 n
+# turn 82
+o 17 6 n
+# turn 83
+o 16 6 n
+# turn 84
+o 15 6 n
+# turn 85
+o 14 6 n
+# turn 86
+o 13 6 n
+# turn 87
+o 12 6 n
+# turn 88
+o 11 6 n
+# turn 89
+o 10 6 n
