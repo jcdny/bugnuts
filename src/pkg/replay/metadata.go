@@ -1,10 +1,12 @@
 package replay
 
 import (
+	"log"
 	"strconv"
 	"bugnuts/maps"
 	"bugnuts/torus"
 	"bugnuts/game"
+	"bugnuts/combat"
 	. "bugnuts/util"
 )
 
@@ -64,8 +66,12 @@ func (r *Replay) AntCount(tmin, tmax int) [][]int {
 		nants[i] = make([]int, tmax-tmin+1)
 	}
 	for _, a := range r.Ants {
-		if a.Start <= tmax && a.End >= tmin {
-			for i := MaxV(a.Start-tmin, 0); i <= MinV(tmax, a.End)-tmin; i++ {
+		nm := len(a.Moves)
+		if false {
+			log.Print("a.End, a.Start+nm", a.End, " ", a.Start+nm)
+		}
+		if a.Start <= tmax && a.Start+nm+1 >= tmin {
+			for i := MaxV(a.Start-tmin, 0); i <= MinV(tmax, a.End+1)-tmin; i++ {
 				nants[a.Player][i]++
 			}
 		}
@@ -76,49 +82,62 @@ func (r *Replay) AntCount(tmin, tmax int) [][]int {
 
 // Return ant locations in array [(turn-tmin)][player][ant] for turns tmin..tmax inclusive
 // Return the spawns [turn][]PlayerLoc
-func (r *Replay) AntLocations(m *maps.Map, tmin, tmax int) ([][][]torus.Location, [][]game.PlayerLoc) {
+func (r *Replay) AntMoves(m *maps.Map, tmin, tmax int) [][][]combat.AntMove {
 	nants := r.AntCount(tmin, tmax)
 
 	// Allocate the slices
-	al := make([][][]torus.Location, tmax-tmin+1)
-	spawn := make([][]game.PlayerLoc, tmax-tmin+1)
+	al := make([][][]combat.AntMove, tmax-tmin+1)
 	for turn := 0; turn <= tmax-tmin; turn++ {
-		al[turn] = make([][]torus.Location, r.Players)
+		al[turn] = make([][]combat.AntMove, r.Players)
 		for np := 0; np < r.Players; np++ {
 			if nants[np][turn] > 0 {
-				al[turn][np] = make([]torus.Location, 0, nants[np][turn])
+				al[turn][np] = make([]combat.AntMove, 0, nants[np][turn])
 			}
 		}
 	}
 	// Populate the array
 	for _, a := range r.Ants {
-		if a.Start <= tmax && a.End >= tmin {
+		if a.Start <= tmax && a.End+1 >= tmin {
+			var nloc torus.Location
 			turn := a.Start
 			loc := m.ToLocation(torus.Point{a.Row, a.Col})
-			if turn >= tmin && turn <= tmax {
-				spawn[turn-tmin] = append(spawn[turn-tmin], game.PlayerLoc{Loc: loc, Player: a.Player})
+			nloc = -1
+			if turn >= tmin {
+				// a spawned ant has From = -1, D: InvalidMove
+				al[turn-tmin][a.Player] = append(al[turn-tmin][a.Player],
+					combat.AntMove{From: -1, To: loc, D: maps.InvalidMove, Player: a.Player})
 			}
+
 			for _, move := range a.Moves {
-				if turn+1 > tmax {
-					break
-				} else if turn >= tmin {
-					if turn != a.Start {
-						al[turn-tmin][a.Player] = append(al[turn-tmin][a.Player], loc)
-					}
-				}
 				turn++
 				d := maps.ByteToDirection[move]
 				if d != maps.InvalidMove {
-					loc = m.LocStep[loc][d]
+					nloc = m.LocStep[loc][d]
+				} else {
+					nloc = -1
+				}
+				if turn < 5 && a.Player < 2 {
+					log.Printf("pl %d turn %d end %d loc %v nloc %v %v", a.Player, turn, a.End, m.ToPoint(loc), m.ToPoint(nloc), d)
+				}
+				if turn >= tmin && turn <= tmax {
+					al[turn-tmin][a.Player] = append(al[turn-tmin][a.Player],
+						combat.AntMove{From: loc, To: nloc, D: d, Player: a.Player})
+				}
+				loc = nloc
+				if turn > tmax {
+					break
 				}
 			}
-			if turn != a.Start {
-				al[turn-tmin][a.Player] = append(al[turn-tmin][a.Player], loc)
+
+			if turn+1 <= tmax && turn == a.End {
+				// An ant that has no further moves.
+				al[turn-tmin+1][a.Player] = append(al[turn-tmin+1][a.Player],
+					combat.AntMove{From: loc, To: -1, D: maps.InvalidMove, Player: a.Player})
 			}
 		}
 	}
 
-	return al, spawn
+	return al
 }
 
 // Return food locations per turn

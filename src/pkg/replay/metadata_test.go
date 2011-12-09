@@ -8,6 +8,7 @@ import (
 	"reflect"
 	"bugnuts/maps"
 	"bugnuts/torus"
+	"bugnuts/combat"
 )
 
 func replayGet(file string) (*Match, *maps.Map) {
@@ -46,7 +47,21 @@ func TestHillLocations(t *testing.T) {
 	}
 }
 
-func TestAntLocations(t *testing.T) {
+func DumpMove(m *maps.Map, am [][][]combat.AntMove, p int) {
+	for turn := range am {
+		log.Print("TURN ", turn)
+		for np := range am[turn] {
+			if p == np || p < 0 {
+				log.Print("PLAYER ", np)
+				for _, move := range am[turn][np] {
+					log.Printf("Move t=%d p=%d %#v %v %#v", turn, np, m.ToPoint(move.From), move.D, m.ToPoint(move.To))
+				}
+			}
+		}
+	}
+}
+
+func TestAntMoves(t *testing.T) {
 	files := []string{
 		"testdata/replay.0.json",
 	}
@@ -54,53 +69,55 @@ func TestAntLocations(t *testing.T) {
 	for _, file := range files {
 		match, m := replayGet(file)
 
+		ac := match.AntCount(0, match.GameLength)
 		ac9 := match.AntCount(9, 9)
 		ac910 := match.AntCount(9, 10)
-		ac := match.AntCount(0, match.GameLength)
-		al, spawn := match.AntLocations(m, 0, match.GameLength)
-		al9, spawn9 := match.AntLocations(m, 9, 9)
-		al910, spawn910 := match.AntLocations(m, 9, 10)
+
+		log.Print("am:**********************************************************")
+		am := match.AntMoves(m, 0, match.GameLength)
+		log.Print("am9:************************************************************")
+		am9 := match.AntMoves(m, 9, 9)
+		log.Print("am910:************************************************************")
+		am910 := match.AntMoves(m, 9, 10)
+		//DumpMove(m, am, -1)
 	OUT:
 		for p := range ac {
-			if ac[p][9] != ac9[p][0] ||
-				ac[p][9] != ac910[p][0] ||
-				ac[p][10] != ac910[p][1] {
-				t.Errorf("Ant count mismatch for full versus subset")
-			}
-
-			if !reflect.DeepEqual(al[9][p], al9[0][p]) ||
-				!reflect.DeepEqual(al[9][p], al910[0][p]) ||
-				!reflect.DeepEqual(al[10][p], al910[1][p]) {
-				log.Print(al[9][p])
-				log.Print(al9[0][p])
-				log.Print(spawn[9])
-				log.Print(spawn9[0])
-				t.Errorf("Ant location mismatch at turn 9")
-			}
-
-			if !reflect.DeepEqual(spawn[9], spawn9[0]) ||
-				!reflect.DeepEqual(spawn[9], spawn910[0]) ||
-				!reflect.DeepEqual(spawn[10], spawn910[1]) {
-				t.Errorf("Ant spawn mismatch at turn 9")
+			am0am9 := reflect.DeepEqual(am[9][p], am9[0][p])
+			am0am910 := reflect.DeepEqual(am[9][p], am910[0][p])
+			am1am910 := reflect.DeepEqual(am[10][p], am910[1][p])
+			if !am0am9 || !am0am910 || !am1am910 {
+				log.Printf("Match: am0am9: %v am0am910 %v; am1am910 %v", am0am9, am0am910, am1am910)
+				log.Print("am[9]:**********************************************************")
+				DumpMove(m, am[9:11], p)
+				log.Print("am9:************************************************************")
+				DumpMove(m, am9, p)
+				log.Print("am910[0]:************************************************************")
+				DumpMove(m, am910, p)
+				t.Error("AntMove move location mismatch for subsets player ", p)
+				break OUT
 			}
 
 			for turn := range ac[p] {
-				ns := 0
-				for _, s := range spawn[turn] {
-					if s.Player == p {
-						ns++
-					}
-				}
-				if ac[p][turn] != len(al[turn][p])+ns {
-					t.Errorf("Ant count, ant location mismatch player %d turn %d: count(%d) != locs(%d) + spawn(%d)", p, turn, ac[p][turn], len(al[turn][p]), ns)
+				if ac[p][turn] != len(am[turn][p]) {
+					t.Errorf("AntCount, AntMove count mismatch player %d turn %d: count(%d) != locs(%d)", p, turn, ac[p][turn], len(am[turn][p]))
 					break OUT
 				}
 			}
+
+			if ac[p][9] != ac9[p][0] ||
+				ac[p][9] != ac910[p][0] ||
+				ac[p][10] != ac910[p][1] {
+				t.Errorf("AntCount mismatch for full versus subset player %d; ac %d ac9 %d, ac %d ac910[0] %d, ac %d ac910[1] %d", p,
+					ac[p][9], ac9[p][0],
+					ac[p][9], ac910[p][0],
+					ac[p][10], ac910[p][1])
+			}
+
 		}
 		if false {
 			p := 2
-			for turn := range al {
-				log.Printf("%d: %v", turn, m.ToPoints(al[turn][p]))
+			for turn := range am {
+				log.Printf("%d: %v", turn, am[turn][p])
 			}
 		}
 	}

@@ -15,7 +15,6 @@ import (
 	. "bugnuts/debug"
 	. "bugnuts/state"
 	. "bugnuts/game"
-	. "bugnuts/util"
 	. "bugnuts/MyBot"
 	// import bots to get their init() to register them.
 	_ "bugnuts/statbot"
@@ -60,7 +59,7 @@ func init() {
 }
 
 func main() {
-	TurnTimer()
+	//TurnTimer()
 
 	var refmap *Map
 	if mapName != "" {
@@ -68,6 +67,12 @@ func main() {
 	}
 
 	in := bufio.NewReader(os.Stdin)
+
+	// T0 START
+	btime := time.Nanoseconds()
+	etime, stime := btime, btime
+	egc := runtime.MemStats.PauseTotalNs
+	sgc := egc
 
 	// Load game definition
 	g, err := GameScan(in)
@@ -101,14 +106,20 @@ func main() {
 	// Send go to tell server we are ready to process turns
 	fmt.Fprintf(os.Stdout, "go\n")
 
-	// Timing
-	btime := time.Nanoseconds()
-	etime, stime := btime, btime
-	egc := runtime.MemStats.PauseTotalNs
-	sgc := egc
+	// Timing for turn 0 
+	// Timing hoohah
+	btime = time.Nanoseconds() // btime is reset since we want per turn time excluding steup.
+	stime, etime = etime, btime
+	sgc, egc = egc, runtime.MemStats.PauseTotalNs
+	if Debug[DBG_TurnTime] {
+		log.Printf("TURN %d %.2fms %.2fms GC",
+			0,
+			float64(etime-stime)/1e6,
+			float64(egc-sgc)/1e6)
+	}
 
 	for {
-		// READ TURN INFO FROM SERVER]
+		// READ TURN INFO FROM SERVER
 		var t *Turn
 		t, _ = TurnScan(s.Map, in, t)
 		if t.End {
@@ -136,16 +147,17 @@ func main() {
 		stime, etime = etime, time.Nanoseconds()
 		sgc, egc = egc, runtime.MemStats.PauseTotalNs
 		if Debug[DBG_TurnTime] {
-			log.Printf("TURN %d %.2fms %.2fms GC",
+			log.Printf("TURN %d %.2fms %.2fms GC %.2f SGap",
 				s.Turn,
-				float64(etime-stime)/1000000,
-				float64(egc-sgc)/1000000)
+				float64(etime-t.Started)/1e6,
+				float64(egc-sgc)/1e6,
+				float64(t.Started-stime)/1e6)
 		}
 	}
 
 	if Debug[DBG_TurnTime] {
 		etime = time.Nanoseconds()
 		log.Printf("TOTAL TIME %.2fms/turn for %d Turns",
-			float64(etime-btime)/1000000/float64(s.Turn), s.Turn)
+			float64(etime-btime)/1e6/float64(s.Turn), s.Turn)
 	}
 }

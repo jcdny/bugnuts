@@ -2,6 +2,7 @@ package state
 
 import (
 	"log"
+	"time"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 	. "bugnuts/util"
@@ -10,7 +11,9 @@ import (
 )
 
 const (
-	MAGICAGE = 10
+	MAGICAGE        = 10
+	ServerSleepTime = 10
+	ServerReadSize  = 99
 )
 
 func (s *State) ProcessFood(food []Location, turn int) {
@@ -41,6 +44,8 @@ func (s *State) ProcessFood(food []Location, turn int) {
 			if s.Map.Grid[loc] == FOOD {
 				s.Map.Grid[loc] = LAND
 			}
+		} else {
+			s.Map.Grid[loc] = FOOD
 		}
 	}
 }
@@ -49,6 +54,11 @@ func (s *State) ProcessTurn(t *Turn) {
 	//log.Printf("s.Turn is ", s.Turn, " t.Turn is ", t.Turn)
 	s.ResetGrid()
 	s.Turn++
+	if t.Started > 0 {
+		s.Started = t.Started
+	} else {
+		s.Started = time.Nanoseconds()
+	}
 
 	s.SSID = s.Map.SID
 
@@ -63,6 +73,11 @@ func (s *State) ProcessTurn(t *Turn) {
 	s.ProcessFood(t.F, s.Turn)
 	s.ProcessAnts(t.A, 0, s.Turn)
 	s.ProcessHills(t.H, 0, s.Turn)
+
+	// The turn cutoff is turn time adjusted by the # of sleeps it
+	// will take the server to do before all our moves are read
+	// assuming the server reads N lines per turn
+	s.Cutoff = s.Started + int64(s.TurnTime-ServerSleepTime*(len(s.Ants[0])/ServerReadSize+2))*1e6
 
 	if s.Turn == 1 {
 		s.Turn1()
@@ -110,7 +125,7 @@ func (s *State) ProcessTurn(t *Turn) {
 	s.Met.HBorder = s.StepHorizon(s.Met.HBorder)
 	s.UpdateHillMaps()
 	s.MonteCarloDensity()
-	s.ComputeThreat(1, 0, s.AttackMask.MM, s.Met.Threat[len(s.Met.Threat)-1], s.Met.PThreat[len(s.Met.PThreat)-1])
+	s.ComputeThreat(1, 0, s.AttackMask.MM, s.Met.Threat[len(s.Met.Threat)-1], s.Met.PrThreat[len(s.Met.PrThreat)-1])
 }
 
 // Given list of player/location update Land visible
@@ -269,11 +284,11 @@ func (s *State) ResetGrid() {
 	n := len(s.Met.Threat)
 	if n > 1 {
 		s.Met.Threat = append(s.Met.Threat[1:n], s.Met.Threat[0])
-		s.Met.PThreat = append(s.Met.PThreat[1:n], s.Met.PThreat[0])
+		s.Met.PrThreat = append(s.Met.PrThreat[1:n], s.Met.PrThreat[0])
 	}
 	for i := range s.Met.Threat[0] {
 		s.Met.Threat[0][i] = 0
-		s.Met.PThreat[0][i] = 0
+		s.Met.PrThreat[0][i] = 0
 	}
 
 	// Set all seen map to land

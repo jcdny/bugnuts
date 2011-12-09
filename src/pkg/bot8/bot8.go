@@ -337,6 +337,8 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 		VizFrenemies(s, ap, pmap)
 	}
 
+	CombatRun(s, endants, ap, pmap)
+
 	s.EmitMoves(endants)
 
 	Visualize(s)

@@ -6,6 +6,7 @@ import (
 	"bufio"
 	"strconv"
 	"strings"
+	"time"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 )
@@ -41,13 +42,14 @@ func stringPlayerLoc(t *Turn, pl *PlayerLoc) string {
 }
 
 type Turn struct {
-	Turn int
-	W    []Location
-	F    []Location
-	A    []PlayerLoc
-	H    []PlayerLoc
-	D    []PlayerLoc
-	End  bool
+	Turn    int
+	Started int64
+	W       []Location
+	F       []Location
+	A       []PlayerLoc
+	H       []PlayerLoc
+	D       []PlayerLoc
+	End     bool
 	*Map
 }
 
@@ -127,6 +129,7 @@ func TurnScan(m *Map, in *bufio.Reader, tl *Turn) (*Turn, os.Error) {
 
 		words := strings.SplitN(line, " ", 5)
 		if words[0] == "turn" {
+			t.Started = time.Nanoseconds()
 			if len(words) != 2 {
 				log.Printf("Invalid command format: \"%s\"", line)
 			}

@@ -45,13 +45,13 @@ func (s *State) Threat(turn int, l Location) int8 {
 	return s.Met.Threat[i][l]
 }
 
-func (s *State) PThreat(turn int, l Location) int {
-	i := len(s.Met.PThreat) - turn + s.Turn - 1
+func (s *State) PrThreat(turn int, l Location) int {
+	i := len(s.Met.PrThreat) - turn + s.Turn - 1
 	if i < 0 {
 		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Met.Threat))
 		return 0
 	}
-	return s.Met.PThreat[i][l]
+	return s.Met.PrThreat[i][l]
 }
 
 func (s *State) ThreatMap(turn int) []int8 {

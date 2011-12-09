@@ -3,8 +3,8 @@ package util
 import (
 	"time"
 	"log"
-	"os"
-	"os/signal"
+	//"os"
+	//"os/signal"
 )
 
 var LMark []int64 = make([]int64, 0, 10)
@@ -43,7 +43,7 @@ func TMark(s string) int64 {
 
 	return diff / 1000000
 }
-
+/*
 func TurnTimer() {
 	log.Print("Starting timing")
 	go func() {
@@ -58,3 +58,4 @@ func TurnTimer() {
 		}
 	}()
 }
+*/

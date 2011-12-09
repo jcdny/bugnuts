@@ -12,11 +12,11 @@ import (
 
 type Neighborhood struct {
 	//TODO add hill distance step
-	Valid   bool
-	Threat  int
-	PThreat int
-	Goal    int
-	PrFood  int
+	Valid    bool
+	Threat   int
+	PrThreat int
+	Goal     int
+	PrFood   int
 	//Vis     int
 	//Unknown int
 	//Land    int
@@ -55,6 +55,7 @@ func (s *State) GenerateAnts(tset *TargetSet, riskOff bool) (ants map[Location]*
 
 	for loc := range s.Ants[0] {
 		ants[loc] = s.AntStep(loc, riskOff)
+		//log.Printf("Ant: %#v", ants[loc])
 
 		fixed := false
 
@@ -96,7 +97,7 @@ func (s *State) GenerateAnts(tset *TargetSet, riskOff bool) (ants map[Location]*
 // Stores the neighborhood of the ant.
 func (s *State) Neighborhood(loc Location, nh *Neighborhood, d Direction) {
 	nh.Threat = int(s.Threat(s.Turn, loc))
-	nh.PThreat = int(s.PThreat(s.Turn, loc))
+	nh.PrThreat = int(s.PrThreat(s.Turn, loc))
 	//nh.Vis = s.Map.VisSum[loc]
 	//nh.Unknown = s.Met.Unknown[loc]
 	//nh.Land = s.Met.Land[loc]
@@ -127,6 +128,7 @@ func (s *State) AntStep(loc Location, riskOff bool) *AntStep {
 		nloc := s.Map.LocStep[loc][d]
 		s.Neighborhood(nloc, as.N[d], Direction(d))
 		as.N[d].Perm = int(permute[d])
+		//log.Printf("%v %v %v", s.ToPoint(nloc), Direction(d), s.Map.Grid[nloc])
 
 		if s.Map.Grid[nloc] == FOOD {
 			as.Foodp = true
@@ -145,15 +147,15 @@ func (s *State) AntStep(loc Location, riskOff bool) *AntStep {
 			as.N[i].Threat -= 3
 			if as.N[i].Threat <= 0 {
 				as.N[i].Threat = 0
-				as.N[i].PThreat = 0
+				as.N[i].PrThreat = 0
 			}
 		}
 	}
 
 	// Compute the min threat moves and flag as safest.
-	minthreat := as.N[4].Threat*100 + as.N[4].PThreat
+	minthreat := as.N[4].Threat*100 + as.N[4].PrThreat
 	for i := 0; i < 4; i++ {
-		nt := as.N[i].Threat*100 + as.N[i].PThreat
+		nt := as.N[i].Threat*100 + as.N[i].PrThreat
 		if nt < minthreat {
 			minthreat = nt
 		}
@@ -271,8 +273,8 @@ func (p ENSlice) Less(i, j int) bool {
 	if p[i].Threat != p[j].Threat {
 		return p[i].Threat < p[j].Threat
 	}
-	if p[i].PThreat != p[j].PThreat {
-		return p[i].PThreat < p[j].PThreat
+	if p[i].PrThreat != p[j].PrThreat {
+		return p[i].PrThreat < p[j].PrThreat
 	}
 	if p[i].Goal != p[j].Goal {
 		return p[i].Goal > p[j].Goal

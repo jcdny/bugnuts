@@ -28,23 +28,22 @@ type State struct {
 	// Game parameter set
 	*GameInfo
 	*Map
-	Rand *rand.Rand
-	SSID int // The sym id at turn start
-	Turn int //current turn number
-
-	AttackMask *Mask
-	ViewMask   *Mask
-
+	Rand         *rand.Rand         // the per bot stateful rng
+	SSID         int                // The sym id at turn start
+	Turn         int                // Current turn number, updated at start of ProcessTurn()
+	Started      int64              // Nanoseconds since epoch at turn start
+	Cutoff       int64              // Nanoseconds til EmitMove() required, see ProcessTurn() for details
 	Ants         []map[Location]int // Ant lists List by playerid value is turn seen
 	Food         map[Location]int   // Food Seen
 	InitialHills int                // Number of hills per player from Turn 1
 	NHills       [MaxPlayers]int    // Count of live hills per player
 	Hills        map[Location]*Hill // Hill list
-	Stats        *Statistics
-
-	// Map Metrics
-	Met     *Metrics
-	Testing bool
+	Stats        *Statistics        //Computed statistics
+	Met          *Metrics           // Map Metrics
+	Testing      bool
+	// Caches
+	AttackMask *Mask
+	ViewMask   *Mask
 }
 
 func NewState(g *GameInfo) *State {

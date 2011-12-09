@@ -15,7 +15,7 @@ type Metrics struct {
 	Seen     []int      // Turn on which cell was last visible.
 	VisCount []int      // How many ants see this cell.
 	Threat   [][]int8   // how much threat is there on a given cell
-	PThreat  [][]int    // Prob of n threat
+	PrThreat [][]int    // Prob of max threat
 	Horizon  []bool     // Inside the event horizon.  false means there could be an ant there we have not seen
 	HBorder  []Location // List of border points
 	Land     []int      // Count of land tiles visible from a given tile
@@ -26,8 +26,8 @@ type Metrics struct {
 	// Fills
 	FDownhill *Fill // Downhill from my own hills
 	FHill     *Fill // Distance to my hills
-	FViewHill *Fill // Distance to visibility boundary for my hills
-	FAll      *Fill // All hill fill
+	// FViewHill *Fill // Distance to visibility boundary for my hills
+	// FAll      *Fill // All hill fill
 	// MC distributions
 	MCDist    []int
 	MCFlow    [][4]int
@@ -52,7 +52,7 @@ func NewMetrics(m *Map) *Metrics {
 
 	for i := 0; i < NTHREAT; i++ {
 		met.Threat = append(met.Threat, make([]int8, size))
-		met.PThreat = append(met.PThreat, make([]int, size))
+		met.PrThreat = append(met.PrThreat, make([]int, size))
 	}
 
 	for i := range met.Unknown {
@@ -215,7 +215,6 @@ func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8,
 		}
 	}
 
-	//llist := make([]Location, len(mask[0].Point))
 	m := mask[0] // for 0 turns out we just use the 0 degree of freedom mask.
 	for i := range s.Ants {
 		if i != player {

@@ -1,7 +1,6 @@
 package maps
 
 import (
-	"log"
 	. "bugnuts/torus"
 )
 
@@ -59,8 +58,7 @@ func (d Direction) String() string {
 		return "-"
 	}
 
-	log.Printf("%v : invalid direction", d)
-	return "-"
+	return "X"
 }
 
 type Path struct {
