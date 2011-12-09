@@ -35,13 +35,12 @@ $TOOLS/playgame.py \
     --food_rate 5 11 \
     --food_turn 19 37 \
     --food_start 75 175 \
-    --food_visible 3 5 \
+    --food_visible 10 15 \
     --cutoff_turn 150 \
     --cutoff_percent 0.85 \
     "$@" \
     "${BB}8" \
     "${BB}7" \
-    "${BB}6" \
     "${BB}5" \
     "python $TOOLS/dist/sample_bots/python/GreedyBot.py" \
     "python $TOOLS/dist/sample_bots/python/HunterBot.py" \

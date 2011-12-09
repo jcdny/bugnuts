@@ -121,9 +121,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	iter := -1
 	maxiter := 50
 	nMove := 1
-	if s.Turn == 66 {
-		tset.Dump(s)
-	}
+
 	for len(ants) > 0 && tset.Pending() > 0 && nMove != 0 {
 		iter++
 		nMove = 0
@@ -336,7 +334,6 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	if Viz["combat"] {
 		VizFrenemies(s, ap, pmap)
 	}
-
 	CombatRun(s, endants, ap, pmap)
 
 	s.EmitMoves(endants)

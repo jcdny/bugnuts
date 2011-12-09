@@ -3,6 +3,7 @@ package combat
 import (
 	"testing"
 	"log"
+	"rand"
 	"bugnuts/maps"
 	"bugnuts/torus"
 	"bugnuts/replay"
@@ -44,6 +45,8 @@ func TestArena(t *testing.T) {
 const NMonte int = 10000
 
 func BenchmarkMonte(b *testing.B) {
+	rng := rand.New(rand.NewSource(1))
+
 	start := ALoc(40)
 	l := start
 	n := 0
@@ -51,7 +54,7 @@ func BenchmarkMonte(b *testing.B) {
 	s := 0
 	for i := 0; i < b.N*NMonte; i++ {
 		var d maps.Direction
-		for _, d = range maps.Permute5() {
+		for _, d = range maps.Permute5(rng) {
 			s++
 			if d == maps.NoMovement {
 				break
@@ -71,6 +74,8 @@ func BenchmarkMonte(b *testing.B) {
 }
 
 func BenchmarkMonteFull(b *testing.B) {
+	rng := rand.New(rand.NewSource(1))
+
 	start := torus.Location(136)
 	l := start
 	n := 0
@@ -79,7 +84,7 @@ func BenchmarkMonteFull(b *testing.B) {
 	for i := 0; i < b.N*NMonte; i++ {
 		s++
 		var d maps.Direction
-		for _, d = range maps.Permute5() {
+		for _, d = range maps.Permute5(rng) {
 			if d == maps.NoMovement {
 				break
 			} else if nl := M.LocStep[l][d]; maps.StepableItem[M.Grid[nl]] {

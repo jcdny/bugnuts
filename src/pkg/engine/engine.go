@@ -106,10 +106,10 @@ func (g *Game) Replay(r *replay.Replay, tmin, tmax int, canonicalorder bool) {
 	g.PlayerInput = tout
 }
 
-func (p *Player) UpdateVisibility(g *Game, ants []combat.AntMove, np int, seen []torus.Location) {
+func (p *Player) UpdateVisibility(g *Game, ants []game.AntMove, np int, seen *[]torus.Location) {
 	copy(p.Visible, _false[:len(p.Visible)])
 	if false && np == 0 {
-		combat.DumpAntMove(g.Map, ants, np, g.Turn)
+		game.DumpAntMove(g.Map, ants, np, g.Turn)
 	}
 	for i := range ants {
 		if ants[i].Player == np && ants[i].To > -1 {
@@ -117,21 +117,21 @@ func (p *Player) UpdateVisibility(g *Game, ants []combat.AntMove, np int, seen [
 				p.Visible[l] = true
 				if !p.Seen[l] {
 					p.Seen[l] = true
-					seen = append(seen, l)
+					*seen = append(*seen, l)
 				}
 			})
 		}
 	}
 	if false && np == 0 {
-		sort.Sort(torus.LocationSlice(seen))
-		log.Printf("t %d Seen %v", g.Turn, g.ToPoints(seen))
+		sort.Sort(torus.LocationSlice(*seen))
+		log.Printf("t %d Seen %v", g.Turn, g.ToPoints(*seen))
 	}
 
 	return
 }
 
 // Generate the Turn output for each player given a collection of ant locations
-func (g *Game) GenerateTurn(ants [][]combat.AntMove, hills []game.PlayerLoc, food []torus.Location, canonicalorder bool) []*game.Turn {
+func (g *Game) GenerateTurn(ants [][]game.AntMove, hills []game.PlayerLoc, food []torus.Location, canonicalorder bool) []*game.Turn {
 	turns := make([]*game.Turn, len(g.Players))
 
 	// Handle Combat for the passed locations.
@@ -143,7 +143,7 @@ func (g *Game) GenerateTurn(ants [][]combat.AntMove, hills []game.PlayerLoc, foo
 	// appending to dead would overwrite live.
 	live, dead := g.C.Resolve(moves)
 	if canonicalorder {
-		sort.Sort(combat.AntMoveSlice(dead))
+		sort.Sort(game.AntMoveSlice(dead))
 		sort.Sort(game.PlayerLocSlice(hills))
 		sort.Sort(torus.LocationSlice(food))
 	}
@@ -156,11 +156,12 @@ func (g *Game) GenerateTurn(ants [][]combat.AntMove, hills []game.PlayerLoc, foo
 	// Handle Gather
 
 	// Update visibility, generating new water, all ants (updating IdMap), hills, and food seen
-	seen := make([]torus.Location, 0, 1024)
+	seen := make([]torus.Location, 0, 300)
 	for np, p := range g.Players {
 		t := &game.Turn{Map: g.Map}
-		seen = seen[:0]
-		p.UpdateVisibility(g, live, np, seen)
+		seen = seen[0:0]
+		p.UpdateVisibility(g, live, np, &seen)
+		log.Print("seen is ", len(seen), " elements for ", np)
 		// newly visible water
 		for _, loc := range seen {
 			if g.Map.Grid[loc] == maps.WATER {

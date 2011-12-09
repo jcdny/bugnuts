@@ -6,7 +6,6 @@ import (
 	"bugnuts/maps"
 	"bugnuts/torus"
 	"bugnuts/game"
-	"bugnuts/combat"
 	. "bugnuts/util"
 )
 
@@ -82,16 +81,16 @@ func (r *Replay) AntCount(tmin, tmax int) [][]int {
 
 // Return ant locations in array [(turn-tmin)][player][ant] for turns tmin..tmax inclusive
 // Return the spawns [turn][]PlayerLoc
-func (r *Replay) AntMoves(m *maps.Map, tmin, tmax int) [][][]combat.AntMove {
+func (r *Replay) AntMoves(m *maps.Map, tmin, tmax int) [][][]game.AntMove {
 	nants := r.AntCount(tmin, tmax)
 
 	// Allocate the slices
-	al := make([][][]combat.AntMove, tmax-tmin+1)
+	al := make([][][]game.AntMove, tmax-tmin+1)
 	for turn := 0; turn <= tmax-tmin; turn++ {
-		al[turn] = make([][]combat.AntMove, r.Players)
+		al[turn] = make([][]game.AntMove, r.Players)
 		for np := 0; np < r.Players; np++ {
 			if nants[np][turn] > 0 {
-				al[turn][np] = make([]combat.AntMove, 0, nants[np][turn])
+				al[turn][np] = make([]game.AntMove, 0, nants[np][turn])
 			}
 		}
 	}
@@ -105,7 +104,7 @@ func (r *Replay) AntMoves(m *maps.Map, tmin, tmax int) [][][]combat.AntMove {
 			if turn >= tmin {
 				// a spawned ant has From = -1, D: InvalidMove
 				al[turn-tmin][a.Player] = append(al[turn-tmin][a.Player],
-					combat.AntMove{From: -1, To: loc, D: maps.InvalidMove, Player: a.Player})
+					game.AntMove{From: -1, To: loc, D: maps.InvalidMove, Player: a.Player})
 			}
 
 			for _, move := range a.Moves {
@@ -121,7 +120,7 @@ func (r *Replay) AntMoves(m *maps.Map, tmin, tmax int) [][][]combat.AntMove {
 				}
 				if turn >= tmin && turn <= tmax {
 					al[turn-tmin][a.Player] = append(al[turn-tmin][a.Player],
-						combat.AntMove{From: loc, To: nloc, D: d, Player: a.Player})
+						game.AntMove{From: loc, To: nloc, D: d, Player: a.Player})
 				}
 				loc = nloc
 				if turn > tmax {
@@ -132,7 +131,7 @@ func (r *Replay) AntMoves(m *maps.Map, tmin, tmax int) [][][]combat.AntMove {
 			if turn+1 <= tmax && turn == a.End {
 				// An ant that has no further moves.
 				al[turn-tmin+1][a.Player] = append(al[turn-tmin+1][a.Player],
-					combat.AntMove{From: loc, To: -1, D: maps.InvalidMove, Player: a.Player})
+					game.AntMove{From: loc, To: -1, D: maps.InvalidMove, Player: a.Player})
 			}
 		}
 	}

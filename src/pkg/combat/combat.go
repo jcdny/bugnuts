@@ -10,14 +10,6 @@ import (
 	. "bugnuts/pathing"
 )
 
-type AntState struct {
-	Start    Location
-	End      Location
-	NStep    int
-	Steps    [8]Direction
-	Prefered Direction
-}
-
 type AntPartition struct {
 	Ants    map[Location]struct{}
 	Players []int
@@ -31,13 +23,6 @@ func NewAntPartition() *AntPartition {
 		Ants: make(map[Location]struct{}, 8),
 	}
 	return p
-}
-
-type AntMove struct {
-	From   Location
-	To     Location
-	D      Direction
-	Player int
 }
 
 type Combat struct {
@@ -83,16 +68,19 @@ func (c *Combat) Reset() {
 
 // Compute initial ant threat. returns a count of dead found.
 // Should be 0 unless something has gone horribly wrong.
-func (c *Combat) Setup(ants []map[Location]int) (dead []PlayerLoc) {
-	dead = make([]PlayerLoc, 0)
-
+func (c *Combat) Setup(ants []map[Location]int) {
+	dead := make([]PlayerLoc, 0)
 	for np := range ants {
-		if len(c.PThreat[np]) == 0 {
+		if len(ants[np]) > 0 && len(c.PThreat[np]) == 0 {
 			c.PThreat[np] = make([]int, c.Map.Size())
 		}
 		for loc := range ants[np] {
-			c.AddAnt(dead, np, loc)
+			c.AddAnt(np, loc, dead)
 		}
+	}
+
+	if len(dead) > 0 {
+		log.Panic("Dead ants found in setup", len(dead))
 	}
 
 	return
@@ -117,7 +105,7 @@ func (c *Combat) SetupReplay(ants [][]AntMove) (moves, spawn []AntMove) {
 			// previous turn. Ignored for now.
 			if ants[np][i].From > -1 && ants[np][i].To > -1 {
 				moves = append(moves, ants[np][i])
-				c.AddAnt(dead, np, ants[np][i].From)
+				c.AddAnt(np, ants[np][i].From, dead)
 			} else if ants[np][i].To > -1 {
 				spawn = append(spawn, ants[np][i])
 			}
@@ -131,7 +119,7 @@ func (c *Combat) SetupReplay(ants [][]AntMove) (moves, spawn []AntMove) {
 	return
 }
 
-func (c *Combat) AddAnt(dead []PlayerLoc, np int, loc Location) {
+func (c *Combat) AddAnt(np int, loc Location, dead []PlayerLoc) {
 
 	c.AntCount[loc]++
 
@@ -359,6 +347,10 @@ func CombatRun(s *State, ants []*AntStep, part Partitions, pmap PartitionMap) {
 	if len(part) == 0 {
 		return
 	}
+	// Setup combat engine
+	C := NewCombat(s.Map, s.AttackMask, MaxPlayers) // TODO player counts?
+	C.Setup(s.Ants)
+
 	budget := (s.Cutoff - time.Nanoseconds()) / int64(len(part)) / 4
 
 	// sim to compute best moves
@@ -368,7 +360,7 @@ func CombatRun(s *State, ants []*AntStep, part Partitions, pmap PartitionMap) {
 			if t > s.Cutoff {
 				break
 			}
-			Sim(s, ploc, ap, t)
+			C.Sim(s, ploc, ap, t)
 		}
 		// TODO REMOVE ME WHEN WORKING
 		break
@@ -377,38 +369,4 @@ func CombatRun(s *State, ants []*AntStep, part Partitions, pmap PartitionMap) {
 	// Move combat moves back to antstep
 
 	// vis
-}
-
-func Sim(s *State, ploc Location, ap *AntPartition, cutoff int64) {
-	log.Printf("Simulate for ap: %v %d ants, cutoff %.2fms",
-		s.ToPoint(ploc),
-		len(ap.Ants),
-		float64(cutoff-time.Nanoseconds())/1e6)
-
-}
-
-// AntMove sorted by To then Player
-type AntMoveSlice []AntMove
-
-func (p AntMoveSlice) Len() int { return len(p) }
-func (p AntMoveSlice) Less(i, j int) bool {
-	return p[i].To < p[j].To || (p[i].To == p[j].To && p[i].Player < p[j].Player)
-}
-func (p AntMoveSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-
-// AntMove sorted by Player then To
-type AntMovePlayerSlice []AntMove
-
-func (p AntMovePlayerSlice) Len() int { return len(p) }
-func (p AntMovePlayerSlice) Less(i, j int) bool {
-	return p[i].Player < p[j].Player || (p[i].Player == p[j].Player && p[i].To < p[j].To)
-}
-func (p AntMovePlayerSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
-
-func DumpAntMove(m *Map, am []AntMove, p int, turn int) {
-	for _, a := range am {
-		if p == a.Player || p < 0 {
-			log.Printf("Move t=%d p=%d %#v %v %#v", turn, a.Player, m.ToPoint(a.From), a.D, m.ToPoint(a.To))
-		}
-	}
 }
