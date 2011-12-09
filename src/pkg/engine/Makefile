@@ -2,7 +2,7 @@ include $(GOROOT)/src/Make.inc
 
 TARG=bugnuts/engine
 GOFILES=\
-	engine.go
-
+	loadstate.go\
+	engine.go\
 
 include $(GOROOT)/src/Make.pkg

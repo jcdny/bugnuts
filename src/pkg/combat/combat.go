@@ -370,3 +370,32 @@ func CombatRun(s *State, ants []*AntStep, part Partitions, pmap PartitionMap) {
 
 	// vis
 }
+
+// PartitionMoves creates the move list and the player count map
+func (c *Combat) PartitionMoves(ap *AntPartition) (am []AntMove, players map[int]int) {
+	players = make(map[int]int, MaxPlayers)
+	am = make([]AntMove, len(ap.Ants))
+	i := 0
+	for loc := range ap.Ants {
+		am[i].From = loc
+		am[i].To = loc
+		am[i].D = NoMovement
+		if c.PlayerMap[loc] > -1 {
+			am[i].Player = c.PlayerMap[loc]
+			players[am[i].Player]++
+			i++
+		} else {
+			log.Printf("Invalid ap player loc %v", c.ToPoint(am[i].From))
+		}
+	}
+
+	return
+}
+
+func (c *Combat) Sim(s *State, ploc Location, ap *AntPartition, cutoff int64) {
+	log.Printf("Simulate for ap: %v %d ants, cutoff %.2fms",
+		s.ToPoint(ploc),
+		len(ap.Ants),
+		float64(cutoff-time.Nanoseconds())/1e6)
+
+}

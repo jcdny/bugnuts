@@ -1,12 +1,11 @@
-package combat
+package monte
 
 import (
 	"log"
-	"time"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
-	. "bugnuts/state"
 	. "bugnuts/game"
+	. "bugnuts/combat"
 )
 
 type AntState struct {
@@ -17,28 +16,6 @@ type AntState struct {
 	Prefered Direction
 }
 
-func (c *Combat) PartitionMoves(ap *AntPartition) []AntMove {
-	// take the partition and setup the move list.
-	am := make([]AntMove, len(ap.Ants))
-	i := 0
-	for loc := range ap.Ants {
-		am[i].From = loc
-		am[i].To = loc
-		am[i].D = NoMovement
-		if c.PlayerMap[loc] > -1 {
-			am[i].Player = c.PlayerMap[loc]
-			i++
-		} else {
-			log.Printf("Invalid ap player loc %v", c.ToPoint(am[i].From))
-		}
-	}
-
-	return am
-}
-
-func (c *Combat) Sim(s *State, ploc Location, ap *AntPartition, cutoff int64) {
-	log.Printf("Simulate for ap: %v %d ants, cutoff %.2fms",
-		s.ToPoint(ploc),
-		len(ap.Ants),
-		float64(cutoff-time.Nanoseconds())/1e6)
+func MonteDraw(c *Combat, am []AntMove, N int) {
+	log.Print("Drawing ", N)
 }

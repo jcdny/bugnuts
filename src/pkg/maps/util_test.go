@@ -2,6 +2,7 @@ package maps
 
 import (
 	"testing"
+	"rand"
 )
 
 func TestPoints(t *testing.T) {
@@ -19,6 +20,38 @@ func TestPoints(t *testing.T) {
 				t.Error("Point roundtrip failed %v, %v, %v, %v", v, vl, vp, vl2)
 				break
 			}
+		}
+	}
+}
+
+func sumDir(x []Direction) int {
+	j := Direction(0)
+	for _, d := range x {
+		j += d
+	}
+
+	return int(j)
+}
+
+func TestPermutes(t *testing.T) {
+	rng := rand.New(rand.NewSource(1))
+
+	for i := 0; i < 256; i++ {
+		for d := Direction(0); d < NoMovement; d++ {
+			p5d := Permute5D(d, rng)
+			if len(p5d) != 5 || sumDir(p5d[:]) != 10 {
+				t.Error("Permute5D wrong ", p5d)
+			}
+		}
+
+		p5 := Permute5(rng)
+		p4g := Permute4G(rng)
+		p4 := Permute4(rng)
+		if len(p5) != 5 || sumDir(p5[:]) != 10 ||
+			len(p4g) != 5 || sumDir(p4g[:]) != 10 ||
+			len(p4) != 4 || sumDir(p4[:]) != 6 {
+			t.Error("Permutes returning invalid array")
+			break
 		}
 	}
 }

@@ -6,6 +6,29 @@ import (
 	. "bugnuts/util"
 )
 
+var PermStepD5 [4][6][5]Direction
+
+func init() {
+	permdstep := map[string][]string{
+		"ns": []string{"ew-", "e-w", "we-", "w-e", "-ew", "-we"},
+		"ew": []string{"ns-", "n-s", "sn-", "s-n", "-ns", "-sn"},
+	}
+	for k, v := range permdstep {
+		da := ByteToDirection[k[0]]
+		db := ByteToDirection[k[1]]
+		for n, s := range v {
+			PermStepD5[da][n][0] = da
+			PermStepD5[da][n][4] = db
+			PermStepD5[db][n][0] = db
+			PermStepD5[db][n][4] = da
+			for j, d := range s {
+				PermStepD5[da][n][j+1] = ByteToDirection[d]
+				PermStepD5[db][n][j+1] = ByteToDirection[d]
+			}
+		}
+	}
+}
+
 // Utility to implement manhattan distance sorting on a slice of Point Offsets
 // TODO think about how to do this in context of torus.  Assumes Offset < side/2
 type OffsetSlice []Point
@@ -67,6 +90,12 @@ func Permute4G(r *rand.Rand) *[5]Direction {
 func Permute5(r *rand.Rand) *[5]Direction {
 	return &Perm5[r.Intn(120)]
 }
+
+// Return a set of directions with d first, opposite last an the other 3 permuted.
+func Permute5D(d Direction, r *rand.Rand) *[5]Direction {
+	return &PermStepD5[d][r.Intn(6)]
+}
+
 // Perm4G is the directions permuted with the NoMovement guard.
 // The ordering here is relevant since NPathInString uses the perm flag to index into this 
 // in order to generate bounding paths.

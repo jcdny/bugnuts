@@ -161,7 +161,6 @@ func (g *Game) GenerateTurn(ants [][]game.AntMove, hills []game.PlayerLoc, food 
 		t := &game.Turn{Map: g.Map}
 		seen = seen[0:0]
 		p.UpdateVisibility(g, live, np, &seen)
-		log.Print("seen is ", len(seen), " elements for ", np)
 		// newly visible water
 		for _, loc := range seen {
 			if g.Map.Grid[loc] == maps.WATER {

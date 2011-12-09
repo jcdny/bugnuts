@@ -1,9 +1,7 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=bugnuts/combat
+TARG=bugnuts/monte
 GOFILES=\
-	arena.go\
-	combat.go\
 	monte.go\
 
 include $(GOROOT)/src/Make.pkg
