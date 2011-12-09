@@ -4,6 +4,7 @@ import (
 	"log"
 	"testing"
 	"bugnuts/replay"
+	"bugnuts/maps"
 	"fmt"
 	"os"
 )
@@ -50,10 +51,14 @@ func BenchmarkEngine(b *testing.B) {
 	if err != nil || match == nil {
 		log.Panicf("Error loading replay: %v", err)
 	}
+
 	m := match.GetMap()
+	gi := &match.GameInfo
+	vm := maps.MakeMask(gi.ViewRadius2, gi.Rows, gi.Cols)
+	am := maps.MakeMask(gi.AttackRadius2, gi.Rows, gi.Cols)
 
 	for i := 0; i < b.N; i++ {
-		g := NewGame(&match.GameInfo, m)
+		g := NewGameMasks(gi, m, vm, am)
 		g.Replay(match.Replay, 0, match.GameLength, false)
 	}
 }
@@ -67,9 +72,12 @@ func BenchmarkEngineOrdered(b *testing.B) {
 		log.Panicf("Error loading replay: %v", err)
 	}
 	m := match.GetMap()
+	gi := &match.GameInfo
+	vm := maps.MakeMask(gi.ViewRadius2, gi.Rows, gi.Cols)
+	am := maps.MakeMask(gi.AttackRadius2, gi.Rows, gi.Cols)
 
 	for i := 0; i < b.N; i++ {
-		g := NewGame(&match.GameInfo, m)
+		g := NewGameMasks(gi, m, vm, am)
 		g.Replay(match.Replay, 0, match.GameLength, true)
 	}
 }

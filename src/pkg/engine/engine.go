@@ -38,14 +38,21 @@ var _false [maps.MAXMAPSIZE]bool
 func NewGame(gi *game.GameInfo, m *maps.Map) *Game {
 	// allocate all the threat arrays at the same time.
 
-	g := &Game{
-		Map:      m,
-		GameInfo: gi,
-		Players:  make([]*Player, m.Players),
-	}
+	vm := maps.MakeMask(gi.ViewRadius2, gi.Rows, gi.Cols)
+	am := maps.MakeMask(gi.AttackRadius2, gi.Rows, gi.Cols)
+	return NewGameMasks(gi, m, vm, am)
+}
 
-	g.ViewMask = maps.MakeMask(g.ViewRadius2, g.Rows, g.Cols)
-	g.AttackMask = maps.MakeMask(g.AttackRadius2, g.Rows, g.Cols)
+func NewGameMasks(gi *game.GameInfo, m *maps.Map, vm *maps.Mask, am *maps.Mask) *Game {
+	// allocate all the threat arrays at the same time.
+
+	g := &Game{
+		Map:        m,
+		GameInfo:   gi,
+		Players:    make([]*Player, m.Players),
+		ViewMask:   vm,
+		AttackMask: am,
+	}
 
 	// Set Hill Locations and initialize the player map, each player is it's own 0th player.
 	for i := range g.Players {
@@ -99,12 +106,11 @@ func (g *Game) Replay(r *replay.Replay, tmin, tmax int, canonicalorder bool) {
 	g.PlayerInput = tout
 }
 
-func (p *Player) UpdateVisibility(g *Game, ants []combat.AntMove, np int) []torus.Location {
+func (p *Player) UpdateVisibility(g *Game, ants []combat.AntMove, np int, seen []torus.Location) {
 	copy(p.Visible, _false[:len(p.Visible)])
-	if np == 0 {
+	if false && np == 0 {
 		combat.DumpAntMove(g.Map, ants, np, g.Turn)
 	}
-	seen := make([]torus.Location, 0, 100)
 	for i := range ants {
 		if ants[i].Player == np && ants[i].To > -1 {
 			g.ApplyOffsets(ants[i].To, &g.ViewMask.Offsets, func(l torus.Location) {
@@ -116,11 +122,12 @@ func (p *Player) UpdateVisibility(g *Game, ants []combat.AntMove, np int) []toru
 			})
 		}
 	}
-	if np == 0 {
+	if false && np == 0 {
 		sort.Sort(torus.LocationSlice(seen))
 		log.Printf("t %d Seen %v", g.Turn, g.ToPoints(seen))
 	}
-	return seen
+
+	return
 }
 
 // Generate the Turn output for each player given a collection of ant locations
@@ -129,13 +136,12 @@ func (g *Game) GenerateTurn(ants [][]combat.AntMove, hills []game.PlayerLoc, foo
 
 	// Handle Combat for the passed locations.
 	g.C.Reset()
-	moves, spawn := g.C.SetupReplay(ants)
-	live, dead := g.C.Resolve(moves)
-	log.Printf("live %v", live)
-	log.Printf("spawn %v", spawn)
-	log.Printf("dead %v", dead)
-	log.Printf("moves %v", moves)
 
+	moves, spawn := g.C.SetupReplay(ants)
+	// NB: This is very tricky - we are avoiding allocating new slices so we
+	// are cutting up ants in place into live and dead, but that means
+	// appending to dead would overwrite live.
+	live, dead := g.C.Resolve(moves)
 	if canonicalorder {
 		sort.Sort(combat.AntMoveSlice(dead))
 		sort.Sort(game.PlayerLocSlice(hills))
@@ -145,26 +151,21 @@ func (g *Game) GenerateTurn(ants [][]combat.AntMove, hills []game.PlayerLoc, foo
 	// Handle Razes
 
 	// Handle Spawns
-	live = append(live, spawn...)
+	live = append(live, spawn...) // NB see Resolve above wrt live slice.
 
 	// Handle Gather
 
 	// Update visibility, generating new water, all ants (updating IdMap), hills, and food seen
+	seen := make([]torus.Location, 0, 1024)
 	for np, p := range g.Players {
 		t := &game.Turn{Map: g.Map}
-		seen := p.UpdateVisibility(g, live, np)
-
+		seen = seen[:0]
+		p.UpdateVisibility(g, live, np, seen)
 		// newly visible water
 		for _, loc := range seen {
-			if np == 0 && g.Turn == 2 {
-				log.Printf("at %v %v", g.ToPoint(loc), g.Map.Grid[loc])
-			}
 			if g.Map.Grid[loc] == maps.WATER {
 				t.W = append(t.W, loc)
 			}
-		}
-		if np == 0 && g.Turn == 2 {
-			log.Printf("water %v", g.ToPoints(t.W))
 		}
 		// visible live ants
 		for i := range live {
@@ -176,7 +177,6 @@ func (g *Game) GenerateTurn(ants [][]combat.AntMove, hills []game.PlayerLoc, foo
 			}
 		}
 
-		// visible dead
 		for i := range dead {
 			if p.Visible[dead[i].To] || dead[i].Player == np {
 				if p.IdMap[dead[i].Player] < 0 {
@@ -210,6 +210,5 @@ func (g *Game) GenerateTurn(ants [][]combat.AntMove, hills []game.PlayerLoc, foo
 		}
 		turns[np] = t
 	}
-	log.Print("turn generated")
 	return turns
 }

@@ -113,6 +113,8 @@ func (c *Combat) SetupReplay(ants [][]AntMove) (moves, spawn []AntMove) {
 			c.PThreat[np] = make([]int, c.Map.Size())
 		}
 		for i := range ants[np] {
+			// ants from from > -1 and to == -1 are ants that died in the 
+			// previous turn. Ignored for now.
 			if ants[np][i].From > -1 && ants[np][i].To > -1 {
 				moves = append(moves, ants[np][i])
 				c.AddAnt(dead, np, ants[np][i].From)
@@ -170,14 +172,16 @@ func (c *Combat) Resolve(moves []AntMove) (live, dead []AntMove) {
 	}
 
 	// go through the moves and collect suicides and update threat for valid moves.
-	lmove := len(moves)
-	for i := 0; i < lmove; {
+	ndead := 0
+	for i := range moves {
 		m := &moves[i]
-		// TODO This should never happen consider removing in prod...
+		// TODO This should never happen consider removing in prod
 		if c.AntCount[m.From] < 0 || c.PlayerMap[m.From] < 0 {
-			log.Printf("Illegal step, source ant location %v, np %d", c.ToPoint(m.From), c.PlayerMap[m.From])
-			lmove--
-			moves[lmove], moves[i] = moves[i], moves[lmove]
+			log.Panic("Illegal step, source ant location %v, np %d", c.ToPoint(m.From), c.PlayerMap[m.From])
+			if ndead < i {
+				moves[ndead], moves[i] = moves[i], moves[ndead]
+			}
+			ndead++
 			continue
 		}
 
@@ -193,36 +197,35 @@ func (c *Combat) Resolve(moves []AntMove) (live, dead []AntMove) {
 					c.PThreat[m.Player][nloc]--
 				})
 			}
-			i++
 		} else {
 			// suicide remove threat add as dead
 			c.ApplyOffsets(m.From, &c.AttackMask.Offsets, func(nloc Location) {
 				c.Threat[nloc]--
 				c.PThreat[m.Player][nloc]--
 			})
-			lmove--
-			moves[lmove], moves[i] = moves[i], moves[lmove]
+			if ndead < i {
+				moves[ndead], moves[i] = moves[i], moves[ndead]
+			}
+			ndead++
 		}
 	}
-
-	suicide := moves[lmove:]
-	moves = moves[:lmove]
+	// log.Printf("len %d lmove %d\nsuicide is %v\nmoves is %v", len(moves), ndead, moves[:ndead], moves[ndead:])
 
 	// now update player map for suicides and moves
-	for i := range suicide {
-		c.PlayerMap[suicide[i].From] = -1
-		c.PlayerMap[suicide[i].To] = -1
-	}
 	for i := range moves {
 		c.PlayerMap[moves[i].From] = -1
 	}
-	for i := range moves {
+	for i := range moves[:ndead] {
+		c.PlayerMap[moves[i].To] = -1
+	}
+	for i := ndead; i < len(moves); i++ {
 		c.PlayerMap[moves[i].To] = moves[i].Player
 	}
 
 	// now do actual combat resolution
-	lmove = len(moves)
-	for i := 0; i < lmove; i++ {
+
+	for i := ndead; i < len(moves); i++ {
+		// log.Printf("Combat for %v", c.ToPoint(moves[i].To))
 		loc := moves[i].To
 		np := moves[i].Player
 		t := c.Threat[loc] - c.PThreat[np][loc]
@@ -230,25 +233,24 @@ func (c *Combat) Resolve(moves []AntMove) (live, dead []AntMove) {
 			c.ApplyOffsetsBreak(loc, &c.AttackMask.Offsets, func(nloc Location) bool {
 				ntp := c.PlayerMap[nloc]
 				if ntp >= 0 && ntp != np && t >= c.Threat[nloc]-c.PThreat[ntp][nloc] {
-					lmove--
-					moves[lmove], moves[i] = moves[i], moves[lmove]
-					i-- // we just increment back to original i after the break
+					if ndead < i {
+						moves[ndead], moves[i] = moves[i], moves[ndead]
+					}
+					ndead++
 					return false
 				}
 				return true
 			})
 		}
-		i++
 	}
 
-	dead = moves[lmove:]
-	live = moves[:lmove]
+	dead = moves[:ndead]
+	live = moves[ndead:]
 
-	// finally update player map for dead
+	// finally update player map for all dead
 	for _, m := range dead {
 		c.PlayerMap[m.To] = -1
 	}
-	dead = append(dead, suicide...)
 
 	return
 }

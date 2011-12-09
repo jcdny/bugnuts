@@ -116,7 +116,7 @@ func (r *Replay) AntMoves(m *maps.Map, tmin, tmax int) [][][]combat.AntMove {
 				} else {
 					nloc = -1
 				}
-				if turn < 5 && a.Player < 2 {
+				if false && turn < 5 && a.Player < 2 {
 					log.Printf("pl %d turn %d end %d loc %v nloc %v %v", a.Player, turn, a.End, m.ToPoint(loc), m.ToPoint(nloc), d)
 				}
 				if turn >= tmin && turn <= tmax {

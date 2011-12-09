@@ -8,9 +8,10 @@ import (
 )
 
 type Offsets struct {
-	R uint8 // Bounding Radius
-	P []Point
-	L []Location
+	R      uint8 // Bounding Radius
+	P      []Point
+	L      []Location
+	cacheL map[Location][]Location
 }
 
 type Mask struct {
@@ -133,12 +134,15 @@ func MakeMask(r2, rows, cols int) *Mask {
 		Add:    addo,
 		Remove: remo,
 		Union:  uniono,
-
-		MM:  MakeMoveMask(r2, cols),
-		MM2: MakeMoveMask2(r2, cols),
+		MM:     MakeMoveMask(r2, cols),
 	}
 
-	m.MM2O = PointsToOffsets(Steps2, cols)
+	if r2 < 8 {
+		// only create for the combat mask...
+		m.MM2 = MakeMoveMask2(r2, cols)
+		m.MM2O = PointsToOffsets(Steps2, cols)
+	}
+
 	m.Offsets = PointsToOffsets(p, cols)
 
 	return m
@@ -222,9 +226,16 @@ func (m *Map) ApplyOffsets(loc Location, o *Offsets, x func(loc Location)) {
 			x(loc + loff)
 		}
 	} else {
-		ap := m.ToPoint(loc)
-		for _, op := range o.P {
-			l := m.ToLocation(m.PointAdd(ap, op))
+		cl, ok := o.cacheL[loc]
+		if !ok {
+			cl = make([]Location, 0, len(o.P))
+			ap := m.ToPoint(loc)
+			for _, op := range o.P {
+				cl = append(cl, m.ToLocation(m.PointAdd(ap, op)))
+			}
+			o.cacheL[loc] = cl
+		}
+		for _, l := range cl {
 			x(l)
 		}
 	}
@@ -238,9 +249,16 @@ func (m *Map) ApplyOffsetsBreak(loc Location, o *Offsets, x func(loc Location) b
 			}
 		}
 	} else {
-		ap := m.ToPoint(loc)
-		for _, op := range o.P {
-			l := m.ToLocation(m.PointAdd(ap, op))
+		cl, ok := o.cacheL[loc]
+		if !ok {
+			cl = make([]Location, 0, len(o.P))
+			ap := m.ToPoint(loc)
+			for _, op := range o.P {
+				cl = append(cl, m.ToLocation(m.PointAdd(ap, op)))
+			}
+			o.cacheL[loc] = cl
+		}
+		for _, l := range cl {
 			if !x(l) {
 				return
 			}
