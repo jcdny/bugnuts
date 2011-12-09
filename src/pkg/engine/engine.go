@@ -86,9 +86,10 @@ func (g *Game) Replay(r *replay.Replay, tmin, tmax int, canonicalorder bool) {
 	g.C = combat.NewCombat(g.Map, g.AttackMask, len(g.Players))
 
 	for i := 0; i <= tmax; i++ {
+		g.Turn = i + tmin + 1
 		tset := g.GenerateTurn(ants[i], hills[i], food[i], canonicalorder)
 		for j := range tset {
-			tset[j].Turn = i + tmin + 1
+			tset[j].Turn = g.Turn
 		}
 		if i >= tmin {
 			tout = append(tout, tset)
@@ -115,7 +116,10 @@ func (p *Player) UpdateVisibility(g *Game, ants []combat.AntMove, np int) []toru
 			})
 		}
 	}
-
+	if np == 0 {
+		sort.Sort(torus.LocationSlice(seen))
+		log.Printf("t %d Seen %v", g.Turn, g.ToPoints(seen))
+	}
 	return seen
 }
 
@@ -134,7 +138,7 @@ func (g *Game) GenerateTurn(ants [][]combat.AntMove, hills []game.PlayerLoc, foo
 
 	if canonicalorder {
 		sort.Sort(combat.AntMoveSlice(dead))
-		sort.Sort(game.LocPlayerSlice(hills))
+		sort.Sort(game.PlayerLocSlice(hills))
 		sort.Sort(torus.LocationSlice(food))
 	}
 
@@ -152,11 +156,16 @@ func (g *Game) GenerateTurn(ants [][]combat.AntMove, hills []game.PlayerLoc, foo
 
 		// newly visible water
 		for _, loc := range seen {
+			if np == 0 && g.Turn == 2 {
+				log.Printf("at %v %v", g.ToPoint(loc), g.Map.Grid[loc])
+			}
 			if g.Map.Grid[loc] == maps.WATER {
 				t.W = append(t.W, loc)
 			}
 		}
-
+		if np == 0 && g.Turn == 2 {
+			log.Printf("water %v", g.ToPoints(t.W))
+		}
 		// visible live ants
 		for i := range live {
 			if p.Visible[live[i].To] {
