@@ -58,7 +58,7 @@ while [ $GAME -lt $END ]; do
             ls -1l $DEST
         fi
 
-        sleep `expr $RANDOM % 13 + 3`
+        sleep `expr $RANDOM % 8 + 2`
     fi
     GAME="`expr $GAME + 1`"
     echo $GAME > $LAST
