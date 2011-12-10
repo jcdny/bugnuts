@@ -57,7 +57,6 @@ func PointsToOffsets(pv []Point, cols int) Offsets {
 		out.L[i] = Location(p.R*cols + p.C)
 	}
 	out.R = uint8(R)
-	out.cacheL = make(map[Location][]Location, 4*(R*cols-R*R))
 	return out
 }
 

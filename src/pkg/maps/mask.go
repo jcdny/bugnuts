@@ -8,10 +8,11 @@ import (
 )
 
 type Offsets struct {
-	R      uint8 // Bounding Radius
-	P      []Point
-	L      []Location
-	cacheL map[Location][]Location
+	R       uint8 // Bounding Radius
+	P       []Point
+	L       []Location
+	nocache bool
+	cacheL  map[Location][]Location
 }
 
 type Mask struct {
@@ -23,7 +24,7 @@ type Mask struct {
 	Remove []Offsets   // Points removed for step in dir d
 	MM     []*MoveMask // See FreedomKey for how to index into this 
 	MM2O   Offsets
-	MM2    []*MoveMask // See FreedomKey for how to index into this 
+	//	MM2    []*MoveMask // See FreedomKeyOff for how to index into this REMOVED - TOO SLOW
 }
 
 // MoveMask is generated for a given number of degrees of freedom
@@ -39,6 +40,86 @@ type MoveMask struct {
 
 const MoveMaskPStep = 60
 const MoveMaskPStep2 = 27720
+
+// Generate a mask for a circle, including the added/removed list for
+// steps in any directions plus a union of the 1step move There is
+// also the move mask which includes probabilities of a cell falling
+// within the mask given available moves.
+func MakeMask(r2, rows, cols int) *Mask {
+	p := maskCircle(r2)
+	add, rem, union := maskChange(r2, p)
+	addo := make([]Offsets, 0, len(add))
+	for _, pv := range add {
+		addo = append(addo, PointsToOffsets(pv, cols))
+	}
+	remo := make([]Offsets, 0, len(rem))
+	for _, pv := range rem {
+		remo = append(remo, PointsToOffsets(pv, cols))
+	}
+	uniono := PointsToOffsets(union, cols)
+
+	m := &Mask{
+		Stride: cols,
+		Add:    addo,
+		Remove: remo,
+		Union:  uniono,
+		MM:     MakeMoveMask(r2, cols),
+	}
+
+	if r2 < 12 {
+		// only create for the combat mask
+		// m.MM2 = MakeMoveMask2(r2, cols)...TOO SLOW!
+		m.MM2O = PointsToOffsets(Steps2, cols)
+	} else {
+		// Don't generate an offset cache for the view MM.
+		// Probably should not even generate the view MM but
+		// it's fast...
+		for i := 0; i < len(m.MM); i++ {
+			m.MM[i].nocache = true
+		}
+	}
+
+	m.Offsets = PointsToOffsets(p, cols)
+
+	return m
+}
+
+func (m *Map) offsetsCachePopulate(o *Offsets) {
+	if !o.nocache {
+		size := 2*int(o.R)*(m.Rows+m.Cols) - 4*int(o.R)*int(o.R)
+		if o.cacheL == nil {
+			o.cacheL = make(map[Location][]Location, size)
+		}
+		if len(o.cacheL) < size {
+			for loc := Location(0); int(loc) < len(m.Grid); loc++ {
+				if m.BorderDist[loc] <= o.R {
+					cl := make([]Location, len(o.P))
+					ap := m.ToPoint(loc)
+					for j, op := range o.P {
+						cl[j] = m.ToLocation(m.PointAdd(ap, op))
+					}
+					o.cacheL[loc] = cl
+				}
+			}
+		}
+	}
+}
+
+func (m *Map) OffsetsCachePopulateAll(mask *Mask) {
+	// Depends on the nocache flag being set for anything we don't want cached...
+	m.offsetsCachePopulate(&mask.Offsets)
+	m.offsetsCachePopulate(&mask.Union)
+	m.offsetsCachePopulate(&mask.MM2O)
+	for i := 0; i < len(mask.Add); i++ {
+		m.offsetsCachePopulate(&mask.Add[i])
+	}
+	for i := 0; i < len(mask.Remove); i++ {
+		m.offsetsCachePopulate(&mask.Remove[i])
+	}
+	for i := 0; i < len(mask.MM); i++ {
+		m.offsetsCachePopulate(&mask.MM[i].Offsets)
+	}
+}
 
 func maskCircle(r2 int) []Point {
 	if r2 < 0 {
@@ -110,42 +191,6 @@ func maskChange(r2 int, v []Point) (add, remove [][]Point, union []Point) {
 	}
 
 	return
-}
-
-// Generate a mask for a circle, including the added/removed list for
-// steps in any directions plus a union of the 1step move There is
-// also the move mask which includes probabilities of a cell falling
-// within the mask given available moves.
-func MakeMask(r2, rows, cols int) *Mask {
-	p := maskCircle(r2)
-	add, rem, union := maskChange(r2, p)
-	addo := make([]Offsets, 0, len(add))
-	for _, pv := range add {
-		addo = append(addo, PointsToOffsets(pv, cols))
-	}
-	remo := make([]Offsets, 0, len(rem))
-	for _, pv := range rem {
-		remo = append(remo, PointsToOffsets(pv, cols))
-	}
-	uniono := PointsToOffsets(union, cols)
-
-	m := &Mask{
-		Stride: cols,
-		Add:    addo,
-		Remove: remo,
-		Union:  uniono,
-		MM:     MakeMoveMask(r2, cols),
-	}
-
-	if r2 < 8 {
-		// only create for the combat mask...
-		m.MM2 = MakeMoveMask2(r2, cols)
-		m.MM2O = PointsToOffsets(Steps2, cols)
-	}
-
-	m.Offsets = PointsToOffsets(p, cols)
-
-	return m
 }
 
 func MakeMoveMask(r2 int, cols int) []*MoveMask {
@@ -225,7 +270,15 @@ func (m *Map) ApplyOffsets(loc Location, o *Offsets, x func(loc Location)) {
 		for _, loff := range o.L {
 			x(loc + loff)
 		}
+	} else if o.nocache {
+		ap := m.ToPoint(loc)
+		for _, op := range o.P {
+			x(m.ToLocation(m.PointAdd(ap, op)))
+		}
 	} else {
+		if len(o.cacheL) == 0 {
+			o.cacheL = make(map[Location][]Location, 2*int(o.R)*(m.Rows+m.Cols)-4*int(o.R)*int(o.R))
+		}
 		cl, ok := o.cacheL[loc]
 		if !ok {
 			cl = make([]Location, 0, len(o.P))
@@ -240,6 +293,7 @@ func (m *Map) ApplyOffsets(loc Location, o *Offsets, x func(loc Location)) {
 		}
 	}
 }
+
 // ApplyOffsetsBreak applies a precomputed mask centered on location loc via function x, if x returns false the apply is aborted.
 func (m *Map) ApplyOffsetsBreak(loc Location, o *Offsets, x func(loc Location) bool) {
 	if m.BorderDist[loc] > o.R {

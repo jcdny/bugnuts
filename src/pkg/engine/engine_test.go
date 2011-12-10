@@ -56,6 +56,8 @@ func BenchmarkEngine(b *testing.B) {
 	gi := &match.GameInfo
 	vm := maps.MakeMask(gi.ViewRadius2, gi.Rows, gi.Cols)
 	am := maps.MakeMask(gi.AttackRadius2, gi.Rows, gi.Cols)
+	m.OffsetsCachePopulateAll(vm)
+	m.OffsetsCachePopulateAll(am)
 
 	for i := 0; i < b.N; i++ {
 		g := NewGameMasks(gi, m, vm, am)
@@ -75,6 +77,8 @@ func BenchmarkEngineOrdered(b *testing.B) {
 	gi := &match.GameInfo
 	vm := maps.MakeMask(gi.ViewRadius2, gi.Rows, gi.Cols)
 	am := maps.MakeMask(gi.AttackRadius2, gi.Rows, gi.Cols)
+	m.OffsetsCachePopulateAll(vm)
+	m.OffsetsCachePopulateAll(am)
 
 	for i := 0; i < b.N; i++ {
 		g := NewGameMasks(gi, m, vm, am)

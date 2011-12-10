@@ -5,6 +5,7 @@ import (
 	"sort"
 	"json"
 	"log"
+	. "bugnuts/torus"
 )
 
 func TestMaskCircle(t *testing.T) {
@@ -97,5 +98,132 @@ func TestMoveMask2(t *testing.T) {
 		for i := 0; i < 2; i++ {
 			log.Printf("%v", mm[i])
 		}
+	}
+}
+
+const (
+	bCols = 80
+	bRows = 80
+	bMask = 77
+)
+
+func TestApplyCacheCreate(t *testing.T) {
+	bRows := 23
+	bCols := 17
+	m := NewMap(bRows, bCols, 1)
+
+	j := 0
+	mm := MakeMask(bMask, bRows, bCols)
+	for loc := range m.Grid {
+		m.ApplyOffsets(Location(loc), &mm.Offsets, func(l Location) { j++ })
+	}
+	for loc := range m.Grid {
+		m.ApplyOffsets(Location(loc), &mm.Offsets, func(l Location) { j++ })
+	}
+
+	if j != 2*bRows*bCols*len(mm.Offsets.P) {
+		t.Error("Invalid ApplyOffsets expected j=", 2*bRows*bCols*len(mm.Offsets.P), " got j=", j)
+	}
+}
+
+func TestCacheAll(t *testing.T) {
+	m := NewMap(bRows, bCols, 1)
+	mm := MakeMask(bMask, bRows, bCols)
+	m.offsetsCachePopulateAll(mm)
+
+	r := int(mm.Offsets.R)
+	e := 2*r*(bRows+bCols) - 4*r*r
+
+	if len(mm.Offsets.cacheL) != e {
+		t.Error("Cache size error expect ", e, " got ", len(mm.Offsets.cacheL))
+	}
+}
+
+func BenchmarkApplyCached(b *testing.B) {
+	m := NewMap(bRows, bCols, 1)
+	mm := MakeMask(bMask, bRows, bCols)
+	for loc := range m.Grid {
+		m.ApplyOffsets(Location(loc), &mm.Offsets, func(l Location) {})
+	}
+
+	for i := 0; i < b.N; i++ {
+		j := 0
+		for loc := range m.Grid {
+			m.ApplyOffsets(Location(loc), &mm.Offsets, func(l Location) { j++ })
+		}
+	}
+}
+
+func BenchmarkApplyNone(b *testing.B) {
+	m := NewMap(bRows, bCols, 1)
+	mm := MakeMask(bMask, bRows, bCols)
+	o := &mm.Offsets
+
+	for i := 0; i < b.N; i++ {
+		j := 0
+		for loc := range m.Grid {
+			if m.BorderDist[loc] <= o.R {
+				ap := m.ToPoint(Location(loc))
+				for j, op := range o.P {
+					j += int(m.ToLocation(m.PointAdd(ap, op)))
+				}
+			} else {
+				for _, lo := range o.L {
+					j += loc + int(lo)
+				}
+			}
+		}
+	}
+}
+
+func BenchmarkApplyNoCache(b *testing.B) {
+	m := NewMap(bRows, bCols, 1)
+	mm := MakeMask(bMask, bRows, bCols)
+	mm.Offsets.nocache = true
+	for i := 0; i < b.N; i++ {
+		j := 0
+		for loc := range m.Grid {
+			m.ApplyOffsets(Location(loc), &mm.Offsets, func(l Location) { j++ })
+		}
+	}
+}
+
+func BenchmarkApplyCacheCreateA(b *testing.B) {
+	m := NewMap(bRows, bCols, 1)
+	for i := 0; i < b.N; i++ {
+		mm := MakeMask(bMask, bRows, bCols)
+		o := &mm.Offsets
+		for loc := Location(0); int(loc) < len(m.Grid); loc++ {
+			m.ApplyOffsets(loc, o, func(l Location) {})
+		}
+	}
+}
+
+func BenchmarkApplyCacheCreateB(b *testing.B) {
+	m := NewMap(bRows, bCols, 1)
+	for i := 0; i < b.N; i++ {
+		mm := MakeMask(bMask, bRows, bCols)
+		o := &mm.Offsets
+		size := 2*int(o.R)*(m.Rows+m.Cols) - 4*int(o.R)*int(o.R)
+		o.cacheL = make(map[Location][]Location, size)
+		for loc := Location(0); int(loc) < len(m.Grid); loc++ {
+			if m.BorderDist[loc] <= o.R {
+				cl := make([]Location, len(o.P))
+				ap := m.ToPoint(loc)
+				for j, op := range o.P {
+					cl[j] = m.ToLocation(m.PointAdd(ap, op))
+				}
+				mm.Offsets.cacheL[loc] = cl
+			}
+		}
+	}
+}
+
+func BenchmarkCacheAll(b *testing.B) {
+	m := NewMap(bRows, bCols, 1)
+
+	for i := 0; i < b.N; i++ {
+		mm := MakeMask(bMask, bRows, bCols)
+		m.offsetsCachePopulateAll(mm)
 	}
 }
