@@ -19,4 +19,4 @@ cmd/bot/bot
 cmd/analyze/mapper
 cmd/analyze/analyze
 .DS_Store
-
+viz
