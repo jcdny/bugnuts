@@ -56,23 +56,23 @@ func (c *Combat) Copy() *Combat {
 	return cc
 }
 
-func CombatCheck(c, c2 *Combat) (equal bool, diffs []string) {
+func CombatCheck(c, c2 *Combat) (equal bool, diffs map[string]struct{}) {
 	equal = reflect.DeepEqual(c, c2)
 	if !equal {
-		diffs = make([]string, 16)
+		diffs = make(map[string]struct{}, 8)
 		if !reflect.DeepEqual(c2.PlayerMap, c.PlayerMap) {
-			diffs = append(diffs, "PlayerMap")
+			diffs["PlayerMap"] = struct{}{}
 		}
 		if !reflect.DeepEqual(c2.AntCount, c.AntCount) {
-			diffs = append(diffs, "AntCount")
+			diffs["AntCount"] = struct{}{}
 		}
 		if !reflect.DeepEqual(c2.Threat, c.Threat) {
-			diffs = append(diffs, "Threat")
+			diffs["Threat"] = struct{}{}
 		}
 		for i := range c.PThreat {
 			if !reflect.DeepEqual(c2.PThreat[i], c.PThreat[i]) {
 				key := "PThreat[" + strconv.Itoa(i) + "]"
-				diffs = append(diffs, key)
+				diffs[key] = struct{}{}
 			}
 		}
 	}
@@ -176,9 +176,9 @@ func (c *Combat) AddAnt(np int, loc Location, dead []PlayerLoc) {
 	return
 }
 
-// Takes a collection of moves and undoes them
+// Unresolve takes a collection of ant moves and undoes them.
 func (c *Combat) Unresolve(moves []AntMove) {
-	// Revert Threat 
+	// Revert Threat
 	for _, m := range moves {
 		if c.AntCount[m.To] == 1 {
 			if m.From != m.To {

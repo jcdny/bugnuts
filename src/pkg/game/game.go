@@ -33,6 +33,14 @@ func gameDefaults() *GameInfo {
 	}
 }
 
+func NewGameInfo(rows, cols int) *GameInfo {
+	g := gameDefaults()
+	g.Rows = rows
+	g.Cols = cols
+
+	return g
+}
+
 // Take the settings from the state string and emit the header for input.
 func (g *GameInfo) String() string {
 	str := ""
