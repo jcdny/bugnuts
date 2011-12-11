@@ -26,6 +26,7 @@ DIRS=\
 	engine\
 	game\
 	maps\
+	monte\
 	parameters\
 	pathing\
 	replay\
