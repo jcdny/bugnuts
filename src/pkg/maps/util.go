@@ -10,8 +10,8 @@ var PermStepD5 [4][6][5]Direction
 
 func init() {
 	permdstep := map[string][]string{
-		"ns": []string{"ew-", "e-w", "we-", "w-e", "-ew", "-we"},
-		"ew": []string{"ns-", "n-s", "sn-", "s-n", "-ns", "-sn"},
+		"ns": []string{"ew-", "we-", "-ew", "-we", "e-w", "w-e"},
+		"ew": []string{"ns-", "sn-", "-ns", "-sn", "n-s", "s-n"},
 	}
 	for k, v := range permdstep {
 		da := ByteToDirection[k[0]]
