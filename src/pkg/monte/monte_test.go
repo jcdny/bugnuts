@@ -4,10 +4,9 @@ import (
 	"log"
 	"testing"
 	"bugnuts/engine"
-	. "bugnuts/maps"
-	. "bugnuts/game"
 	. "bugnuts/torus"
 	. "bugnuts/combat"
+	. "bugnuts/game"
 )
 
 type testData struct {
@@ -17,52 +16,59 @@ type testData struct {
 }
 
 var tests = []testData{
-	{"testdata/test1/0.replay", "bot8", 30, Point{28, 52}},
+	//{"testdata/test1/0.replay", "bot8", 30, Point{28, 52}},  // 6 me 2 other
+	{"testdata/test1/0.replay", "bot8", 30, Point{49, 19}}, // 5 me, 3, 1
 }
 
-func TestMonteCarlo(t *testing.T) {
-	for _, t := range tests {
-		log.Print("Running test for ", t.in, "(", t.user, ") turn ", t.turn, " partition ", t.part)
-		combatMe(t)
+func init() {
+	log.SetFlags(log.Lshortfile)
+}
+
+func TestGenPerm(t *testing.T) {
+	if len(genperm(2)) != 16 ||
+		len(genperm(3)) != 64 ||
+		len(genperm(4)) != 256 {
+		t.Error("genperm length wrong")
 	}
 }
 
-func combatMe(t testData) {
+func BenchmarkMonteCarlo(b *testing.B) {
+	for _, td := range tests {
+		benchMe(td, b)
+	}
+}
+
+func benchMe(t testData, b *testing.B) {
 	s := engine.LoadState(t.in, t.user, t.turn)
 	if s != nil {
+		c := NewCombat(s.Map, s.AttackMask, 10) // TODO player counts?
+		c.Setup(s.Ants)
+
 		ap, pmap := CombatPartition(s)
-		log.Printf("%v", ap)
-		log.Printf("%v", pmap)
 		pkey := s.ToLocation(t.part)
 		p, ok := ap[pmap[pkey][0]]
 		if !ok {
 			log.Print("Could not find partition for ", t.part)
 		} else {
-			log.Print("Simulate for ", p)
+			ps := NewPartitionState(c, p)
+			perm := genperm(uint(ps.PLive))
+			move := make([][]AntMove, len(perm))
+			fs := FirstStep(s.Map, c, ps)
 
-			c := NewCombat(s.Map, s.AttackMask, 10) // TODO player counts?
-			c.Setup(s.Ants)
-			// players
-			am, _ := c.PartitionMoves(p)
-			DumpAntMove(s.Map, am, -1, t.turn)
+			for ip, p := range perm {
+				move[ip] = make([]AntMove, ps.ALive)
+				ib, ie := 0, 0
+				for np := 0; np < ps.PLive; np++ {
+					ib, ie = ie, ie+len(fs[np][p[np]])
+					copy(move[ip][ib:ie], fs[np][p[np]])
+				}
+			}
+			for i := 0; i < b.N; i++ {
+				for ip := range move {
+					c.Resolve(move[ip])
+					c.Unresolve(move[ip])
+				}
+			}
 		}
 	}
-
-	log.Print(genperm(4))
-}
-
-// generate the list of permuted directions for n players
-func genperm(n uint) [][]Direction {
-	nperm := uint(4) << (2 * (n - 1))
-	log.Print("nperm ", nperm)
-	dl := make([]Direction, nperm*n)
-	out := make([][]Direction, nperm)
-	for i := uint(0); i < nperm; i++ {
-		for s := uint(0); s < n; s++ {
-			dl[i*n+s] = Direction((i >> (2 * s)) & 3)
-		}
-		out[i] = dl[i*n : (i+1)*n]
-	}
-
-	return out
 }
