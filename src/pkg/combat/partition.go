@@ -12,6 +12,7 @@ import (
 
 type AntPartition struct {
 	Ants map[Location]struct{}
+	PS   *PartitionState
 }
 
 type Partitions map[Location]*AntPartition
@@ -34,6 +35,10 @@ type PlayerState struct {
 	Player int
 	Live   int
 	Moves  []AntMove
+	First  [4][]AntMove
+	// move scoring
+	Score [4]int
+	Best  int
 }
 
 func CombatPartition(s *State) (Partitions, PartitionMap) {

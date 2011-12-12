@@ -1,5 +1,7 @@
 package combat
 
+// See benchmark/combat_test.go for functional testing.
+
 import (
 	"testing"
 	"reflect"
