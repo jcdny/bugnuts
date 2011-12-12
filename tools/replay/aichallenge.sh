@@ -6,6 +6,7 @@ SUFFIX=".replaygz"
 PREFIX=""
 LAST=$ROOT/data/$HOST/LAST
 LOCK=$ROOT/data/$HOST/LOCK
+STOP=$ROOT/data/$HOST/STOP
 
 if [ ! -d $ROOT/data ]; then
     echo "Fatal $ROOT/data does not exist"
@@ -18,7 +19,7 @@ if [ -f $LOCK ]; then
     echo "LOCK for $HOST exists.  remove $LOCK to run"
     exit 1
 fi
-echo `date` > $HOST/LOCK
+echo "$$ `date`" > $HOST/LOCK
 
 GAME="`cat $LAST || echo 1`"
 END=$(curl -s http://aichallenge.org/games.php | egrep 'visualizer.php.*game=[0-9]' | head -n1 | sed 's/.*game=\([0-9]*\)[^0-9].*/\1/')
@@ -42,7 +43,7 @@ echo "INFO: getting $HOST games $GAME to $END"
 
 cd $HOST
 
-while [ $GAME -lt $END ]; do
+while [ $GAME -lt $END -a ! -f $STOP ]; do
     D="`expr $GAME / 1000`"
     mkdir -p $D
     FILENAME="$PREFIX$GAME$SUFFIX"
@@ -57,10 +58,12 @@ while [ $GAME -lt $END ]; do
             chmod 444 $DEST
             ls -1l $DEST
         fi
-
-        sleep `expr $RANDOM % 8 + 2`
+        curl -o /dev/null -d "email=jeff.davis@gmail.com&stat=$HOST:game&value=$GAME" http://api.stathat.com/ez &
+        curl -o /dev/null -d "email=jeff.davis@gmail.com&stat=$HOST:downloaded&count=1" http://api.stathat.com/ez &
+        sleep `expr $RANDOM % 4 + 2`
     fi
     GAME="`expr $GAME + 1`"
     echo $GAME > $LAST
 done
 rm -f $LOCK
+

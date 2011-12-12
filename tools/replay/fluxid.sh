@@ -4,6 +4,7 @@ URLBASE=http://ants.fluxid.pl/replay
 ROOT=~/ai
 LAST=$ROOT/data/$HOST/LAST
 LOCK=$ROOT/data/$HOST/LOCK
+STOP=$ROOT/data/$HOST/STOP
 
 if [ ! -d $ROOT/data ]; then
     echo "Fatal $ROOT/data does not exist"
@@ -40,7 +41,7 @@ echo "INFO: getting $HOST games $GAME to $END"
 
 cd $HOST
 
-while [ $GAME -lt $END ]; do
+while [ $GAME -lt $END -a ! -f $STOP ]; do
     D="`expr $GAME / 1000`"
         mkdir -p $D
     DEST="$D/replay.$GAME"
@@ -55,6 +56,8 @@ while [ $GAME -lt $END ]; do
             chmod 444 ${DEST}.gz
             ls -1l ${DEST}.gz
         fi
+        curl -o /dev/null -d "email=jeff.davis@gmail.com&stat=$HOST:game&value=$GAME" http://api.stathat.com/ez &
+        curl -o /dev/null -d "email=jeff.davis@gmail.com&stat=$HOST:downloaded&count=1" http://api.stathat.com/ez &
         sleep `expr $RANDOM % 10 + 10`
     fi
     GAME="`expr $GAME + 1`"
