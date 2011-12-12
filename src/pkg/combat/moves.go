@@ -6,7 +6,8 @@ import (
 )
 
 // MoveEm given a list of AntMove update D and To for the move in the given direction
-func moveEm(moves []AntMove, d Direction, m *Map, c *Combat) {
+func moveEm(moves []AntMove, d Direction, c *Combat) {
+	m := c.Map
 	for i := range moves {
 		moves[i].D = d
 		moves[i].To = m.LocStep[moves[i].From][d]
@@ -67,14 +68,14 @@ func moveEm(moves []AntMove, d Direction, m *Map, c *Combat) {
 	}
 }
 
-func (ps *PartitionState) FirstStep(m *Map, c *Combat) {
+func (ps *PartitionState) FirstStep(c *Combat) {
 	for np := range ps.P {
 		am := ps.P[np].Moves
 		pm := make([]AntMove, ps.P[np].Live*4)
 		for d := 0; d < 4; d++ {
 			copy(pm[d*len(am):(d+1)*len(am)], am)
 			ps.P[np].First[d] = pm[d*len(am) : (d+1)*len(am)]
-			moveEm(ps.P[np].First[d], Direction(d), m, c)
+			moveEm(ps.P[np].First[d], Direction(d), c)
 		}
 	}
 }

@@ -1,7 +1,6 @@
 package state
 
 import (
-	"log"
 	"strconv"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
@@ -34,33 +33,6 @@ func (s *State) EnemyHillLocations(player int) (l []Location) {
 	}
 
 	return l
-}
-
-func (s *State) Threat(turn int, l Location) int8 {
-	i := len(s.Met.Threat) - turn + s.Turn - 1
-	if i < 0 {
-		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Met.Threat))
-		return 0
-	}
-	return s.Met.Threat[i][l]
-}
-
-func (s *State) PrThreat(turn int, l Location) int {
-	i := len(s.Met.PrThreat) - turn + s.Turn - 1
-	if i < 0 {
-		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Met.Threat))
-		return 0
-	}
-	return s.Met.PrThreat[i][l]
-}
-
-func (s *State) ThreatMap(turn int) []int8 {
-	i := len(s.Met.Threat) - turn + s.Turn - 1
-	if i < 0 {
-		log.Printf("Threat for turn %d on turn %d we only keep %d turns", turn, s.Turn, len(s.Met.Threat))
-		return nil
-	}
-	return s.Met.Threat[i]
 }
 
 func (s *State) ValidStep(loc Location) bool {

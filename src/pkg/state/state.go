@@ -6,10 +6,7 @@ import (
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 	. "bugnuts/game"
-)
-
-const (
-	MaxPlayers int = 10
+	. "bugnuts/combat"
 )
 
 type Hill struct {
@@ -40,7 +37,9 @@ type State struct {
 	Hills        map[Location]*Hill // Hill list
 	Stats        *Statistics        //Computed statistics
 	Met          *Metrics           // Map Metrics
-	Testing      bool
+	C            *Combat
+
+	Testing bool
 	// Caches
 	AttackMask *Mask
 	ViewMask   *Mask

@@ -8,6 +8,7 @@ import (
 	. "bugnuts/util"
 	. "bugnuts/pathing"
 	. "bugnuts/game"
+	. "bugnuts/combat"
 )
 
 const (
@@ -46,6 +47,16 @@ func (s *State) ProcessFood(food []Location, turn int) {
 			}
 		} else {
 			s.Map.Grid[loc] = FOOD
+		}
+	}
+}
+
+func (s *State) ResetGrid() {
+	// Set all seen map to land
+	for i, t := range s.Met.Seen {
+		s.Met.VisCount[i] = 0
+		if t == s.Turn && s.Map.Grid[i] > LAND {
+			s.Map.Grid[i] = LAND
 		}
 	}
 }
@@ -125,13 +136,16 @@ func (s *State) ProcessTurn(t *Turn) {
 	s.Met.HBorder = s.StepHorizon(s.Met.HBorder)
 	s.UpdateHillMaps()
 	s.MonteCarloDensity()
-	s.ComputeThreat(1, 0, s.AttackMask.MM, s.Met.Threat[len(s.Met.Threat)-1], s.Met.PrThreat[len(s.Met.PrThreat)-1])
+	s.CombatSetup()
+}
+
+func (s *State) CombatSetup() {
+	s.C = NewCombat(s.Map, s.AttackMask, 10)
+	s.C.Setup(s.Ants)
 }
 
 // Given list of player/location update Land visible
 // Also updates: Met.Unknown, Met.Land, Met.Seen, and Met.VisCount.
-
-
 func (s *State) ProcessVisible(antloc []PlayerLoc, player, turn int) {
 	for _, pl := range antloc {
 		if pl.Player != player {
@@ -276,27 +290,6 @@ func (s *State) ProcessAnts(antloc []PlayerLoc, player, turn int) {
 			// TODO New ant seen - start guessing hill loc
 		}
 		s.Ants[pl.Player][pl.Loc] = turn
-	}
-}
-
-func (s *State) ResetGrid() {
-	// Rotate threat maps and clear first.
-	n := len(s.Met.Threat)
-	if n > 1 {
-		s.Met.Threat = append(s.Met.Threat[1:n], s.Met.Threat[0])
-		s.Met.PrThreat = append(s.Met.PrThreat[1:n], s.Met.PrThreat[0])
-	}
-	for i := range s.Met.Threat[0] {
-		s.Met.Threat[0][i] = 0
-		s.Met.PrThreat[0][i] = 0
-	}
-
-	// Set all seen map to land
-	for i, t := range s.Met.Seen {
-		s.Met.VisCount[i] = 0
-		if t == s.Turn && s.Map.Grid[i] > LAND {
-			s.Map.Grid[i] = LAND
-		}
 	}
 }
 

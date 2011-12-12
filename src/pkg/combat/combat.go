@@ -5,10 +5,10 @@ import (
 	"time"
 	"reflect"
 	"strconv"
+	"rand"
 	. "bugnuts/maps"
 	. "bugnuts/game"
 	. "bugnuts/torus"
-	. "bugnuts/state"
 	. "bugnuts/util"
 )
 
@@ -19,6 +19,8 @@ type Combat struct {
 	AntCount   []int
 	Threat     []int
 	PThreat    [][]int
+	Threat1    []int
+	PThreat1   [][]int
 }
 
 var _minusone [MAXMAPSIZE]int
@@ -106,8 +108,6 @@ func (c *Combat) Setup(ants []map[Location]int) {
 	if len(dead) > 0 {
 		log.Panic("Dead ants found in setup", len(dead))
 	}
-
-	return
 }
 
 // Compute initial ant threat. returns a count of dead found.
@@ -304,26 +304,20 @@ func (c *Combat) Resolve(moves []AntMove) (live, dead []AntMove) {
 	return
 }
 
-func CombatRun(s *State, ants []*AntStep, part Partitions, pmap PartitionMap) {
+func (c *Combat) Run(ants []*AntStep, part Partitions, pmap PartitionMap, cutoff int64, rng *rand.Rand) {
 	if len(part) == 0 {
 		return
 	}
-	// Setup combat engine
-	TPush("setup")
-	c := NewCombat(s.Map, s.AttackMask, MaxPlayers) // TODO player counts?
-	c.Setup(s.Ants)
-	TPop()
 
-	budget := (s.Cutoff - time.Nanoseconds()) / int64(len(part)) / 4
-
+	budget := (cutoff - time.Nanoseconds()) / int64(len(part)) / 4
 	// sim to compute best moves
 	for {
 		for ploc, ap := range part {
 			t := time.Nanoseconds() + budget
-			if t > s.Cutoff {
+			if t > cutoff {
 				break
 			}
-			c.Sim(s, ploc, ap, t)
+			c.Sim(ap, ploc, t, rng)
 		}
 		break
 	}
@@ -346,19 +340,19 @@ func CombatRun(s *State, ants []*AntStep, part Partitions, pmap PartitionMap) {
 	// vis
 }
 
-func (c *Combat) Sim(s *State, ploc Location, ap *AntPartition, cutoff int64) {
+func (c *Combat) Sim(ap *AntPartition, ploc Location, cutoff int64, rng *rand.Rand) {
 	log.Printf("Simulate for ap: %v %d ants, cutoff %.2fms",
-		s.ToPoint(ploc),
+		c.ToPoint(ploc),
 		len(ap.Ants),
 		float64(cutoff-time.Nanoseconds())/1e6)
 
 	ap.PS = NewPartitionState(c, ap)
-	ap.PS.FirstStep(s.Map, c)
-	MonteSim(s, c, ap.PS)
+	ap.PS.FirstStep(c)
+	MonteSim(c, ap.PS, rng)
 
 }
 
-func MonteSim(s *State, c *Combat, ps *PartitionState) {
+func MonteSim(c *Combat, ps *PartitionState, rng *rand.Rand) {
 	perm := genPerm(uint(ps.PLive))
 	move := make([][]AntMove, len(perm))
 
@@ -396,7 +390,7 @@ func MonteSim(s *State, c *Combat, ps *PartitionState) {
 	log.Print("Score: ", ps.P[0].Score)
 	if Min(ps.P[0].Score[:]) != Max(ps.P[0].Score[:]) {
 		ms := Max(ps.P[0].Score[:])
-		for _, d := range Permute4(s.Rand) {
+		for _, d := range Permute4(rng) {
 			if ps.P[0].Score[d] == ms {
 				ps.P[0].Best = int(d)
 			}

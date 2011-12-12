@@ -133,7 +133,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 		}
 		for _, loc := range f.Closest(ccl) {
 			depth := f.Depth[loc]
-			threat := s.Threat(s.Turn, loc)
+			threat := s.C.PThreat1[0][loc]
 			p := s.Map.ToPoint(loc)
 		STEP:
 			// Perm here so our bots are not biased to move in particular directions
@@ -145,7 +145,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 				np := s.Map.PointAdd(p, Steps[d])
 				nl := s.Map.ToLocation(np)
 				item := s.Map.Grid[nl]
-				nthreat := s.Threat(s.Turn, nl)
+				nthreat := s.C.PThreat1[0][nl]
 				// TODO clean up risk aversion...
 				// TODO Parameterize willingness to sacrifice
 				if f.Depth[nl] < uint16(depth) &&
@@ -185,7 +185,7 @@ func (bot *BotV5) DoTurn(s *State) os.Error {
 							}
 						} else if steps >= 0 && tgt.Count > 0 {
 							if Debug[DBG_Threat] {
-								if s.Threat(s.Turn, nl) > 0 {
+								if s.C.PThreat1[0][nl] > 0 {
 									log.Printf("#%d: %v -> %v threat %d -> %d\n", s.Turn, p, np, threat, nthreat)
 								}
 							}

@@ -15,6 +15,7 @@ import (
 	. "bugnuts/pathing"
 	. "bugnuts/viz"
 	. "bugnuts/combat"
+	. "bugnuts/game"
 )
 
 type BotV8 struct {
@@ -329,12 +330,12 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	}
 
 	// Lets combat a bit.
-	ap, pmap := CombatPartition(s)
+	ap, pmap := CombatPartition(s.Ants, s.Map)
 	// Now visualize the frenemies.
 	if Viz["combat"] {
 		VizFrenemies(s, ap, pmap)
 	}
-	CombatRun(s, endants, ap, pmap)
+	s.C.Run(endants, ap, pmap, s.Cutoff, s.Rand)
 
 	s.EmitMoves(endants)
 

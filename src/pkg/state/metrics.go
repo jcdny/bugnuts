@@ -1,7 +1,6 @@
 package state
 
 import (
-	"log"
 	. "bugnuts/pathing"
 	. "bugnuts/torus"
 	. "bugnuts/maps"
@@ -14,8 +13,6 @@ type Metrics struct {
 	*Map
 	Seen     []int      // Turn on which cell was last visible.
 	VisCount []int      // How many ants see this cell.
-	Threat   [][]int8   // how much threat is there on a given cell
-	PrThreat [][]int    // Prob of max threat
 	Horizon  []bool     // Inside the event horizon.  false means there could be an ant there we have not seen
 	HBorder  []Location // List of border points
 	Land     []int      // Count of land tiles visible from a given tile
@@ -48,11 +45,6 @@ func NewMetrics(m *Map) *Metrics {
 		Horizon:  make([]bool, size),
 		Runs:     make([][4]uint8, size),
 		HBorder:  make([]Location, 0, 1000),
-	}
-
-	for i := 0; i < NTHREAT; i++ {
-		met.Threat = append(met.Threat, make([]int8, size))
-		met.PrThreat = append(met.PrThreat, make([]int, size))
 	}
 
 	for i := range met.Unknown {
@@ -190,71 +182,6 @@ func (m *Metrics) ComputePrFood(loc, sloc Location, turn int, o *Offsets, f *Fil
 	m.PrFood[loc] = prfood
 
 	return prfood
-}
-
-// Compute the threat for N turns out (currently only n = 0 or 1)
-// if player > -1 then sum players not including player
-func (s *State) ComputeThreat(turn, player int, mask []*MoveMask, threat []int8, pthreat []int) {
-	if turn > 1 || turn < 0 {
-		log.Panicf("Illegal turns out = %d", turn)
-	}
-
-	if len(threat) != s.Rows*s.Cols || len(threat) != len(pthreat) {
-		log.Panic("ComputeThreat slice size mismatch")
-	}
-
-	var mythreat []int8
-	if player >= 0 && turn > 0 && s.Testing {
-		mythreat = make([]int8, s.Map.Size())
-		for loc := range s.Ants[player] {
-			p := s.ToPoint(loc)
-			m := mask[s.FreedomKey(loc)]
-			for _, op := range m.P {
-				mythreat[s.ToLocation(s.PointAdd(p, op))]++
-			}
-		}
-	}
-
-	m := mask[0] // for 0 turns out we just use the 0 degree of freedom mask.
-	for i := range s.Ants {
-		if i != player {
-			for loc := range s.Ants[i] {
-				p := s.Map.ToPoint(loc)
-				if turn > 0 {
-					if false { // crazy or willing to sacrifice or other rules
-						m = mask[s.Map.FreedomKey(loc)]
-					} else {
-						var nsup [4]int8
-						for _, op := range mask[0].P {
-							l := s.ToLocation(s.PointAdd(p, op))
-							if _, ok := s.Ants[i][l]; ok {
-								if op.R >= 0 {
-									nsup[South]++
-								}
-								if op.R <= 0 {
-									nsup[North]++
-								}
-								if op.C >= 0 {
-									nsup[East]++
-								}
-								if op.C <= 0 {
-									nsup[West]++
-								}
-
-							}
-						}
-						m = mask[s.Map.FreedomKeyThreat(loc, mythreat, nsup)]
-					}
-				}
-				for i, op := range m.P {
-					threat[s.ToLocation(s.PointAdd(p, op))]++
-					pthreat[s.ToLocation(s.PointAdd(p, op))] += m.MaxPr[i]
-				}
-			}
-		}
-	}
-
-	return
 }
 
 func (s *State) StepHorizon(hlist []Location) []Location {

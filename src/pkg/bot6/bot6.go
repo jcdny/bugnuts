@@ -23,6 +23,7 @@ import (
 	. "bugnuts/debug"
 	. "bugnuts/pathing"
 	. "bugnuts/viz"
+	. "bugnuts/game"
 )
 
 type BotV6 struct {

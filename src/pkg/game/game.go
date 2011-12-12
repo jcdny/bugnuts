@@ -8,6 +8,9 @@ import (
 	"strings"
 )
 
+const MaxPlayers = 10
+const MaxMapDimension = 200
+
 // Game definition
 type GameInfo struct {
 	Rows          int

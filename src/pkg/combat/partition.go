@@ -6,7 +6,6 @@ import (
 	. "bugnuts/maps"
 	. "bugnuts/game"
 	. "bugnuts/torus"
-	. "bugnuts/state"
 	. "bugnuts/pathing"
 )
 
@@ -41,20 +40,20 @@ type PlayerState struct {
 	Best  int
 }
 
-func CombatPartition(s *State) (Partitions, PartitionMap) {
+func CombatPartition(Ants []map[Location]int, m *Map) (Partitions, PartitionMap) {
 	// how many ants are there
 	nant := 0
-	for _, ants := range s.Ants {
+	for _, ants := range Ants {
 		nant += len(ants)
 	}
 
 	origin := make(map[Location]int, nant)
-	for _, ants := range s.Ants {
+	for _, ants := range Ants {
 		for loc := range ants {
 			origin[loc] = 1
 		}
 	}
-	f := NewFill(s.Map)
+	f := NewFill(m)
 	// will only find neighbors withing 2x8 steps.
 	_, near := f.MapFillSeedNN(origin, 1, 8)
 
@@ -62,12 +61,12 @@ func CombatPartition(s *State) (Partitions, PartitionMap) {
 	// maps an ant to the partitions it belongs to.
 	pmap := make(PartitionMap, nant)
 
-	for ploc := range s.Ants[0] {
+	for ploc := range Ants[0] {
 		if _, ok := pmap[ploc]; !ok {
 			// for any of my ants not already in a partition
 			for eloc, nn := range near[ploc] {
 				if nn.Steps < 7 {
-					if _, ok := s.Ants[0][eloc]; !ok {
+					if _, ok := Ants[0][eloc]; !ok {
 						// a close enemy ant, add it and it's nearest neighbors to the partition
 
 						ap, ok := parts[ploc] // ap = a partition
@@ -104,11 +103,11 @@ func CombatPartition(s *State) (Partitions, PartitionMap) {
 			// close neighbors of the friendly ants already in the
 			// partition
 			for loc := range ap.Ants {
-				if _, ok := s.Ants[0][loc]; ok {
+				if _, ok := Ants[0][loc]; ok {
 					// one of our friendly ants, add any close neigbors of our friendly guy
 					for nloc, nn := range near[loc] {
 						if nn.Steps < 2 {
-							_, me := s.Ants[0][nloc]
+							_, me := Ants[0][nloc]
 							_, in := ap.Ants[nloc]
 							if me && !in {
 								ap.Ants[nloc] = struct{}{}
@@ -129,7 +128,7 @@ func CombatPartition(s *State) (Partitions, PartitionMap) {
 		for loc := range enemy {
 			for floc, nn := range near[loc] {
 				if nn.Steps < 6 {
-					if _, ok := s.Ants[0][floc]; !ok {
+					if _, ok := Ants[0][floc]; !ok {
 						// a close not me ant
 						enemy[floc] = 0
 					}

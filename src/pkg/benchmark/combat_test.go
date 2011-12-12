@@ -3,6 +3,7 @@ package bench
 import (
 	"log"
 	"testing"
+	"reflect"
 	"bugnuts/engine"
 	. "bugnuts/util"
 	. "bugnuts/torus"
@@ -28,12 +29,59 @@ func TestPartitions(t *testing.T) {
 	}
 }
 
+/*  see mystery.go for the what this tests...
+ *
+
+func TestCombatSetup(t *testing.T) {
+	td := tests[1]
+	s := engine.LoadState(td.in, td.user, td.turn)
+	if s != nil {
+		c := NewCombat(s.Map, s.AttackMask, 10) // TODO player counts?
+		c.Setup(s.Ants)
+		c1 := NewCombat(s.Map, s.AttackMask, 10) // TODO player counts?
+		c1.SetupS1(s.Ants)
+		c2 := NewCombat(s.Map, s.AttackMask, 10) // TODO player counts?
+		c2.SetupS2(s.Ants)
+
+		log.Print(reflect.DeepEqual(c, c1), reflect.DeepEqual(c1, c2), reflect.DeepEqual(c2, c))
+	}
+}
+
+func BenchmarkCombatSetupS1(b *testing.B) {
+	b.StopTimer()
+	t := tests[1]
+	s := engine.LoadState(t.in, t.user, t.turn)
+	if s != nil {
+		c := NewCombat(s.Map, s.AttackMask, 10) // TODO player counts?
+		c.SetupS1(s.Ants)
+		b.StartTimer()
+		for i := 0; i < b.N; i++ {
+			c.SetupS1(s.Ants)
+		}
+	}
+}
+func BenchmarkCombatSetupS2(b *testing.B) {
+	b.StopTimer()
+	t := tests[1]
+	s := engine.LoadState(t.in, t.user, t.turn)
+	if s != nil {
+		c := NewCombat(s.Map, s.AttackMask, 10) // TODO player counts?
+		c.SetupS2(s.Ants)
+		b.StartTimer()
+		for i := 0; i < b.N; i++ {
+			c.SetupS2(s.Ants)
+		}
+	}
+}
+*/
+
 func BenchmarkCombatSetup(b *testing.B) {
 	b.StopTimer()
 	t := tests[1]
 	s := engine.LoadState(t.in, t.user, t.turn)
 	if s != nil {
 		c := NewCombat(s.Map, s.AttackMask, 10) // TODO player counts?
+		c.Setup(s.Ants)
 		b.StartTimer()
 		for i := 0; i < b.N; i++ {
 			c.Setup(s.Ants)
@@ -45,7 +93,7 @@ func combatMe(t testData) {
 	s := engine.LoadState(t.in, t.user, t.turn)
 	if s != nil {
 		c := NewCombat(s.Map, s.AttackMask, 10) // TODO player counts?
-		c.Setup(s.Ants)
+		c.SetupS2(s.Ants)
 
 		TPush("** Partition " + t.in)
 		ap, pmap := CombatPartition(s)

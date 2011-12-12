@@ -30,12 +30,13 @@ type Mask struct {
 // MoveMask is generated for a given number of degrees of freedom
 type MoveMask struct {
 	Offsets
-	NFree  int   // Degrees of freedom
-	PStep  int   // Probability denom
-	PTot   int   // Probability denom
-	Stride int   // Cols used to generate loc offsets.
-	MinPr  []int // Pr numerator, matches Offsets order
-	MaxPr  []int // Pr numerator, matches Offsets order
+	Add    Offsets // Points added on the step.
+	NFree  int     // Degrees of freedom
+	PStep  int     // Probability denom
+	PTot   int     // Probability denom
+	Stride int     // Cols used to generate loc offsets.
+	MinPr  []int   // Pr numerator, matches Offsets order
+	MaxPr  []int   // Pr numerator, matches Offsets order
 }
 
 const MoveMaskPStep = 60
@@ -118,6 +119,7 @@ func (m *Map) OffsetsCachePopulateAll(mask *Mask) {
 	}
 	for i := 0; i < len(mask.MM); i++ {
 		m.offsetsCachePopulate(&mask.MM[i].Offsets)
+		m.offsetsCachePopulate(&mask.MM[i].Add)
 	}
 }
 
@@ -234,6 +236,7 @@ func MakeMoveMask(r2 int, cols int) []*MoveMask {
 
 		// Given maxpr Generate the location offsets and point offsets for the masks
 		mpt := make([]Point, 0, len(pr))
+		mpta := make([]Point, 0, len(pr))
 		minpr := make([]int, 0, len(pr))
 		maxpr := make([]int, 0, len(pr))
 
@@ -243,6 +246,9 @@ func MakeMoveMask(r2 int, cols int) []*MoveMask {
 				p := pr[r*stride+c]
 				if p > 0 {
 					mpt = append(mpt, Point{R: r - off, C: c - off})
+					if (off-r)*(off-r)+(off-c)*(off-c) > r2 {
+						mpta = append(mpta, Point{R: r - off, C: c - off})
+					}
 					minpr = append(minpr, MoveMaskPStep-p)
 					maxpr = append(maxpr, p)
 				}
@@ -258,6 +264,7 @@ func MakeMoveMask(r2 int, cols int) []*MoveMask {
 			MaxPr:  maxpr,
 		}
 		mask.Offsets = PointsToOffsets(mpt, cols)
+		mask.Add = PointsToOffsets(mpta, cols)
 		mm[i] = &mask
 	}
 

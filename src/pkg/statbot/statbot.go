@@ -5,10 +5,11 @@ package statbot
 import (
 	"os"
 	"fmt"
+	"bugnuts/engine"
+	. "bugnuts/game"
 	. "bugnuts/state"
 	. "bugnuts/parameters"
 	. "bugnuts/MyBot"
-	"bugnuts/engine"
 )
 
 type StatBot struct {

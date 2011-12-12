@@ -84,6 +84,7 @@ func TestMoveMask(t *testing.T) {
 		// dump masks
 		for i := 0; i < 16; i++ {
 			log.Printf("%v", mm[i])
+			log.Printf("Add: %v", mm[i].Add)
 		}
 	}
 }
@@ -129,7 +130,7 @@ func TestApplyCacheCreate(t *testing.T) {
 func TestCacheAll(t *testing.T) {
 	m := NewMap(bRows, bCols, 1)
 	mm := MakeMask(bMask, bRows, bCols)
-	m.offsetsCachePopulateAll(mm)
+	m.OffsetsCachePopulateAll(mm)
 
 	r := int(mm.Offsets.R)
 	e := 2*r*(bRows+bCols) - 4*r*r
@@ -224,6 +225,6 @@ func BenchmarkCacheAll(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		mm := MakeMask(bMask, bRows, bCols)
-		m.offsetsCachePopulateAll(mm)
+		m.OffsetsCachePopulateAll(mm)
 	}
 }

@@ -3,6 +3,7 @@ include $(GOROOT)/src/Make.inc
 TARG=bugnuts/game
 GOFILES=\
 	antmove.go\
+	antstep.go\
 	game.go\
 	turn.go\
 

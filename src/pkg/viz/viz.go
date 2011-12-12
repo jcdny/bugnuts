@@ -103,8 +103,8 @@ func Visualize(s *State) {
 	}
 
 	if Viz["threat"] {
-		lthreat := int8(10)
-		for i, threat := range s.ThreatMap(s.Turn) {
+		lthreat := 10
+		for i, threat := range s.C.PThreat[0] {
 			if threat > 0 {
 				if lthreat != threat {
 					sfc(cRed, float64(threat)*.2)
