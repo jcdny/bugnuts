@@ -148,6 +148,10 @@ func (s *State) EmitMoves(ants []*AntStep) {
 	}
 }
 
+func (s *State) TurnDone() {
+	fmt.Fprintf(os.Stdout, "go\n") // TODO Flush ??
+}
+
 func (s *State) GenerateMoves(antsIn []*AntStep) {
 	// make a copy of the ant slice
 	ants := make([]*AntStep, len(antsIn))
