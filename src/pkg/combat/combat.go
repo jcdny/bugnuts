@@ -3,27 +3,14 @@ package combat
 import (
 	"log"
 	"time"
+	"reflect"
+	"strconv"
 	. "bugnuts/maps"
 	. "bugnuts/game"
 	. "bugnuts/torus"
 	. "bugnuts/state"
-	. "bugnuts/pathing"
+	. "bugnuts/util"
 )
-
-type AntPartition struct {
-	Ants    map[Location]struct{}
-	Players []int
-}
-
-type Partitions map[Location]*AntPartition
-type PartitionMap map[Location][]Location
-
-func NewAntPartition() *AntPartition {
-	p := &AntPartition{
-		Ants: make(map[Location]struct{}, 8),
-	}
-	return p
-}
 
 type Combat struct {
 	*Map
@@ -57,6 +44,43 @@ func NewCombat(m *Map, am *Mask, np int) *Combat {
 	return c
 }
 
+func (c *Combat) Copy() *Combat {
+	cc := NewCombat(c.Map, c.AttackMask, len(c.PThreat))
+	copy(cc.PlayerMap, c.PlayerMap)
+	copy(cc.AntCount, c.AntCount)
+	copy(cc.Threat, c.Threat)
+	for i := range c.PThreat {
+		cc.PThreat[i] = make([]int, len(c.PThreat[i]))
+		copy(cc.PThreat[i], c.PThreat[i])
+	}
+
+	return cc
+}
+
+func CombatCheck(c, c2 *Combat) (equal bool, diffs map[string]struct{}) {
+	equal = reflect.DeepEqual(c, c2)
+	if !equal {
+		diffs = make(map[string]struct{}, 8)
+		if !reflect.DeepEqual(c2.PlayerMap, c.PlayerMap) {
+			diffs["PlayerMap"] = struct{}{}
+		}
+		if !reflect.DeepEqual(c2.AntCount, c.AntCount) {
+			diffs["AntCount"] = struct{}{}
+		}
+		if !reflect.DeepEqual(c2.Threat, c.Threat) {
+			diffs["Threat"] = struct{}{}
+		}
+		for i := range c.PThreat {
+			if !reflect.DeepEqual(c2.PThreat[i], c.PThreat[i]) {
+				key := "PThreat[" + strconv.Itoa(i) + "]"
+				diffs[key] = struct{}{}
+			}
+		}
+	}
+
+	return
+}
+
 func (c *Combat) Reset() {
 	copy(c.PlayerMap, _minusone[:len(c.PlayerMap)])
 	copy(c.AntCount, _zero[:len(c.AntCount)])
@@ -85,6 +109,7 @@ func (c *Combat) Setup(ants []map[Location]int) {
 
 	return
 }
+
 // Compute initial ant threat. returns a count of dead found.
 // Should be 0 unless something has gone horribly wrong.
 func (c *Combat) SetupReplay(ants [][]AntMove) (moves, spawn []AntMove) {
@@ -150,6 +175,42 @@ func (c *Combat) AddAnt(np int, loc Location, dead []PlayerLoc) {
 	}
 
 	return
+}
+
+// Unresolve takes a collection of ant moves and undoes them.
+func (c *Combat) Unresolve(moves []AntMove) {
+	// Revert Threat
+	for _, m := range moves {
+		if c.AntCount[m.To] == 1 {
+			if m.From != m.To {
+				// good move update threat
+				c.ApplyOffsets(m.From, &c.AttackMask.Add[m.D], func(nloc Location) {
+					c.Threat[nloc]--
+					c.PThreat[m.Player][nloc]--
+				})
+				c.ApplyOffsets(m.From, &c.AttackMask.Remove[m.D], func(nloc Location) {
+					c.Threat[nloc]++
+					c.PThreat[m.Player][nloc]++
+				})
+			}
+		} else {
+			// suicide replace threat
+			c.ApplyOffsets(m.From, &c.AttackMask.Offsets, func(nloc Location) {
+				c.Threat[nloc]++
+				c.PThreat[m.Player][nloc]++
+			})
+		}
+	}
+
+	// Now revert counts and playermap
+	for _, m := range moves {
+		c.AntCount[m.To] = 0
+		c.PlayerMap[m.To] = -1
+	}
+	for _, m := range moves {
+		c.AntCount[m.From] = 1
+		c.PlayerMap[m.From] = m.Player
+	}
 }
 
 func (c *Combat) Resolve(moves []AntMove) (live, dead []AntMove) {
@@ -243,113 +304,15 @@ func (c *Combat) Resolve(moves []AntMove) (live, dead []AntMove) {
 	return
 }
 
-func CombatPartition(s *State) (Partitions, PartitionMap) {
-	// how many ants are there
-	nant := 0
-	for _, ants := range s.Ants {
-		nant += len(ants)
-	}
-
-	origin := make(map[Location]int, nant)
-	for _, ants := range s.Ants {
-		for loc := range ants {
-			origin[loc] = 1
-		}
-	}
-	f := NewFill(s.Map)
-	// will only find neighbors withing 2x8 steps.
-	_, near := f.MapFillSeedNN(origin, 1, 8)
-
-	parts := make(Partitions, 5)
-	// maps an ant to the partitions it belongs to.
-	pmap := make(PartitionMap, nant)
-
-	for ploc := range s.Ants[0] {
-		if _, ok := pmap[ploc]; !ok {
-			// for any of my ants not already in a partition
-			for eloc, nn := range near[ploc] {
-				if nn.Steps < 7 {
-					if _, ok := s.Ants[0][eloc]; !ok {
-						// a close enemy ant, add it and it's nearest neighbors to the partition
-
-						ap, ok := parts[ploc] // ap = a partition
-						if !ok {
-							ap = NewAntPartition()
-						}
-						parts[ploc] = ap
-
-						for nloc, nn := range near[eloc] {
-							if nn.Steps < 7 {
-								ap.Ants[nloc] = struct{}{}
-
-								pm, ok := pmap[nloc]
-								if !ok {
-									pm = make([]Location, 0, 8)
-								}
-								pmap[nloc] = append(pm, ploc)
-							}
-						}
-						pm, ok := pmap[eloc]
-						if !ok {
-							pm = make([]Location, 0, 8)
-						}
-
-						pmap[eloc] = append(pm, ploc)
-						ap.Ants[eloc] = struct{}{}
-					}
-				}
-			}
-		}
-
-		if ap, ok := parts[ploc]; ok {
-			// If we created a partition centered on this ant add any
-			// close neighbors of the friendly ants already in the
-			// partition
-			for loc := range ap.Ants {
-				if _, ok := s.Ants[0][loc]; ok {
-					// one of our friendly ants, add any close neigbors of our friendly guy
-					for nloc, nn := range near[loc] {
-						if nn.Steps < 2 {
-							_, me := s.Ants[0][nloc]
-							_, in := ap.Ants[nloc]
-							if me && !in {
-								ap.Ants[nloc] = struct{}{}
-								pm, ok := pmap[nloc]
-								if !ok {
-									pm = make([]Location, 0, 8)
-								}
-								pmap[nloc] = append(pm, ploc)
-							}
-						}
-					}
-				}
-			}
-		}
-	}
-
-	/*
-		for loc := range enemy {
-			for floc, nn := range near[loc] {
-				if nn.Steps < 6 {
-					if _, ok := s.Ants[0][floc]; !ok {
-						// a close not me ant
-						enemy[floc] = 0
-					}
-				}
-			}
-		}
-	*/
-
-	return parts, pmap
-}
-
 func CombatRun(s *State, ants []*AntStep, part Partitions, pmap PartitionMap) {
 	if len(part) == 0 {
 		return
 	}
 	// Setup combat engine
-	C := NewCombat(s.Map, s.AttackMask, MaxPlayers) // TODO player counts?
-	C.Setup(s.Ants)
+	TPush("setup")
+	c := NewCombat(s.Map, s.AttackMask, MaxPlayers) // TODO player counts?
+	c.Setup(s.Ants)
+	TPop()
 
 	budget := (s.Cutoff - time.Nanoseconds()) / int64(len(part)) / 4
 
@@ -360,36 +323,27 @@ func CombatRun(s *State, ants []*AntStep, part Partitions, pmap PartitionMap) {
 			if t > s.Cutoff {
 				break
 			}
-			C.Sim(s, ploc, ap, t)
+			c.Sim(s, ploc, ap, t)
 		}
-		// TODO REMOVE ME WHEN WORKING
 		break
 	}
-
-	// Move combat moves back to antstep
-
-	// vis
-}
-
-// PartitionMoves creates the move list and the player count map
-func (c *Combat) PartitionMoves(ap *AntPartition) (am []AntMove, players map[int]int) {
-	players = make(map[int]int, MaxPlayers)
-	am = make([]AntMove, len(ap.Ants))
-	i := 0
-	for loc := range ap.Ants {
-		am[i].From = loc
-		am[i].To = loc
-		am[i].D = NoMovement
-		if c.PlayerMap[loc] > -1 {
-			am[i].Player = c.PlayerMap[loc]
-			players[am[i].Player]++
-			i++
-		} else {
-			log.Printf("Invalid ap player loc %v", c.ToPoint(am[i].From))
+	mm := make(map[Location]*AntMove, 100)
+	for _, ap := range part {
+		ps := &ap.PS.P[0]
+		if ps.Best != int(InvalidMove) {
+			for _, am := range ps.First[ps.Best] {
+				mm[am.From] = &am
+			}
 		}
 	}
 
-	return
+	for _, a := range ants {
+		if move, ok := mm[a.Source]; ok {
+			a.Move = move.D
+		}
+	}
+
+	// vis
 }
 
 func (c *Combat) Sim(s *State, ploc Location, ap *AntPartition, cutoff int64) {
@@ -398,4 +352,71 @@ func (c *Combat) Sim(s *State, ploc Location, ap *AntPartition, cutoff int64) {
 		len(ap.Ants),
 		float64(cutoff-time.Nanoseconds())/1e6)
 
+	ap.PS = NewPartitionState(c, ap)
+	ap.PS.FirstStep(s.Map, c)
+	MonteSim(s, c, ap.PS)
+
+}
+
+func MonteSim(s *State, c *Combat, ps *PartitionState) {
+	perm := genPerm(uint(ps.PLive))
+	move := make([][]AntMove, len(perm))
+
+	for ip, p := range perm {
+		move[ip] = make([]AntMove, ps.ALive)
+		ib, ie := 0, 0
+		for np := 0; np < ps.PLive; np++ {
+			ib, ie = ie, ie+len(ps.P[np].First[p[np]])
+			//log.Print("ip,np,P, ib,ie,ps.Alive:", ip, np, p[np], ib, ie, ps.ALive)
+			copy(move[ip][ib:ie], ps.P[np].First[p[np]])
+		}
+		//c2 := c.Copy()
+		_, dead := c.Resolve(move[ip])
+		for _, da := range dead {
+			for np := range ps.P {
+				if da.Player == np {
+					ps.P[np].Score[p[np]] -= 20
+				} else {
+					ps.P[np].Score[p[np]] += 10
+				}
+			}
+		}
+		c.Unresolve(move[ip])
+		if false && len(dead) > 0 {
+			log.Print("perm ", ip, ":", p, ": ", DumpMoves(move[ip]))
+			log.Print("DEAD: ", len(dead), ": ", DumpMoves(dead))
+		}
+
+		/*
+			 if same, diffs := CombatCheck(c, c2); !same {
+				log.Print("****************************** Unresolve unequal: ", diffs)
+			}
+		*/
+	}
+	log.Print("Score: ", ps.P[0].Score)
+	if Min(ps.P[0].Score[:]) != Max(ps.P[0].Score[:]) {
+		ms := Max(ps.P[0].Score[:])
+		for _, d := range Permute4(s.Rand) {
+			if ps.P[0].Score[d] == ms {
+				ps.P[0].Best = int(d)
+			}
+		}
+	} else {
+		ps.P[0].Best = int(InvalidMove)
+	}
+}
+
+// generate the list of permuted directions for n players
+func genPerm(n uint) [][]Direction {
+	nperm := uint(4) << (2 * (n - 1))
+	dl := make([]Direction, nperm*n)
+	out := make([][]Direction, nperm)
+	for i := uint(0); i < nperm; i++ {
+		for s := uint(0); s < n; s++ {
+			dl[i*n+s] = Direction((i >> (2 * s)) & 3)
+		}
+		out[i] = dl[i*n : (i+1)*n]
+	}
+
+	return out
 }

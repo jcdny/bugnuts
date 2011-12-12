@@ -26,7 +26,7 @@ func TPop() int64 {
 	LMark = LMark[:len(LMark)-1]
 	LStr = LStr[:len(LStr)-1]
 
-	log.Printf("%.2f %s", float64(diff)/1000000.0, s)
+	log.Printf("** %.2fms %s", float64(diff)/1000000.0, s)
 
 	return diff / 1000000
 }
@@ -39,7 +39,7 @@ func TMark(s string) int64 {
 	diff := mark - LMark[len(LMark)-1]
 	ts := LStr[len(LStr)-1]
 
-	log.Printf("%.2f %s: %s", float64(diff)/1000000.0, ts, s)
+	log.Printf("** %.2fms %s: %s", float64(diff)/1000000.0, ts, s)
 
 	return diff / 1000000
 }

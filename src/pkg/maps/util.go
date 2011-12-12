@@ -10,8 +10,8 @@ var PermStepD5 [4][6][5]Direction
 
 func init() {
 	permdstep := map[string][]string{
-		"ns": []string{"ew-", "e-w", "we-", "w-e", "-ew", "-we"},
-		"ew": []string{"ns-", "n-s", "sn-", "s-n", "-ns", "-sn"},
+		"ns": {"ew-", "we-", "-ew", "-we", "e-w", "w-e"},
+		"ew": {"ns-", "sn-", "-ns", "-sn", "n-s", "s-n"},
 	}
 	for k, v := range permdstep {
 		da := ByteToDirection[k[0]]
@@ -57,7 +57,6 @@ func PointsToOffsets(pv []Point, cols int) Offsets {
 		out.L[i] = Location(p.R*cols + p.C)
 	}
 	out.R = uint8(R)
-	out.cacheL = make(map[Location][]Location, 4*(R*cols-R*R))
 	return out
 }
 

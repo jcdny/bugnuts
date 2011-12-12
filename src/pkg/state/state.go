@@ -61,6 +61,10 @@ func NewState(g *GameInfo) *State {
 	s.ViewMask = MakeMask(s.ViewRadius2, s.Rows, s.Cols)
 	s.AttackMask = MakeMask(s.AttackRadius2, s.Rows, s.Cols)
 
+	// Populate calculated locations caches.
+	m.OffsetsCachePopulateAll(s.ViewMask)
+	m.OffsetsCachePopulateAll(s.AttackMask)
+
 	// From every point on the map we know nothing.
 	for i := range s.Met.Unknown {
 		s.Met.Unknown[i] = len(s.ViewMask.P)

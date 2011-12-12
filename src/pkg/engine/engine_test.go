@@ -44,21 +44,28 @@ func TestEngine(t *testing.T) {
 	}
 }
 
+func getMatch(file string) (match *replay.Match, m *maps.Map, vm, am *maps.Mask) {
+	var err os.Error
+	match, err = replay.Load(file)
+	if err != nil || match == nil {
+		log.Panic("Error loading replay", file, ":", err)
+	}
+	m = match.GetMap()
+	gi := &match.GameInfo
+	vm = maps.MakeMask(gi.ViewRadius2, gi.Rows, gi.Cols)
+	am = maps.MakeMask(gi.AttackRadius2, gi.Rows, gi.Cols)
+	m.OffsetsCachePopulateAll(vm)
+	m.OffsetsCachePopulateAll(am)
+
+	return
+}
+
 // BenchmarkEngine times turn generation for a replay file.
 func BenchmarkEngine(b *testing.B) {
-
-	match, err := replay.Load("testdata/0.replay")
-	if err != nil || match == nil {
-		log.Panicf("Error loading replay: %v", err)
-	}
-
-	m := match.GetMap()
-	gi := &match.GameInfo
-	vm := maps.MakeMask(gi.ViewRadius2, gi.Rows, gi.Cols)
-	am := maps.MakeMask(gi.AttackRadius2, gi.Rows, gi.Cols)
+	match, m, vm, am := getMatch("testdata/0.replay")
 
 	for i := 0; i < b.N; i++ {
-		g := NewGameMasks(gi, m, vm, am)
+		g := NewGameMasks(&match.GameInfo, m, vm, am)
 		g.Replay(match.Replay, 0, match.GameLength, false)
 	}
 }
@@ -66,18 +73,10 @@ func BenchmarkEngine(b *testing.B) {
 // BenchmarkEngineOrdered times the generation in cannonical order to reproduce the 
 // python input files.
 func BenchmarkEngineOrdered(b *testing.B) {
-
-	match, err := replay.Load("testdata/0.replay")
-	if err != nil || match == nil {
-		log.Panicf("Error loading replay: %v", err)
-	}
-	m := match.GetMap()
-	gi := &match.GameInfo
-	vm := maps.MakeMask(gi.ViewRadius2, gi.Rows, gi.Cols)
-	am := maps.MakeMask(gi.AttackRadius2, gi.Rows, gi.Cols)
+	match, m, vm, am := getMatch("testdata/0.replay")
 
 	for i := 0; i < b.N; i++ {
-		g := NewGameMasks(gi, m, vm, am)
+		g := NewGameMasks(&match.GameInfo, m, vm, am)
 		g.Replay(match.Replay, 0, match.GameLength, true)
 	}
 }

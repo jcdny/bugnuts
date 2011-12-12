@@ -1,11 +1,7 @@
 include $(GOROOT)/src/Make.inc
 
-TARG=bugnuts/combat
+TARG=bugnuts/bench
 GOFILES=\
-	arena.go\
-	combat.go\
-	moves.go\
-	partition.go\
-
+	bench.go
 
 include $(GOROOT)/src/Make.pkg
