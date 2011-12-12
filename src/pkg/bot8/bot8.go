@@ -14,7 +14,6 @@ import (
 	. "bugnuts/debug"
 	. "bugnuts/pathing"
 	. "bugnuts/viz"
-	. "bugnuts/combat"
 	. "bugnuts/game"
 )
 
@@ -330,7 +329,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	}
 
 	// Lets combat a bit.
-	ap, pmap := CombatPartition(s.Ants, s.Map)
+	ap, pmap := s.C.Partition(s.Ants)
 	// Now visualize the frenemies.
 	if Viz["combat"] {
 		VizFrenemies(s, ap, pmap)
@@ -340,7 +339,8 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	s.EmitMoves(endants)
 
 	Visualize(s)
-	fmt.Fprintf(os.Stdout, "go\n") // TODO Flush ??
+
+	s.TurnDone()
 
 	return nil
 }

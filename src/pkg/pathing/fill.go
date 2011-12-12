@@ -219,9 +219,18 @@ func (f *Fill) MapFill(origin map[Location]int, pri uint16) (*Fill, int, uint16)
 // Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
 // use origin map value
 func (f *Fill) MapFillSeed(origin map[Location]int, pri uint16) (*Fill, int, uint16) {
+	return f.MapFillSeedMD(origin, pri, 0)
+}
+
+// Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise
+// use origin map value
+func (f *Fill) MapFillSeedMD(origin map[Location]int, pri, maxDepth uint16) (*Fill, int, uint16) {
 	f.Seed = make([]Location, len(f.Depth))
 	m := f.Map
 	q := make([]Location, 0, 200+len(origin)*2)
+	if maxDepth == 0 {
+		maxDepth = 65535
+	}
 
 	for loc, opri := range origin {
 		// log.Printf("Q loc %v pri %d", f.ToPoint(loc), pri)
@@ -242,6 +251,9 @@ func (f *Fill) MapFillSeed(origin map[Location]int, pri uint16) (*Fill, int, uin
 		Depth := f.Depth[loc]
 		Seed := f.Seed[loc]
 		newDepth = Depth + 1
+		if newDepth > maxDepth {
+			break
+		}
 
 		for i := 0; i < 4; i++ {
 			floc := m.LocStep[loc][i]

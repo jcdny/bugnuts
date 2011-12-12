@@ -4,7 +4,9 @@ TARG=bugnuts/combat
 GOFILES=\
 	arena.go\
 	combat.go\
+	monte.go\
 	moves.go\
+	threat.go\
 	partition.go\
 
 

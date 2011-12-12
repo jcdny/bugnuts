@@ -9,17 +9,21 @@ import (
 	. "bugnuts/pathing"
 )
 
+const PDist = 7  // MAGIC -- enemy max distance for partition
+const FPDist = 3 // MAGIC -- friendly distance to pull into partition
+
 type AntPartition struct {
-	Ants map[Location]struct{}
+	Ants []Location
 	PS   *PartitionState
 }
 
 type Partitions map[Location]*AntPartition
-type PartitionMap map[Location][]Location
+// PartitionMap maps an ant to the partitions it belongs to
+type PartitionMap map[Location]map[Location]struct{}
 
 func NewAntPartition() *AntPartition {
 	p := &AntPartition{
-		Ants: make(map[Location]struct{}, 8),
+		Ants: make([]Location, 0, 8),
 	}
 	return p
 }
@@ -40,7 +44,17 @@ type PlayerState struct {
 	Best  int
 }
 
-func CombatPartition(Ants []map[Location]int, m *Map) (Partitions, PartitionMap) {
+func (pmap *PartitionMap) Add(from, to Location) {
+	pm, ok := (*pmap)[from]
+	if !ok {
+		pm = make(map[Location]struct{}, 8)
+		(*pmap)[from] = pm
+	}
+	// map a location to a partition
+	pm[to] = struct{}{}
+}
+
+func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 	// how many ants are there
 	nant := 0
 	for _, ants := range Ants {
@@ -53,70 +67,36 @@ func CombatPartition(Ants []map[Location]int, m *Map) (Partitions, PartitionMap)
 			origin[loc] = 1
 		}
 	}
-	f := NewFill(m)
+	f := NewFill(c.Map)
 	// will only find neighbors withing 2x8 steps.
 	_, near := f.MapFillSeedNN(origin, 1, 8)
 
+	c.PFill[0] = ThreatFill(c.Map, c.Threat1, c.PThreat1[0], 10, 0)
+
+	// the actual partitions
 	parts := make(Partitions, 5)
 	// maps an ant to the partitions it belongs to.
 	pmap := make(PartitionMap, nant)
 
 	for ploc := range Ants[0] {
+		// If the ant is not mapped to a partition
 		if _, ok := pmap[ploc]; !ok {
-			// for any of my ants not already in a partition
+			// Look at the nearby ants 
 			for eloc, nn := range near[ploc] {
-				if nn.Steps < 7 {
-					if _, ok := Ants[0][eloc]; !ok {
-						// a close enemy ant, add it and it's nearest neighbors to the partition
-
-						ap, ok := parts[ploc] // ap = a partition
-						if !ok {
-							ap = NewAntPartition()
-						}
-						parts[ploc] = ap
-
-						for nloc, nn := range near[eloc] {
-							if nn.Steps < 7 {
-								ap.Ants[nloc] = struct{}{}
-
-								pm, ok := pmap[nloc]
-								if !ok {
-									pm = make([]Location, 0, 8)
-								}
-								pmap[nloc] = append(pm, ploc)
-							}
-						}
-						pm, ok := pmap[eloc]
-						if !ok {
-							pm = make([]Location, 0, 8)
-						}
-
-						pmap[eloc] = append(pm, ploc)
-						ap.Ants[eloc] = struct{}{}
+				if nn.Steps < PDist && c.PlayerMap[eloc] != 0 {
+					// a close enemy an, create a partition if needed
+					ap, ok := parts[ploc] // ap = a partition
+					if !ok {
+						ap = NewAntPartition()
+						pmap.Add(ploc, ploc)
 					}
-				}
-			}
-		}
+					parts[ploc] = ap
 
-		if ap, ok := parts[ploc]; ok {
-			// If we created a partition centered on this ant add any
-			// close neighbors of the friendly ants already in the
-			// partition
-			for loc := range ap.Ants {
-				if _, ok := Ants[0][loc]; ok {
-					// one of our friendly ants, add any close neigbors of our friendly guy
-					for nloc, nn := range near[loc] {
-						if nn.Steps < 2 {
-							_, me := Ants[0][nloc]
-							_, in := ap.Ants[nloc]
-							if me && !in {
-								ap.Ants[nloc] = struct{}{}
-								pm, ok := pmap[nloc]
-								if !ok {
-									pm = make([]Location, 0, 8)
-								}
-								pmap[nloc] = append(pm, ploc)
-							}
+					// add the enemy and any of it's neighbors
+					pmap.Add(eloc, ploc)
+					for nloc, nn := range near[eloc] {
+						if nn.Steps < PDist {
+							pmap.Add(nloc, ploc)
 						}
 					}
 				}
@@ -124,18 +104,38 @@ func CombatPartition(Ants []map[Location]int, m *Map) (Partitions, PartitionMap)
 		}
 	}
 
-	/*
-		for loc := range enemy {
-			for floc, nn := range near[loc] {
-				if nn.Steps < 6 {
-					if _, ok := Ants[0][floc]; !ok {
-						// a close not me ant
-						enemy[floc] = 0
+	// invert pmap to generate ap members
+	for aloc := range pmap {
+		for ploc := range pmap[aloc] {
+			parts[ploc].Ants = append(parts[ploc].Ants, aloc)
+		}
+	}
+
+	// For each partition, grow ours adding friendly neighbors of ants
+	// already in the partition
+	for ploc, ap := range parts {
+		for _, loc := range ap.Ants {
+			if c.PlayerMap[loc] == 0 {
+				// one of our ants
+				for nloc, nn := range near[loc] {
+					// Add our nearby ants which are not already in the partition
+					if nn.Steps < FPDist && c.PlayerMap[nloc] == 0 {
+						if _, in := pmap[nloc][ploc]; !in {
+							pmap.Add(ploc, nloc)
+							ap.Ants = append(ap.Ants, nloc)
+						}
 					}
 				}
 			}
 		}
-	*/
+	}
+
+	// Now disolve partitions which are 1-1
+	for ploc, ap := range parts {
+		if len(ap.Ants) == 2 {
+			parts[ploc] = &AntPartition{}, false
+		}
+	}
 
 	return parts, pmap
 }
@@ -147,14 +147,14 @@ func NewPartitionState(c *Combat, ap *AntPartition) *PartitionState {
 	players := make([]int, MaxPlayers)
 	playermap := make([]int, MaxPlayers)
 
-	for loc := range ap.Ants {
+	for i, loc := range ap.Ants {
 		if c.PlayerMap[loc] > -1 {
 			players[c.PlayerMap[loc]]++
 			ps.ALive++
 		} else {
 			log.Print("Invalid ap player loc %v removing it", c.ToPoint(loc))
 			log.Print(ap, c.PlayerMap[loc])
-			ap.Ants[loc] = struct{}{}, false
+			copy(ap.Ants[i:len(ap.Ants)-1], ap.Ants[i+1:])
 		}
 	}
 
@@ -166,6 +166,7 @@ func NewPartitionState(c *Combat, ap *AntPartition) *PartitionState {
 			playermap[i] = -1
 		}
 	}
+
 	// sanity
 	if ps.PLive < 2 {
 		log.Panic("Partition with less than 2 players")
@@ -174,7 +175,7 @@ func NewPartitionState(c *Combat, ap *AntPartition) *PartitionState {
 
 	// Populate the actual player states
 	ps.P = make([]PlayerState, ps.PLive)
-	for loc := range ap.Ants {
+	for _, loc := range ap.Ants {
 		np := c.PlayerMap[loc]
 		if np > -1 {
 			if players[np] > 0 {
