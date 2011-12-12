@@ -109,6 +109,7 @@ func mapMeBaby(name string) *Map {
 		file = name
 	}
 	m, err := MapLoadFile(file)
+	copy(m.TGrid, m.Grid)
 	if m == nil || err != nil {
 		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
 	}
@@ -119,21 +120,36 @@ func mapMeBaby(name string) *Map {
 var benchMap string = "mmaze_05p_01"
 
 func BenchmarkTile0(b *testing.B) {
+	b.StopTimer()
 	m := mapMeBaby(benchMap)
+	s := m.NewSymData(0)
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		m.Tile(0)
+		for loc := range m.Grid {
+			s.Update(Location(loc))
+		}
 	}
 }
 func BenchmarkTile4(b *testing.B) {
+	b.StopTimer()
 	m := mapMeBaby(benchMap)
+	s := m.NewSymData(4)
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		m.Tile(4)
+		for loc := range m.Grid {
+			s.Update(Location(loc))
+		}
 	}
 }
 func BenchmarkTile8(b *testing.B) {
+	b.StopTimer()
 	m := mapMeBaby(benchMap)
+	s := m.NewSymData(8)
+	b.StartTimer()
 	for i := 0; i < b.N; i++ {
-		m.Tile(8)
+		for loc := range m.Grid {
+			s.Update(Location(loc))
+		}
 	}
 }
 

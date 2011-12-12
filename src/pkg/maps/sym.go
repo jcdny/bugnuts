@@ -27,6 +27,7 @@ type SymTile struct {
 
 type SymData struct {
 	*Map                         // The associated map for the Symmetry data.
+	Offsets                      // The offsets cache
 	MinBits uint8                // Ignore hashes with less than MinBits bits of different info
 	NLen    [16]int              // Number of equiv group for a given N
 	MinHash []SymHash            // Sym data for a given point.
@@ -36,6 +37,7 @@ type SymData struct {
 
 // The bit shuffle for the 8 symmetries a SYMNxSYMN neighborhood
 var symMask [SYMN * SYMN][8]SymHash
+var symPointOffsets []Point
 
 // Map {r, c} -> {r*rr + c*cr, c*cc+ r*rc}
 type symOffsets struct {
@@ -113,6 +115,16 @@ func init() {
 			}
 		}
 	}
+
+	// populate and cache the Offseterator
+	symPointOffsets = make([]Point, SYMN*SYMN)
+	i := 0
+	for r := -SYMN / 2; r < (SYMN+1)/2; r++ {
+		for c := -SYMN / 2; c < (SYMN+1)/2; c++ {
+			symPointOffsets[i] = Point{R: r, C: c}
+			i++
+		}
+	}
 }
 
 func (m *Map) NewSymData(minBits uint8) *SymData {
@@ -124,6 +136,9 @@ func (m *Map) NewSymData(minBits uint8) *SymData {
 		Tiles:   make(map[SymHash]*SymTile, m.Size()/4),
 	}
 	s.NLen[0] = s.Size()
+	s.Offsets = PointsToOffsets(symPointOffsets, m.Cols)
+	// Don't prepopulate since it's not used much....
+	// s.offsetsCachePopulate(&s.Offsets)
 
 	return &s
 }
@@ -250,7 +265,8 @@ func (s *SymData) SymCompute(loc Location) (SymHash, *[8]SymHash, uint8, uint8) 
 	nl := loc
 	N := SYMN / 2
 	bits := 0
-	// TODO this could be a lot faster.
+	g := s.TGrid
+	// TODO this might be faster...
 	// TODO also might be worth discarding all land tiles quickly
 	for r := -N; r < N+1; r++ {
 		for c := -N; c < N+1; c++ {
@@ -260,11 +276,11 @@ func (s *SymData) SymCompute(loc Location) (SymHash, *[8]SymHash, uint8, uint8) 
 				nl = loc + Location(r*s.Cols+c)
 			}
 
-			if s.Grid[nl] == UNKNOWN {
+			if g[nl] == UNKNOWN {
 				return -1, nil, SYMNONE, 0
 			}
 
-			if s.Grid[nl] == WATER {
+			if g[nl] == WATER {
 				bits++
 				for rot, mask := range symMask[i] {
 					id[rot] ^= mask
@@ -277,6 +293,47 @@ func (s *SymData) SymCompute(loc Location) (SymHash, *[8]SymHash, uint8, uint8) 
 		bits = SYMN*SYMN - bits
 	}
 
+	self := 0
+	for i := 1; i < 8; i++ {
+		if id[0] == id[i] {
+			self++
+		}
+	}
+
+	return minSymHash(&id), &id, uint8(bits), uint8(self)
+}
+
+// Compute the minhash for a given location, returning the bits of data, the minHash and all
+// 8 hashes.  It returns (0, -1, nil) in the event it encounters an unknown tile...
+// This is slower than the version above...
+func (s *SymData) slowSymCompute(loc Location) (SymHash, *[8]SymHash, uint8, uint8) {
+	id := [8]SymHash{}
+
+	i := 0
+	bits := 0
+	g := s.TGrid
+	s.ApplyOffsetsBreak(loc, &s.Offsets, func(nl Location) bool {
+		if g[nl] == UNKNOWN {
+			bits = -1
+			return false
+		}
+		if g[nl] == WATER {
+			bits++
+			for rot, mask := range symMask[i] {
+				id[rot] ^= mask
+			}
+		}
+		i++
+		return true
+	})
+
+	if bits < 0 {
+		return -1, nil, SYMNONE, 0
+	}
+
+	if bits > (SYMN*SYMN)/2 {
+		bits = SYMN*SYMN - bits
+	}
 	self := 0
 	for i := 1; i < 8; i++ {
 		if id[0] == id[i] {

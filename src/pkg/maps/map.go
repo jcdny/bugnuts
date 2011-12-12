@@ -164,7 +164,7 @@ func MapValidate(ref *Map, gen *Map) (int, string) {
 			ref.Rows, ref.Cols, gen.Rows, gen.Cols)
 		count++
 	} else {
-		for i, item := range gen.Grid {
+		for i, item := range gen.TGrid {
 			if item != UNKNOWN && item != ref.Grid[i] &&
 				(item == WATER || ref.Grid[i] == WATER ||
 					item.IsHill() != gen.Grid[i].IsHill()) {
