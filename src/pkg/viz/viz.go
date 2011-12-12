@@ -24,6 +24,7 @@ var Viz = map[string]bool{
 	"monte":   false,
 	"sym":     false,
 	"combat":  false,
+	"tborder": false,
 }
 
 func SetViz(vizList string, Viz map[string]bool) {
@@ -115,6 +116,15 @@ func Visualize(s *State) {
 			}
 		}
 		sfc(cBlack, 1.0)
+	}
+
+	if Viz["tborder"] {
+		slc(cRed, 1.0)
+		for _, loc := range ThreatBorder(s.C.Map, s.C.Threat1, s.C.PThreat1[0], 0) {
+			p := s.ToPoint(Location(loc))
+			fmt.Fprintf(os.Stdout, "v tb %d %d MM\n", p.R, p.C)
+		}
+		slc(cBlack, 1.0)
 	}
 
 	if Viz["vcount"] {
@@ -232,10 +242,10 @@ func vizCircle(p Point, r float64, fill bool) {
 		p.R, p.C, r, fill)
 }
 
-func VizFrenemies(s *State, ap Partitions, pmap map[Location][]Location) {
+func VizFrenemies(s *State, ap Partitions, pmap map[Location]map[Location]struct{}) {
 	i := 0
 	for ploc, p := range ap {
-		for loc := range p.Ants {
+		for _, loc := range p.Ants {
 			//log.Printf("ploc %v loc %v pmap %v", ploc, loc, pmap[loc])
 			slc(qual6[i%6], 1)
 			p := s.ToPoint(loc)
@@ -243,7 +253,7 @@ func VizFrenemies(s *State, ap Partitions, pmap map[Location][]Location) {
 				sfc(qual6[i%6], .5)
 				vizCircle(p, 1, true)
 				sfc(cWhite, 1)
-			} else if pmap[loc][0] == ploc {
+			} else {
 				vizCircle(p, 1, false)
 			}
 			pp := s.ToPoint(ploc)
