@@ -68,7 +68,7 @@ func (s *State) GenerateAnts(tset *TargetSet, riskOff bool) (ants map[Location]*
 
 // Stores the neighborhood of the ant.
 func (s *State) Neighborhood(loc Location, nh *Neighborhood, d Direction) {
-	nh.Threat = s.C.PThreat[0][loc]
+	nh.Threat = s.C.Threat1[loc] - s.C.PThreat1[0][loc]
 	//nh.PrThreat = s.C.PrThreat[loc]
 	nh.PrFood = s.Met.PrFood[loc]
 	nh.D = d
@@ -113,7 +113,7 @@ func (s *State) AntStep(loc Location, riskOff bool) *AntStep {
 	if riskOff {
 		// Risk Off so decrement threat.
 		for i := 0; i < 5; i++ {
-			as.N[i].Threat -= 3
+			as.N[i].Threat -= 3 // MAGIC
 			if as.N[i].Threat <= 0 {
 				as.N[i].Threat = 0
 				as.N[i].PrThreat = 0
