@@ -17,10 +17,11 @@ type Combat struct {
 	AttackMask *Mask
 	PlayerMap  []int
 	AntCount   []int
-	Threat     []int
-	PThreat    [][]int
-	Threat1    []int
-	PThreat1   [][]int
+	Threat     []int   // Global threat
+	PThreat    [][]int // Player's Own Threat
+	Threat1    []int   // One Step Threat
+	PThreat1   [][]int // Player's one step threat
+	PThreat1Pr []int   // one step threat prob (only computed for player 0)
 }
 
 var _minusone [MAXMAPSIZE]int
@@ -40,12 +41,17 @@ func NewCombat(m *Map, am *Mask, np int) *Combat {
 		AntCount:   make([]int, m.Size()),
 		Threat:     make([]int, m.Size()),
 		PThreat:    make([][]int, np),
+		Threat1:    make([]int, m.Size()), //
+		PThreat1:   make([][]int, np),
+		PThreat1Pr: make([]int, m.Size()),
 	}
 	copy(c.PlayerMap, _minusone[:len(c.PlayerMap)])
 
 	return c
 }
 
+// Copy a Combat struct.  This does not copy 1 step threat and other single ant
+// metrics.
 func (c *Combat) Copy() *Combat {
 	cc := NewCombat(c.Map, c.AttackMask, len(c.PThreat))
 	copy(cc.PlayerMap, c.PlayerMap)
@@ -89,6 +95,7 @@ func (c *Combat) Reset() {
 	copy(c.Threat, _zero[:len(c.AntCount)])
 	for i := range c.PThreat {
 		copy(c.PThreat[i], _zero[:len(c.PThreat[i])])
+		copy(c.PThreat1[i], _zero[:len(c.PThreat[i])])
 	}
 }
 
@@ -99,6 +106,7 @@ func (c *Combat) Setup(ants []map[Location]int) {
 	for np := range ants {
 		if len(ants[np]) > 0 && len(c.PThreat[np]) == 0 {
 			c.PThreat[np] = make([]int, c.Map.Size())
+			c.PThreat1[np] = make([]int, c.Map.Size())
 		}
 		for loc := range ants[np] {
 			c.AddAnt(np, loc, dead)
@@ -124,6 +132,7 @@ func (c *Combat) SetupReplay(ants [][]AntMove) (moves, spawn []AntMove) {
 	for np := range ants {
 		if len(c.PThreat[np]) == 0 {
 			c.PThreat[np] = make([]int, c.Map.Size())
+			c.PThreat1[np] = make([]int, c.Map.Size())
 		}
 		for i := range ants[np] {
 			// ants from from > -1 and to == -1 are ants that died in the 
@@ -171,6 +180,13 @@ func (c *Combat) AddAnt(np int, loc Location, dead []PlayerLoc) {
 		c.ApplyOffsets(loc, &c.AttackMask.Offsets, func(nloc Location) {
 			c.Threat[nloc] += inc
 			c.PThreat[tp][nloc] += inc
+			c.Threat1[nloc] += inc
+			c.PThreat1[tp][nloc] += inc
+		})
+
+		c.ApplyOffsets(loc, &c.AttackMask.MM[c.Map.FreedomKey(loc)].Add, func(nloc Location) {
+			c.Threat1[nloc] += inc
+			c.PThreat1[tp][nloc] += inc
 		})
 	}
 

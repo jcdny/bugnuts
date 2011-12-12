@@ -140,7 +140,7 @@ func CombatPartition(Ants []map[Location]int, m *Map) (Partitions, PartitionMap)
 	return parts, pmap
 }
 
-// PartitionMoves creates the move list and player states
+// NewPartitionState creates the move list and player states
 func NewPartitionState(c *Combat, ap *AntPartition) *PartitionState {
 	ps := &PartitionState{}
 
@@ -152,7 +152,9 @@ func NewPartitionState(c *Combat, ap *AntPartition) *PartitionState {
 			players[c.PlayerMap[loc]]++
 			ps.ALive++
 		} else {
-			log.Panicf("Invalid ap player loc %v", c.ToPoint(loc))
+			log.Print("Invalid ap player loc %v removing it", c.ToPoint(loc))
+			log.Print(ap, c.PlayerMap[loc])
+			ap.Ants[loc] = struct{}{}, false
 		}
 	}
 
