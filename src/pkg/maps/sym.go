@@ -305,7 +305,7 @@ func (s *SymData) SymCompute(loc Location) (SymHash, *[8]SymHash, uint8, uint8) 
 
 // Compute the minhash for a given location, returning the bits of data, the minHash and all
 // 8 hashes.  It returns (0, -1, nil) in the event it encounters an unknown tile...
-// This is slower than the version above...
+// This is slower than the version above although I find it surprising that it is...
 func (s *SymData) slowSymCompute(loc Location) (SymHash, *[8]SymHash, uint8, uint8) {
 	id := [8]SymHash{}
 
@@ -395,6 +395,33 @@ func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point, []Location
 		}
 	}
 
+	if s.Rows == s.Cols {
+		found := make([]uint8, 0, 3)
+		orig := Point{0, 0}
+		for i, l1 := range llist {
+			for _, l2 := range llist[i+1:] {
+				//log.Printf("\n%#v\n%#v", s.Hashes[l1], s.Hashes[l2])
+				if s.Hashes[l1][0] == s.Hashes[l2][SYMROT90] {
+					log.Print("Rot90", s.ToPoint(l1), s.ToPoint(l2))
+					found = append(found, SYMROT90)
+				}
+				if s.Hashes[l1][0] == s.Hashes[l2][SYMROT180] {
+					log.Print("Rot180", s.ToPoint(l1), s.ToPoint(l2))
+					orig.C = s.Mirror(l1, l2, 1)
+					orig.R = s.Mirror(l1, l2, 0)
+					found = append(found, SYMROT180)
+				}
+				if s.Hashes[l1][0] == s.Hashes[l2][SYMROT270] {
+					log.Print("Rot270", s.ToPoint(l1), s.ToPoint(l2))
+					found = append(found, SYMROT270)
+				}
+			}
+		}
+		if len(found) > 1 {
+			return found, orig, Point{}, []Location{}
+		}
+	}
+
 	// Test for mirroring
 	found := make([]uint8, 0, 3)
 	orig := Point{0, 0}
@@ -402,14 +429,17 @@ func (s *SymData) SymAnalyze(minhash SymHash) ([]uint8, Point, Point, []Location
 		for _, l2 := range llist[i+1:] {
 			//log.Printf("\n%#v\n%#v", s.Hashes[l1], s.Hashes[l2])
 			if s.Hashes[l1][0] == s.Hashes[l2][SYMMIRRORC] {
+				log.Print("MirrorC", s.ToPoint(l1), s.ToPoint(l2))
 				orig.C = s.Mirror(l1, l2, 1)
 				found = append(found, SYMMIRRORC)
 			}
 			if s.Hashes[l1][0] == s.Hashes[l2][SYMMIRRORR] {
+				log.Print("MirrorR", s.ToPoint(l1), s.ToPoint(l2))
 				orig.R = s.Mirror(l1, l2, 0)
 				found = append(found, SYMMIRRORR)
 			}
 			if s.Hashes[l1][0] == s.Hashes[l2][SYMROT180] {
+				log.Print("Rot180", s.ToPoint(l1), s.ToPoint(l2))
 				orig.C = s.Mirror(l1, l2, 1)
 				orig.R = s.Mirror(l1, l2, 0)
 				found = append(found, SYMROT180)

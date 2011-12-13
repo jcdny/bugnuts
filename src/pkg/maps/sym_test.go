@@ -5,6 +5,7 @@ import (
 	"log"
 	"fmt"
 	. "bugnuts/torus"
+	. "bugnuts/util"
 )
 
 func TestShiftReduce(t *testing.T) {
@@ -157,14 +158,17 @@ func TestSym(t *testing.T) {
 	//AllMaps := []string{"random_walk_10p_02"}
 	//AllMaps := []string{"maze_04p_02"}
 	//AllMaps := []string{"../crazy"}
-	AllMaps := []string{"cell_maze_p06_01"}
+	//AllMaps := []string{"cell_maze_p06_01"}
+	AllMaps := []string{"maze_p04_02"}
 	for _, name := range AllMaps {
 		log.Printf("***************************  %s ***************************************************", name)
 		m := mapMeBaby(name)
 		if m == nil {
 			t.Error("Map nil")
 		}
+		TPush("Tile " + name)
 		sym := m.Tile(0)
+		TPop()
 		if sym == nil {
 			t.Error("Sym nil")
 		}
@@ -174,11 +178,11 @@ func TestSym(t *testing.T) {
 		if len(sym.Tiles) > 0 {
 			done := 0
 			for minhash, tile := range sym.Tiles {
-				if done < 20 && len(tile.Locs) < 20 {
+				if done < 2 && len(tile.Locs) < 20 {
 					sf, p1, p2, _ := sym.SymAnalyze(minhash)
 					if true {
 						done++
-						log.Printf("Analyze: %v %v %v bits %d self %d: len %d, ex: %v", sf, p1, p2, tile.Bits, tile.Self, len(tile.Locs), m.ToPoints(tile.Locs)[0])
+						log.Printf("Analyze: %v %v %v bits %d self %d: len %d, ex: %v", sf, p1, p2, tile.Bits, tile.Self, len(tile.Locs), m.ToPoints(tile.Locs)[:4])
 						//sym.symdump(minhash, m)
 					}
 				}
