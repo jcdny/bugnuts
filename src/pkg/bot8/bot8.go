@@ -190,10 +190,6 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 							// and it needs to be a step we can take
 							if ant.N[i].Safest {
 								good = true
-							} else if ant.N[i].Threat < 2 && seg.Steps < 20 &&
-								(tgt.Item == DEFEND || tgt.Item.IsHill()) {
-								good = true
-								ant.N[i].Threat = 0 // TODO HACK!
 							}
 						}
 					}
@@ -334,8 +330,8 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	if Viz["combat"] {
 		VizFrenemies(s, ap, pmap)
 	}
+	s.C.Risk = s.C.Riskly(s.Ants)
 	s.C.Run(endants, ap, pmap, s.Cutoff, s.Rand)
-
 	s.EmitMoves(endants)
 
 	Visualize(s)
