@@ -4,6 +4,7 @@ import (
 	"testing"
 	"math"
 	"rand"
+	"log"
 )
 
 type Lists struct {
@@ -51,4 +52,9 @@ func BenchmarkMin(b *testing.B) {
 	for i := 0; i < b.N; i++ {
 		Min(L)
 	}
+}
+
+func TestP(t *testing.T) {
+	p := Permutations(2, 4)
+	log.Print(p)
 }
