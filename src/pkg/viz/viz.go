@@ -25,6 +25,7 @@ var Viz = map[string]bool{
 	"sym":     false,
 	"combat":  false,
 	"tborder": false,
+	"risk":    false,
 }
 
 func SetViz(vizList string, Viz map[string]bool) {
@@ -124,6 +125,23 @@ func Visualize(s *State) {
 			p := s.ToPoint(Location(loc))
 			fmt.Fprintf(os.Stdout, "v tb %d %d MM\n", p.R, p.C)
 		}
+		slc(cBlack, 1.0)
+	}
+
+	if Viz["risk"] {
+		rm := RiskMark(s.Map, &s.AttackMask.Offsets, s.Ants, s.C.Ants1, s.C.Threat1, s.C.PThreat1)
+		for r := 0; r < MaxRiskStat; r++ {
+			slc(risk[r], .8)
+			for np := range rm {
+				for loc, rs := range rm[np] {
+					if r == rs {
+						p := s.ToPoint(Location(loc))
+						fmt.Fprintf(os.Stdout, "v tb %d %d MM\n", p.R, p.C)
+					}
+				}
+			}
+		}
+
 		slc(cBlack, 1.0)
 	}
 
