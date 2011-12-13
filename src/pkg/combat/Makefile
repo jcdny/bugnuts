@@ -6,8 +6,12 @@ GOFILES=\
 	combat.go\
 	monte.go\
 	moves.go\
-	threat.go\
+	moverisk.go\
 	partition.go\
+	playermask.go\
+	score.go\
+	threat.go\
+
 
 
 include $(GOROOT)/src/Make.pkg

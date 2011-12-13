@@ -17,10 +17,12 @@ type Combat struct {
 	AntCount   []int
 	Threat     []int   // Global threat
 	PThreat    [][]int // Player's Own Threat
+	Ants1      []int   // bitmask of possible ants
 	Threat1    []int   // One Step Threat
 	PThreat1   [][]int // Player's one step threat
 	PThreat1Pr []int   // one step threat prob (only computed for player 0)
 	PFill      []*Fill // Distance to Threat1 surface
+	Risk       []map[Location]int
 }
 
 var _minusone [MAXMAPSIZE]int
@@ -40,6 +42,7 @@ func NewCombat(m *Map, am *Mask, np int) *Combat {
 		AntCount:   make([]int, m.Size()),
 		Threat:     make([]int, m.Size()),
 		PThreat:    make([][]int, np),
+		Ants1:      make([]int, m.Size()), //
 		Threat1:    make([]int, m.Size()), //
 		PThreat1:   make([][]int, np),
 		PThreat1Pr: make([]int, m.Size()),
@@ -91,10 +94,24 @@ func CombatCheck(c, c2 *Combat) (equal bool, diffs map[string]struct{}) {
 func (c *Combat) Reset() {
 	copy(c.PlayerMap, _minusone[:len(c.PlayerMap)])
 	copy(c.AntCount, _zero[:len(c.AntCount)])
-	copy(c.Threat, _zero[:len(c.AntCount)])
+	copy(c.Threat, _zero[:len(c.Threat)])
+	copy(c.Ants1, _zero[:len(c.Ants1)])
+	copy(c.Threat1, _zero[:len(c.Threat1)])
 	for i := range c.PThreat {
 		copy(c.PThreat[i], _zero[:len(c.PThreat[i])])
 		copy(c.PThreat1[i], _zero[:len(c.PThreat[i])])
+	}
+}
+
+func (c *Combat) ResetAlloc() {
+	copy(c.PlayerMap, _minusone[:len(c.PlayerMap)])
+	c.AntCount = make([]int, len(c.AntCount))
+	c.Threat = make([]int, len(c.Threat))
+	c.Ants1 = make([]int, len(c.Threat1))
+	c.Threat1 = make([]int, len(c.Threat1))
+	for i := range c.PThreat {
+		c.PThreat[i] = make([]int, len(c.PThreat[i]))
+		c.PThreat1[i] = make([]int, len(c.PThreat1[i]))
 	}
 }
 
@@ -163,9 +180,11 @@ func (c *Combat) AddAnt(np int, loc Location, dead []PlayerLoc) {
 	tp := np // threat for player
 	if c.AntCount[loc] == 1 {
 		c.PlayerMap[loc] = np
+		c.Ants1[loc] |= PlayerFlag[np]
 	} else if c.AntCount[loc] == 2 {
 		inc = -1
 		tp = c.PlayerMap[loc] // need to remove the original players threat
+		c.Ants1[loc] &= PlayerMask[tp]
 		c.PlayerMap[loc] = -1
 		dead = append(dead, PlayerLoc{Loc: loc, Player: tp})
 		dead = append(dead, PlayerLoc{Loc: loc, Player: np})
@@ -181,7 +200,21 @@ func (c *Combat) AddAnt(np int, loc Location, dead []PlayerLoc) {
 			c.PThreat1[tp][nloc] += inc
 		})
 
-		c.ApplyOffsets(loc, &c.AttackMask.MM[c.Map.FreedomKey(loc)].Add, func(nloc Location) {
+		// Get the freedomkey and mask the player in to the permissible steps at the same time.
+		key := 0
+		for i := uint(0); i < 4; i++ {
+			l := c.Map.LocStep[loc][i]
+			if StepableItem[c.Map.Grid[l]] {
+				key += 1 << i
+				if inc > 0 {
+					c.Ants1[l] |= PlayerFlag[tp]
+				} else {
+					c.Ants1[l] &= PlayerMask[tp]
+				}
+			}
+		}
+
+		c.ApplyOffsets(loc, &c.AttackMask.MM[key].Add, func(nloc Location) {
 			c.Threat1[nloc] += inc
 			c.PThreat1[tp][nloc] += inc
 		})

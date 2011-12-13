@@ -7,6 +7,7 @@ import (
 	. "bugnuts/game"
 	. "bugnuts/torus"
 	. "bugnuts/pathing"
+	. "bugnuts/util"
 )
 
 const PDist = 7  // MAGIC -- enemy max distance for partition
@@ -38,9 +39,9 @@ type PlayerState struct {
 	Player int
 	Live   int
 	Moves  []AntMove
-	First  [4][]AntMove
+	First  [][]AntMove
 	// move scoring
-	Score [4]int
+	Score []int
 	Best  int
 }
 
@@ -70,8 +71,6 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 	f := NewFill(c.Map)
 	// will only find neighbors withing 2x8 steps.
 	_, near := f.MapFillSeedNN(origin, 1, 8)
-
-	c.PFill[0] = ThreatFill(c.Map, c.Threat1, c.PThreat1[0], 10, 0)
 
 	// the actual partitions
 	parts := make(Partitions, 5)
@@ -137,6 +136,12 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 		}
 	}
 
+	for i := 0; i < len(Ants); i++ {
+		if len(Ants[i]) > 0 {
+			c.PFill[i] = ThreatFill(c.Map, c.Threat1, c.PThreat1[i], 10, 0)
+		}
+	}
+
 	return parts, pmap
 }
 
@@ -195,6 +200,15 @@ func NewPartitionState(c *Combat, ap *AntPartition) *PartitionState {
 	return ps
 }
 
+func (ps *PlayerState) bestScore() (best []int) {
+	ms := Max(ps.Score[:])
+	for i, s := range ps.Score {
+		if s == ms {
+			best = append(best, i)
+		}
+	}
+	return
+}
 func DumpPartitionState(ps *PartitionState) string {
 	s := fmt.Sprintf("Players %d Ants %d: ", ps.PLive, ps.ALive)
 	for i := range ps.P {

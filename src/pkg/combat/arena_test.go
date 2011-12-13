@@ -12,6 +12,8 @@ import (
 var M *maps.Map
 var A *Arena
 
+var arenachatty = chatty
+
 func init() {
 	file := "../replay/testdata/replay.0.json"
 	match, err := replay.Load(file)
@@ -36,7 +38,7 @@ func TestArena(t *testing.T) {
 		m := match.Replay.GetMap()
 
 		a := NewArena(m, torus.Location(9*96+11))
-		if false {
+		if chatty {
 			log.Printf("Arena:\n%v", a)
 		}
 	}
@@ -70,7 +72,9 @@ func BenchmarkMonte(b *testing.B) {
 			s = 0
 		}
 	}
-	log.Printf("mean steps to exit %.2f exited %d Steps %d %d", float64(tn)/float64(n), n, tn, b.N)
+	if arenachatty {
+		log.Printf("mean steps to exit %.2f exited %d Steps %d %d", float64(tn)/float64(n), n, tn, b.N)
+	}
 }
 
 func BenchmarkMonteFull(b *testing.B) {
@@ -99,5 +103,7 @@ func BenchmarkMonteFull(b *testing.B) {
 			s = 0
 		}
 	}
-	log.Printf("mean steps to exit %.2f", float64(tn)/float64(n))
+	if arenachatty {
+		log.Printf("mean steps to exit %.2f", float64(tn)/float64(n))
+	}
 }
