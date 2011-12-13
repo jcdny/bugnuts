@@ -5,7 +5,7 @@ bot7.install: MyBot.install debug.install game.install maps.install parameters.i
 bot8.install: MyBot.install debug.install game.install maps.install parameters.install pathing.install state.install torus.install viz.install
 statbot.install: MyBot.install engine.install game.install parameters.install state.install
 MyBot.install: parameters.install state.install
-combat.install: game.install maps.install pathing.install torus.install util.install
+combat.install: debug.install game.install maps.install pathing.install torus.install util.install
 debug.install: watcher.install
 engine.install: combat.install game.install maps.install replay.install state.install torus.install util.install
 game.install: maps.install torus.install
