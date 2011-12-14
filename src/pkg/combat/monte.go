@@ -7,6 +7,7 @@ import (
 	. "bugnuts/maps"
 	. "bugnuts/game"
 	. "bugnuts/torus"
+	. "bugnuts/debug"
 )
 
 func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap PartitionMap, cutoff int64, rng *rand.Rand) {
@@ -29,7 +30,9 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 			}
 
 			// c.Sim(ap, ploc, t, rng)
-			log.Print("Scoring ", ploc)
+			if Debug[DBG_Combat] {
+				log.Print("Scoring ", ploc)
+			}
 			ap.PS.ComputeScore(c)
 
 		}
@@ -53,11 +56,15 @@ func setMoves(ants map[Location]*AntStep, part Partitions, rng *rand.Rand) {
 			} else {
 				ps.Best = best[0]
 			}
-			log.Print(ploc, " best state is ", ps.Best)
+			if Debug[DBG_Combat] {
+				log.Print(ploc, " best state is ", ps.Best)
+			}
 
 			if ps.Best != -1 {
 				for _, am := range ps.First[ps.Best] {
-					log.Print(am.From, " move is ", am)
+					if Debug[DBG_Combat] {
+						log.Print(am.From, " move is ", am)
+					}
 					mm[am.From] = am
 					mp[am.From] = ploc
 				}

@@ -41,5 +41,7 @@ func (ps *PartitionState) ComputeScore(c *Combat) {
 			log.Print("DEAD: ", len(dead), ": ", DumpMoves(dead))
 		}
 	}
-	log.Print("Score: ", ps.P[0].Score)
+	if Debug[DBG_Combat] {
+		log.Print("Score: ", ps.P[0].Score)
+	}
 }
