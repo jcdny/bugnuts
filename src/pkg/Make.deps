@@ -14,7 +14,7 @@ monte.install:
 parameters.install: maps.install
 pathing.install: debug.install maps.install torus.install util.install
 replay.install: game.install maps.install torus.install util.install
-state.install: combat.install debug.install game.install maps.install pathing.install torus.install util.install
+state.install: combat.install debug.install game.install maps.install pathing.install torus.install util.install watcher.install
 torus.install: util.install
 util.install:
 viz.install: combat.install maps.install pathing.install state.install torus.install util.install
