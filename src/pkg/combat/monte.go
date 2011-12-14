@@ -14,7 +14,7 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 	if len(part) == 0 {
 		return
 	}
-	budget := (cutoff - time.Nanoseconds()) / int64(len(part)) / 2
+	budget := (cutoff - time.Nanoseconds()) / (int64(len(part)) * 3 / 2)
 	// TODO prioritize partition resolution...
 	for {
 		for ploc, ap := range part {
@@ -34,7 +34,6 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 				log.Print("Scoring ", ploc)
 			}
 			ap.PS.ComputeScore(c)
-
 		}
 		break
 	}
@@ -47,7 +46,7 @@ func setMoves(ants map[Location]*AntStep, part Partitions, rng *rand.Rand) {
 	mp := make(map[Location]Location, 100)
 	for ploc, ap := range part {
 		// this can happen if we run out of time...
-		if ap.PS != nil {
+		if ap.PS != nil && len(ap.PS.P[0].Score) > 0 {
 			ps := &ap.PS.P[0]
 
 			best := ps.bestScore()

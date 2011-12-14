@@ -41,5 +41,5 @@ if [ -s tmp/test.err ]; then
     echo "WARNING: nonzero stderr `wc -l <$DEST/tmp/test.err` lines in $DEST/tmp/test.err"
 fi
 
-cd /tmp
-zip $DEST.zip $DEST/*.go && echo "$DEST.zip created"
+cd $DEST
+zip $DEST.zip *.go && echo "$DEST.zip created"
