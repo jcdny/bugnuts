@@ -52,7 +52,7 @@ OUT:
 		}
 	}
 
-	if Debug[DBG_PathIn] && WS.Watched(loc, -1, 0) {
+	if Debug[DBG_PathIn] && WS.Watched(loc, 0) {
 		log.Printf("step from %v to %v depth %d to %d, steps %d\n", f.ToPoint(start), f.ToPoint(loc), f.Depth[start], f.Depth[loc], steps)
 	}
 
@@ -101,7 +101,7 @@ OUT:
 		}
 	}
 
-	if Debug[DBG_PathIn] && WS.Watched(loc, -1, 0) {
+	if Debug[DBG_PathIn] && WS.Watched(loc, 0) {
 		log.Printf("step from %v to %v depth %d to %d, steps %d, str %s\n", f.ToPoint(start), f.ToPoint(loc), f.Depth[start], f.Depth[loc], steps, out)
 	}
 

@@ -9,6 +9,7 @@ import (
 	. "bugnuts/pathing"
 	. "bugnuts/game"
 	. "bugnuts/combat"
+	. "bugnuts/watcher"
 )
 
 const (
@@ -65,6 +66,7 @@ func (s *State) ProcessTurn(t *Turn) {
 	//log.Printf("s.Turn is ", s.Turn, " t.Turn is ", t.Turn)
 	s.ResetGrid()
 	s.Turn++
+	TurnSet(s.Turn) // for watches.
 	if t.Started > 0 {
 		s.Started = t.Started
 	} else {

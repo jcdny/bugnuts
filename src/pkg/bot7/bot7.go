@@ -198,7 +198,7 @@ func (bot *BotV7) DoTurn(s *State) os.Error {
 					}
 				}
 
-				if WS.Watched(ant.Source, s.Turn, 0) {
+				if WS.Watched(ant.Source, 0) {
 					for i := 0; i < 5; i++ {
 						log.Printf("TURN %d: %v -> %v (%s): \"%s\" steps %d: \"%s\":%#v",
 							s.Turn, s.ToPoint(ant.Source), s.ToPoint(s.Map.LocStep[seg.Src][ant.N[i].D]),
@@ -299,7 +299,7 @@ func (bot *BotV7) DoTurn(s *State) os.Error {
 				ant.Steps = append(ant.Steps, dh)
 				for d := Direction(0); d < 5; d++ {
 					ant.N[d].Goal = s.Met.FDownhill.DistanceStep(ant.Source, ant.N[d].D)
-					if WS.Watched(ant.Source, s.Turn, 0) {
+					if WS.Watched(ant.Source, 0) {
 						log.Printf("DOWNHILL: %v %s %#v", s.ToPoint(ant.Source), ant.N[d].D, ant.N[d])
 					}
 				}
@@ -310,7 +310,7 @@ func (bot *BotV7) DoTurn(s *State) os.Error {
 
 	s.GenerateMoves(endants)
 	for _, ant := range endants {
-		if WS.Watched(ant.Source, s.Turn, 0) {
+		if WS.Watched(ant.Source, 0) {
 			log.Printf("ANT: %#v", ant)
 			for d := Direction(0); d < 5; d++ {
 				log.Printf("MOVE: %v %s d:%s :: %#v", s.ToPoint(ant.Source), ant.Move, ant.N[d].D, ant.N[d])

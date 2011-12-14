@@ -121,7 +121,8 @@ func Visualize(s *State) {
 
 	if Viz["tborder"] {
 		slc(cRed, 1.0)
-		for _, loc := range ThreatBorder(s.C.Map, s.C.Threat1, s.C.PThreat1[0], 0) {
+		tb, _ := ThreatBorder(s.C.Map, s.C.Threat1, s.C.PThreat1[0], 0)
+		for _, loc := range tb {
 			p := s.ToPoint(Location(loc))
 			fmt.Fprintf(os.Stdout, "v tb %d %d MM\n", p.R, p.C)
 		}

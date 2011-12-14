@@ -23,6 +23,7 @@ const (
 )
 
 var Debug = make([]bool, maxDBG)
+
 var WS *Watches
 
 // DebugLevels are cumulative, but a 0 resets all to false and a -Level unsets.
@@ -31,6 +32,7 @@ var debugLevels = [][]int{
 	1: {DBG_TurnTime},
 	2: {DBG_Iterations, DBG_Symmetry},
 	3: {DBG_Targets, DBG_Threat},
+	4: {0, DBG_Movement},
 }
 
 func SetDebugLevel(dlev int) {

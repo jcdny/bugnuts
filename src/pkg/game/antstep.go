@@ -30,6 +30,7 @@ type AntStep struct {
 	N       []*Neighborhood
 	Foodp   bool
 	Goalp   bool
+	Combatp bool
 	Perm    int // to randomize ants when sorting
 	NFree   int
 }

@@ -118,10 +118,18 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 		VizTargets(s, tset)
 	}
 
+	// Lets combat a bit.
+	ap, pmap := s.C.Partition(s.Ants)
+	// Now visualize the frenemies.
+	if Viz["combat"] {
+		VizFrenemies(s, ap, pmap)
+	}
+	s.C.Risk = s.C.Riskly(s.Ants)
+	s.C.Run(ants, ap, pmap, s.Cutoff, s.Rand)
+
 	iter := -1
 	maxiter := 50
 	nMove := 1
-
 	for len(ants) > 0 && tset.Pending() > 0 && nMove != 0 {
 		iter++
 		nMove = 0
@@ -195,7 +203,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 					}
 				}
 
-				if WS.Watched(ant.Source, s.Turn, 0) {
+				if WS.Watched(ant.Source, 0) {
 					for i := 0; i < 5; i++ {
 						log.Printf("TURN %d: %v -> %v (%s): \"%s\" steps %d: \"%s\":%#v",
 							s.Turn, s.ToPoint(ant.Source), s.ToPoint(s.Map.LocStep[seg.Src][ant.N[i].D]),
@@ -277,11 +285,13 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	tp := make(map[Location]int, len(endants))
 	for _, ant := range endants {
 		if ant.Goalp {
-			tp[ant.Source] = 5 // TODO more magic
+			tp[ant.Source] = 5 // MAGIC
 		} else {
 			tp[ant.Source] = 1
 		}
 	}
+
+	// TODO walk away if N in > N enemy in.
 
 	// Walk away from Hills - only if hill # < 3
 	// Bloodbath maps best defense is fast gathering.
@@ -300,7 +310,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 				ant.Steps = append(ant.Steps, dh)
 				for d := Direction(0); d < 5; d++ {
 					ant.N[d].Goal = s.Met.FDownhill.DistanceStep(ant.Source, ant.N[d].D)
-					if WS.Watched(ant.Source, s.Turn, 0) {
+					if WS.Watched(ant.Source, 0) {
 						log.Printf("DOWNHILL: %v %s %#v", s.ToPoint(ant.Source), ant.N[d].D, ant.N[d])
 					}
 				}
@@ -312,7 +322,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	s.GenerateMoves(endants)
 
 	for _, ant := range endants {
-		if WS.Watched(ant.Source, s.Turn, 0) {
+		if WS.Watched(ant.Source, 0) {
 			log.Printf("ANT: %#v", ant)
 			for d := Direction(0); d < 5; d++ {
 				log.Printf("MOVE: %v %s d:%s :: %#v", s.ToPoint(ant.Source), ant.Move, ant.N[d].D, ant.N[d])
@@ -324,14 +334,6 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 		}
 	}
 
-	// Lets combat a bit.
-	ap, pmap := s.C.Partition(s.Ants)
-	// Now visualize the frenemies.
-	if Viz["combat"] {
-		VizFrenemies(s, ap, pmap)
-	}
-	s.C.Risk = s.C.Riskly(s.Ants)
-	s.C.Run(endants, ap, pmap, s.Cutoff, s.Rand)
 	s.EmitMoves(endants)
 
 	Visualize(s)

@@ -6,9 +6,30 @@ import (
 	"strconv"
 	"math"
 	"log"
+	"sync"
 	. "bugnuts/util"
 	. "bugnuts/torus"
 )
+
+type lockedTurn struct {
+	lock sync.Mutex
+	turn int
+}
+
+var globalTurn lockedTurn
+
+func TurnSet(t int) {
+	globalTurn.lock.Lock()
+	globalTurn.turn = t
+	globalTurn.lock.Unlock()
+}
+
+func TurnGet() int {
+	globalTurn.lock.Lock()
+	t := globalTurn.turn
+	globalTurn.lock.Unlock()
+	return t
+}
 
 type Watch struct {
 	S      string
@@ -29,7 +50,7 @@ type Watches struct {
 	turns   []bool     // turns for all locs
 	locs    []bool     // locs for all turns
 	wturns  [][]*Watch // turn/region restricted watches slice of turns
-	Watched func(Location, int, int) bool
+	Watched func(Location, int) bool
 }
 
 func NewWatches(rows, cols, turns int) *Watches {
@@ -55,14 +76,15 @@ func (ws *Watches) Load(wlist []string) {
 	}
 }
 
-func (ws *Watches) NullWatcher() func(Location, int, int) bool {
-	return func(Location, int, int) bool {
+func (ws *Watches) NullWatcher() func(Location, int) bool {
+	return func(Location, int) bool {
 		return false
 	}
 }
 
-func (ws *Watches) GetWatcher() func(Location, int, int) bool {
-	return func(l Location, turn, player int) bool {
+func (ws *Watches) GetWatcher() func(Location, int) bool {
+	return func(l Location, player int) bool {
+		turn := TurnGet()
 		if len(ws.W) == 0 {
 			return false
 		}
@@ -186,6 +208,7 @@ func (ws *Watches) Parse(s string) (w *Watch, err os.Error) {
 			w.End = w.Start
 		}
 	}
+
 	if len(turns) > 1 {
 		if len(turns[0]) == 0 {
 			w.Start = 0
