@@ -173,10 +173,10 @@ func (f *Fill) slowReset() {
 	}
 }
 
-var _zero [MAXMAPSIZE]uint16
+var _zerofill [MAXMAPSIZE]uint16
 
 func (f *Fill) Reset() {
-	copy(f.Depth, _zero[:len(f.Depth)])
+	copy(f.Depth, _zerofill[:len(f.Depth)])
 }
 
 // Generate a BFS Fill.  if pri is > 0 then use it for the point pri otherwise

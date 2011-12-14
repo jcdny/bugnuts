@@ -18,7 +18,7 @@ type testData struct {
 
 var tests = []testData{
 	//{"testdata/test1/0.replay", "bot8", 30, Point{28, 52}},  // 6 me 2 other
-	{"../monte/testdata/test1/0.replay", "bot8", 30, Point{49, 19}}, // 5 me, 3, 1
+	{"testdata/test1/0.replay", "bot8", 30, Point{49, 19}}, // 5 me, 3, 1
 	{"../pathing/testdata/replay.big.json.gz", "MomoBot", 300, Point{75, 102}},
 }
 

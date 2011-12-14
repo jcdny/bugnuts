@@ -41,6 +41,7 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 
 func setMoves(ants map[Location]*AntStep, part Partitions, rng *rand.Rand) {
 	mm := make(map[Location]AntMove, 100)
+	mp := make(map[Location]Location, 100)
 	for ploc, ap := range part {
 		// this can happen if we run out of time...
 		if ap.PS != nil {
@@ -58,6 +59,7 @@ func setMoves(ants map[Location]*AntStep, part Partitions, rng *rand.Rand) {
 				for _, am := range ps.First[ps.Best] {
 					log.Print(am.From, " move is ", am)
 					mm[am.From] = am
+					mp[am.From] = ploc
 				}
 			}
 		}
@@ -69,12 +71,12 @@ func setMoves(ants map[Location]*AntStep, part Partitions, rng *rand.Rand) {
 			log.Print("Attempt to move an unfound ant", loc)
 		} else {
 			if _, found := togoo[move.To]; !found {
-				am.Move = move.D
+				am.N[move.D].Combat = 1
 				am.Dest = append(am.Dest, move.To)
 				am.Steps = append(am.Steps, 1)
-				am.Steptot += 5 // MAGIC - ants in combat tend not to path to anything 
+				am.Steptot += 5 // MAGIC - ants in combat tend not to path to anything
 				am.Goalp = true
-				am.Combatp = true
+				am.Combat = mp[loc]
 			} else {
 				log.Print("COLLISION ", move.To)
 			}

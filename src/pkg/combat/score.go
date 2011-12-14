@@ -21,7 +21,7 @@ func (ps *PartitionState) ComputeScore(c *Combat) {
 		ib, ie := 0, 0
 		for np := 0; np < ps.PLive; np++ {
 			ib, ie = ie, ie+len(ps.P[np].First[p[np]])
-			//log.Print("ip,np,P, ib,ie,ps.Alive:", ip, np, p[np], ib, ie, ps.ALive)
+			//log.Print("Perm,Player,Scenario,ib,ie,total", ip, np, p[np], ib, ie, ps.ALive)
 			copy(move[ip][ib:ie], ps.P[np].First[p[np]])
 		}
 		_, dead := c.Resolve(move[ip])

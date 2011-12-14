@@ -54,6 +54,23 @@ func (pmap *PartitionMap) Add(from, to Location) {
 	// map a location to a partition
 	pm[to] = struct{}{}
 }
+func (pmap *PartitionMap) Get(from Location) []Location {
+	pm, ok := (*pmap)[from]
+	if !ok || len(pm) == 0 {
+		return []Location{}
+	}
+	out := make([]Location, 0, len(pm))
+	for loc := range pm {
+		out = append(out, loc)
+	}
+	return out
+}
+
+type pStat struct {
+	tot    int
+	menemy int
+	pn     [MaxPlayers]int
+}
 
 func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 	// how many ants are there
@@ -80,16 +97,21 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 	for ploc := range Ants[0] {
 		// If the ant is not mapped to a partition
 		if _, ok := pmap[ploc]; !ok {
-			// Look at the nearby ants 
+			// Look at the nearby ants
 			for eloc, nn := range near[ploc] {
+				// a close enemy ant
 				if nn.Steps < PDist && c.PlayerMap[eloc] != 0 {
-					// a close enemy an, create a partition if needed
-					ap, ok := parts[ploc] // ap = a partition
-					if !ok {
-						ap = NewAntPartition()
-						pmap.Add(ploc, ploc)
+					// if mapped to a partition already then merge
+					// to that one.
+					if _, mapped := pmap[eloc]; mapped {
+						ploc = pmap.Get(eloc)[0]
+					} else {
+						ap, ok := parts[ploc] // ap = a partition
+						if !ok {
+							ap = NewAntPartition()
+						}
+						parts[ploc] = ap
 					}
-					parts[ploc] = ap
 
 					// add the enemy and any of it's neighbors
 					pmap.Add(eloc, ploc)
@@ -110,28 +132,54 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 		}
 	}
 
-	// For each partition, grow ours adding friendly neighbors of ants
-	// already in the partition
+	// Compute the counts per player for each partition
+	pstats := make(map[Location]*pStat, len(parts))
 	for ploc, ap := range parts {
+		pstats[ploc] = &pStat{}
+		pstat := pstats[ploc]
 		for _, loc := range ap.Ants {
-			if c.PlayerMap[loc] == 0 {
-				// one of our ants
-				for nloc, nn := range near[loc] {
-					// Add our nearby ants which are not already in the partition
-					if nn.Steps < FPDist && c.PlayerMap[nloc] == 0 {
-						if _, in := pmap[nloc][ploc]; !in {
-							pmap.Add(ploc, nloc)
-							ap.Ants = append(ap.Ants, nloc)
+			if c.PlayerMap[loc] > -1 {
+				pstat.pn[c.PlayerMap[loc]] += 1
+				pstat.tot++
+			}
+		}
+		pstat.menemy = Max(pstat.pn[1:])
+	}
+
+	// For each partition, potentially grow ours adding our ants which are
+	// neighbors of ants already in the partition.  Don't grow if N > maxE + 3
+	for ploc, ap := range parts {
+		pstat := pstats[ploc]
+		if pstat.pn[0] < pstat.menemy+2 { // MAGIC
+		NEXT:
+			for _, loc := range ap.Ants {
+				if c.PlayerMap[loc] == 0 {
+					// one of our ants
+					for nloc, nn := range near[loc] {
+						// Add our nearby ants which are not already in the partition
+						if nn.Steps < FPDist && c.PlayerMap[nloc] == 0 {
+							if _, in := pmap[nloc][ploc]; !in {
+								pstat.pn[0]++
+								pstat.tot++
+								if pstat.pn[0] < pstat.menemy+2 {
+									break NEXT
+								}
+								pmap.Add(nloc, ploc)
+								ap.Ants = append(ap.Ants, nloc)
+							}
 						}
 					}
+				} else {
+					continue
 				}
 			}
 		}
 	}
 
-	// Now disolve partitions which are 1-1
-	for ploc, ap := range parts {
-		if len(ap.Ants) == 2 {
+	// Finally disolve partitions which are 1-1
+	// just rely on normal risk behavior on those.
+	for ploc := range parts {
+		if pstats[ploc].tot < 3 {
 			parts[ploc] = &AntPartition{}, false
 		}
 	}

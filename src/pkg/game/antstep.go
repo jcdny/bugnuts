@@ -12,6 +12,7 @@ type Neighborhood struct {
 	PrThreat int
 	Goal     int
 	PrFood   int
+	Combat   int
 	//Vis     int
 	//Unknown int
 	//Land    int
@@ -30,8 +31,8 @@ type AntStep struct {
 	N       []*Neighborhood
 	Foodp   bool
 	Goalp   bool
-	Combatp bool
-	Perm    int // to randomize ants when sorting
+	Combat  Location // pointer to the combat partition
+	Perm    int      // to randomize ants when sorting
 	NFree   int
 }
 
@@ -63,6 +64,9 @@ func (p ENSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func (p ENSlice) Less(i, j int) bool {
 	if p[i].Valid != p[j].Valid {
 		return p[i].Valid
+	}
+	if p[i].Combat != p[j].Combat {
+		return p[i].Combat > p[j].Combat
 	}
 	if p[i].Threat != p[j].Threat {
 		return p[i].Threat < p[j].Threat

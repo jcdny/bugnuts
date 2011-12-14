@@ -32,6 +32,7 @@ type rScore struct {
 func (ps *PartitionState) FirstStepRisk(c *Combat) {
 	tdepth := []int{0, 0, 0, 65535, 65535}
 	trisk := []int{Suicidal, RiskNeutral, RiskAverse, RiskAverse, RiskAverse}
+
 	for np := range ps.P {
 		rs, davg, _ := riskmet(c, ps.P[np].Moves)
 		tdepth[2] = davg
@@ -121,8 +122,9 @@ func moveEmRisk(rs []rScore, tdepth int, c *Combat, risktype int) []AntMove {
 			rs[i].met[d].target = Abs(rs[i].met[d].depth - tdepth)
 			rs[i].met[d].netrisk = MaxV(rs[i].met[d].risk-risktype, 0)
 		}
+
 		if Debug[DBG_Combat] || WS.Watched(rs[i].am.From, rs[i].am.Player) {
-			log.Print(rs[i].am.From, ": tdepth ", tdepth, " risktype ", risktype, " depth ", rs[i].depth, rs[i].target)
+			log.Print("Ant #", i, "/", len(rs), " ", rs[i].am.From, ": depth, tdepth, target ", rs[i].depth, rs[i].target)
 			sort.Sort(rMetSlice(rs[i].met[:]))
 			for d := 0; d < 5; d++ {
 				log.Print("\t", rs[i].met[d])

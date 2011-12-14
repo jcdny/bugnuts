@@ -10,7 +10,6 @@ debug.install: watcher.install
 engine.install: combat.install game.install maps.install replay.install state.install torus.install util.install
 game.install: maps.install torus.install
 maps.install: debug.install torus.install util.install
-monte.install:
 parameters.install: maps.install
 pathing.install: debug.install maps.install torus.install util.install
 replay.install: game.install maps.install torus.install util.install
