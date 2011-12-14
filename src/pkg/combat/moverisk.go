@@ -33,7 +33,7 @@ func (ps *PartitionState) FirstStepRisk(c *Combat) {
 	tdepth := []int{0, 0, 0, 65535, 65535}
 	trisk := []int{Suicidal, RiskNeutral, RiskAverse, RiskAverse, RiskAverse}
 	for np := range ps.P {
-		rs, davg := riskmet(c, ps.P[np].Moves)
+		rs, davg, _ := riskmet(c, ps.P[np].Moves)
 		tdepth[2] = davg
 		ps.P[np].First = make([][]AntMove, len(tdepth))
 		for d := 0; d < len(tdepth); d++ {
@@ -42,9 +42,9 @@ func (ps *PartitionState) FirstStepRisk(c *Combat) {
 	}
 }
 
-func riskmet(c *Combat, ants []AntMove) (rs []rScore, davg int) {
+func riskmet(c *Combat, ants []AntMove) (rs []rScore, davg, dmin int) {
 	dtot := 0
-	dmin := 65535
+	dmin = 65535
 	rs = make([]rScore, len(ants))
 
 	for i := range rs {
@@ -70,7 +70,9 @@ func riskmet(c *Combat, ants []AntMove) (rs []rScore, davg int) {
 			}
 		}
 	}
-	log.Print("dtot: ", dtot, " dmin: ", dmin, " len:", len(ants))
+	if Debug[DBG_Combat] {
+		log.Print("Partition Depth: dtot: ", dtot, " dmin: ", dmin, " Ants:", len(ants))
+	}
 
 	davg = dtot / len(ants)
 
@@ -110,19 +112,21 @@ func (p rScoreSlice) Less(i, j int) bool {
 }
 
 // MoveEm given a list of AntMove update D and To for the move in the given direction
-func moveEmRisk(rs []rScore, tr int, c *Combat, risktype int) []AntMove {
+func moveEmRisk(rs []rScore, tdepth int, c *Combat, risktype int) []AntMove {
 	for i := range rs {
 		rs[i].am.D = NoMovement
 		rs[i].am.To = rs[i].am.From
-		rs[i].target = Abs(rs[i].depth - tr)
+		rs[i].target = Abs(rs[i].depth - tdepth)
 		for d := 0; d < 5; d++ {
-			rs[i].met[d].target = Abs(rs[i].met[d].depth - tr)
+			rs[i].met[d].target = Abs(rs[i].met[d].depth - tdepth)
 			rs[i].met[d].netrisk = MaxV(rs[i].met[d].risk-risktype, 0)
 		}
-		log.Print(rs[i].am.From, ": tr ", tr, " risktype ", risktype, " depth ", rs[i].depth, rs[i].target)
-		sort.Sort(rMetSlice(rs[i].met[:]))
-		for d := 0; d < 5; d++ {
-			log.Print("\t", rs[i].met[d])
+		if Debug[DBG_Combat] || WS.Watched(rs[i].am.From, rs[i].am.Player) {
+			log.Print(rs[i].am.From, ": tdepth ", tdepth, " risktype ", risktype, " depth ", rs[i].depth, rs[i].target)
+			sort.Sort(rMetSlice(rs[i].met[:]))
+			for d := 0; d < 5; d++ {
+				log.Print("\t", rs[i].met[d])
+			}
 		}
 	}
 
@@ -133,7 +137,7 @@ func moveEmRisk(rs []rScore, tr int, c *Combat, risktype int) []AntMove {
 		for i := moved; i < len(rs); i++ {
 			sort.Sort(rMetSlice(rs[i].met[:]))
 			am := rs[i].am
-			if WS.Watched(am.From, -1, am.Player) {
+			if WS.Watched(am.From, am.Player) {
 				log.Print(am.From, " best ", rs[i].met[0], c.AntCount[rs[i].met[0].to])
 			}
 
@@ -143,7 +147,7 @@ func moveEmRisk(rs []rScore, tr int, c *Combat, risktype int) []AntMove {
 			}
 
 			if am.D != NoMovement {
-				if WS.Watched(am.From, -1, am.Player) {
+				if WS.Watched(am.From, am.Player) {
 					log.Print(am.From, " moved ", am.To)
 				}
 				c.AntCount[am.To]++

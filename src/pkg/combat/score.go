@@ -4,6 +4,7 @@ import (
 	"log"
 	. "bugnuts/game"
 	. "bugnuts/util"
+	. "bugnuts/debug"
 )
 
 func (ps *PartitionState) ComputeScore(c *Combat) {
@@ -35,7 +36,7 @@ func (ps *PartitionState) ComputeScore(c *Combat) {
 		}
 		c.Unresolve(move[ip])
 
-		if true && len(dead) > 0 {
+		if Debug[DBG_Combat] && len(dead) > 0 {
 			log.Print("perm ", ip, ":", p, ": ", DumpMoves(move[ip]))
 			log.Print("DEAD: ", len(dead), ": ", DumpMoves(dead))
 		}

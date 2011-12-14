@@ -9,7 +9,7 @@ import (
 	. "bugnuts/torus"
 )
 
-func (c *Combat) Run(ants []*AntStep, part Partitions, pmap PartitionMap, cutoff int64, rng *rand.Rand) {
+func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap PartitionMap, cutoff int64, rng *rand.Rand) {
 	if len(part) == 0 {
 		return
 	}
@@ -39,7 +39,7 @@ func (c *Combat) Run(ants []*AntStep, part Partitions, pmap PartitionMap, cutoff
 	setMoves(ants, part, rng)
 }
 
-func setMoves(ants []*AntStep, part Partitions, rng *rand.Rand) {
+func setMoves(ants map[Location]*AntStep, part Partitions, rng *rand.Rand) {
 	mm := make(map[Location]AntMove, 100)
 	for ploc, ap := range part {
 		// this can happen if we run out of time...
@@ -48,27 +48,36 @@ func setMoves(ants []*AntStep, part Partitions, rng *rand.Rand) {
 
 			best := ps.bestScore()
 			if len(best) == len(ps.Score) && ps.Score[0] < 0 {
-				ps.Best = best[2] // HACK
+				ps.Best = -1
 			} else {
-				ps.Best = best[rng.Intn(len(best))]
+				ps.Best = best[0]
 			}
-			log.Print("Best ", ploc, " is ", ps.Best)
+			log.Print(ploc, " best state is ", ps.Best)
 
 			if ps.Best != -1 {
 				for _, am := range ps.First[ps.Best] {
-					log.Print(am.From, "move is ", am)
+					log.Print(am.From, " move is ", am)
 					mm[am.From] = am
 				}
 			}
 		}
 	}
 
-	for _, a := range ants {
-		if move, ok := mm[a.Source]; ok {
-			log.Print(a.Source, "move is ", move)
-			a.Move = move.D
+	togoo := make(map[Location]struct{}, len(mm))
+	for loc, move := range mm {
+		if am, ok := ants[loc]; !ok {
+			log.Print("Attempt to move an unfound ant", loc)
 		} else {
-			log.Print(a.Source, "move not found")
+			if _, found := togoo[move.To]; !found {
+				am.Move = move.D
+				am.Dest = append(am.Dest, move.To)
+				am.Steps = append(am.Steps, 1)
+				am.Steptot += 5 // MAGIC - ants in combat tend not to path to anything 
+				am.Goalp = true
+				am.Combatp = true
+			} else {
+				log.Print("COLLISION ", move.To)
+			}
 		}
 	}
 }
