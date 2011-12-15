@@ -1,7 +1,6 @@
 package combat
 
 import (
-	"log"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 	. "bugnuts/pathing"
@@ -84,9 +83,6 @@ func RiskMark(m *Map, o *Offsets, Ants []map[Location]int, amask, Tg []int, Tp [
 							}
 							return mint >= myt
 						})
-						if aloc == 3154 {
-							log.Print("loc,myt,mint", loc, myt, mint)
-						}
 						switch {
 						case mint < myt:
 							rm[np][loc] = Suicidal

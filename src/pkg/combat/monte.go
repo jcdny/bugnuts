@@ -14,7 +14,7 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 	if len(part) == 0 {
 		return
 	}
-	budget := (cutoff - time.Nanoseconds()) / (int64(len(part)) * 3 / 2)
+	budget := (cutoff - time.Nanoseconds()) / int64(len(part)*3) / 2
 	// TODO prioritize partition resolution...
 	for {
 		for ploc, ap := range part {
@@ -25,7 +25,9 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 
 			t := time.Nanoseconds() + budget
 			if t > cutoff {
-				log.Print("Out of time in Run combat")
+				now := time.Nanoseconds()
+				log.Print("Out of time in Run combat parts, cutoff, budget (ms):",
+					len(part), cutoff-now/1000000, budget/1000000)
 				break
 			}
 

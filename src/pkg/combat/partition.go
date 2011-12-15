@@ -8,10 +8,11 @@ import (
 	. "bugnuts/torus"
 	. "bugnuts/pathing"
 	. "bugnuts/util"
+	. "bugnuts/debug"
 )
 
-const PDist = 7  // MAGIC -- enemy max distance for partition
-const FPDist = 3 // MAGIC -- friendly distance to pull into partition
+const PDist = 6  // MAGIC -- enemy max distance for partition
+const FPDist = 4 // MAGIC -- friendly distance to pull into partition
 
 type AntPartition struct {
 	Ants []Location
@@ -149,6 +150,9 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 	// For each partition, potentially grow ours adding our ants which are
 	// neighbors of ants already in the partition.  Don't grow if N > maxE + 3
 	for ploc, ap := range parts {
+		if WS.Watched(ploc, 0) {
+			log.Print("growing ", ploc, pstats[ploc])
+		}
 		pstat := pstats[ploc]
 		if pstat.pn[0] < pstat.menemy+2 { // MAGIC
 		NEXT:
@@ -158,10 +162,17 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 					for nloc, nn := range near[loc] {
 						// Add our nearby ants which are not already in the partition
 						if nn.Steps < FPDist && c.PlayerMap[nloc] == 0 {
+							if WS.Watched(ploc, 0) {
+								log.Print("checking: ", nloc, nn)
+							}
 							if _, in := pmap[nloc][ploc]; !in {
+								if WS.Watched(ploc, 0) {
+									log.Print("Adding: ", nloc, nn)
+								}
+
 								pstat.pn[0]++
 								pstat.tot++
-								if pstat.pn[0] < pstat.menemy+2 {
+								if pstat.pn[0] > pstat.menemy+2 {
 									break NEXT
 								}
 								pmap.Add(nloc, ploc)
