@@ -12,16 +12,27 @@ import (
 )
 
 type lockedTurn struct {
-	lock sync.Mutex
-	turn int
+	lock   sync.Mutex
+	prefix string
+	turn   int
 }
 
 var globalTurn lockedTurn
 
+func SetWatcherPrefix(s string) {
+	globalTurn.lock.Lock()
+	globalTurn.prefix = s
+	t := globalTurn.turn
+	globalTurn.lock.Unlock()
+	log.SetPrefix(s + ":" + strconv.Itoa(t) + ":")
+}
+
 func TurnSet(t int) {
 	globalTurn.lock.Lock()
 	globalTurn.turn = t
+	pre := globalTurn.prefix
 	globalTurn.lock.Unlock()
+	log.SetPrefix(pre + ":" + strconv.Itoa(t) + ":")
 }
 
 func TurnGet() int {
