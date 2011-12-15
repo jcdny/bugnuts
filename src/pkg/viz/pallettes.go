@@ -4,16 +4,7 @@ import (
 	"image"
 	"os"
 	"fmt"
-	. "bugnuts/maps"
 )
-
-type ImageLayer struct {
-	name  string
-	l     []uint8
-	m     *Map
-	pal   image.NRGBAColor
-	color image.ColorImage
-}
 
 func sfc(color image.NRGBAColor, alpha float64) {
 	if alpha == 0 {

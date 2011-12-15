@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"strings"
 	"log"
-	. "bugnuts/maps"
+	"rand"
 	. "bugnuts/torus"
 	. "bugnuts/util"
 	. "bugnuts/state"
 	. "bugnuts/pathing"
 	. "bugnuts/combat"
+	. "bugnuts/maps"
 )
 
 var Viz = map[string]bool{
@@ -22,10 +23,11 @@ var Viz = map[string]bool{
 	"error":   false,
 	"targets": false,
 	"monte":   false,
-	"sym":     false,
 	"combat":  false,
 	"tborder": false,
 	"risk":    false,
+	"sym":     false, // show the map as deduced by symmetry.
+	"symgen":  false, // highlight passed and failed tile matches and hill guesses.
 }
 
 func SetViz(vizList string, Viz map[string]bool) {
@@ -41,13 +43,13 @@ func SetViz(vizList string, Viz map[string]bool) {
 					Viz[flag] = false
 				}
 			case "useful":
-				Viz["path"] = true
 				Viz["goals"] = true
 				Viz["combat"] = true
-				Viz["horizon"] = true
 				Viz["targets"] = true
+				Viz["tborder"] = true
 				Viz["error"] = true
-				Viz["monte"] = true
+				Viz["symgen"] = true
+				Viz["risk"] = true
 			default:
 				_, ok := Viz[word]
 				if !ok {
@@ -60,7 +62,7 @@ func SetViz(vizList string, Viz map[string]bool) {
 	}
 }
 
-func VizPath(m *Map, p Point, steps string, color int) {
+func VizPath(p Point, steps string, color int) {
 	if color == 1 {
 		slc(cRed, .5)
 	} else if color == 2 {
@@ -72,24 +74,24 @@ func VizPath(m *Map, p Point, steps string, color int) {
 	}
 }
 
-func VizLine(m *Map, p1, p2 Point, arrow bool) {
+func VizLine(t Torus, p1, p2 Point, arrow bool) {
 	ltype := "l"
 	if arrow {
 		ltype = "a"
 	}
 
-	if Abs(p1.R-p2.R) > m.Rows/2 {
-		if p1.R < m.Rows/2 {
-			p2.R -= m.Rows
+	if Abs(p1.R-p2.R) > t.Rows/2 {
+		if p1.R < t.Rows/2 {
+			p2.R -= t.Rows
 		} else {
-			p2.R += m.Rows
+			p2.R += t.Rows
 		}
 	}
-	if Abs(p2.C-p1.C) > m.Cols/2 {
-		if p1.C < m.Cols/2 {
-			p2.C -= m.Cols
+	if Abs(p2.C-p1.C) > t.Cols/2 {
+		if p1.C < t.Cols/2 {
+			p2.C -= t.Cols
 		} else {
-			p2.C += m.Cols
+			p2.C += t.Cols
 		}
 	}
 
@@ -98,9 +100,10 @@ func VizLine(m *Map, p1, p2 Point, arrow bool) {
 
 func Visualize(s *State) {
 	if Viz["horizon"] {
+		sfc(cBlack, 1.0)
 		for _, loc := range s.Met.HBorder {
 			p := s.ToPoint(Location(loc))
-			fmt.Fprintf(os.Stdout, "v tb %d %d MM\n", p.R, p.C)
+			fmt.Fprintf(os.Stdout, "v ts %d %d MM\n", p.R, p.C)
 		}
 	}
 
@@ -120,19 +123,19 @@ func Visualize(s *State) {
 	}
 
 	if Viz["tborder"] {
-		slc(cRed, 1.0)
+		sfc(cRed, 1.0)
 		tb, _ := ThreatBorder(s.C.Map, s.C.Threat1, s.C.PThreat1[0], 0)
 		for _, loc := range tb {
 			p := s.ToPoint(Location(loc))
-			fmt.Fprintf(os.Stdout, "v tb %d %d MM\n", p.R, p.C)
+			fmt.Fprintf(os.Stdout, "v ts %d %d MM\n", p.R, p.C)
 		}
-		slc(cBlack, 1.0)
+		sfc(cBlack, 1.0)
 	}
 
 	if Viz["risk"] {
 		rm := RiskMark(s.Map, &s.AttackMask.Offsets, s.Ants, s.C.Ants1, s.C.Threat1, s.C.PThreat1)
 		for r := 0; r < MaxRiskStat; r++ {
-			slc(risk[r], .8)
+			slc(risk[r], 1.0)
 			for np := range rm {
 				for loc, rs := range rm[np] {
 					if r == rs {
@@ -168,14 +171,15 @@ func Visualize(s *State) {
 	if Viz["monte"] {
 		VizMCPaths(s)
 	}
+
 	if Viz["sym"] {
 		m := s.Map
 		if len(m.SMap) > 0 {
 			for _, item := range []Item{WATER, LAND} {
 				if item == WATER {
-					sfc(cBlue, .2)
+					sfc(cBlue, .15)
 				} else {
-					sfc(cGreen, .2)
+					sfc(cGreen, .15)
 				}
 				for i, gitem := range m.Grid {
 					if item == gitem && m.TGrid[i] != gitem {
@@ -238,7 +242,10 @@ func VizMCHillIn(s *State) {
 			if paths > 32 {
 				paths = 32
 			}
-			dist, _ := f.MontePathIn(s.Rand, ants, paths, 1)
+			// we use a separate rng so MontePathIn here does not change bot
+			// state
+			rng := rand.New(rand.NewSource(1))
+			dist, _ := f.MontePathIn(rng, ants, paths, 1)
 			maxdist := Max(dist)
 			for i, val := range dist {
 				if val > 0 {
@@ -264,19 +271,19 @@ func vizCircle(p Point, r float64, fill bool) {
 func VizFrenemies(s *State, ap Partitions, pmap map[Location]map[Location]struct{}) {
 	i := 0
 	for ploc, p := range ap {
+		slc(qual6[i%6], 1)
 		for _, loc := range p.Ants {
-			//log.Printf("ploc %v loc %v pmap %v", ploc, loc, pmap[loc])
-			slc(qual6[i%6], 1)
 			p := s.ToPoint(loc)
+			//log.Printf("ploc %v loc %v pmap %v", ploc, loc, pmap[loc])
 			if loc == ploc {
 				sfc(qual6[i%6], .5)
-				vizCircle(p, 1, true)
+				vizCircle(p, .75, true)
 				sfc(cWhite, 1)
 			} else {
-				vizCircle(p, 1, false)
+				vizCircle(p, .75, false)
+				pp := s.ToPoint(ploc)
+				VizLine(s.Map.Torus, p, pp, false)
 			}
-			pp := s.ToPoint(ploc)
-			VizLine(s.Map, p, pp, false)
 		}
 		i++
 	}

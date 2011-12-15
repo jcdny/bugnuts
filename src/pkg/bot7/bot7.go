@@ -161,7 +161,7 @@ func (bot *BotV7) DoTurn(s *State) os.Error {
 				}
 				if Viz["error"] {
 					p := s.ToPoint(seg.Src)
-					VizLine(s.Map, p, s.ToPoint(seg.End), false)
+					VizLine(s.Torus, p, s.ToPoint(seg.End), false)
 					fmt.Fprintf(os.Stdout, "v tileBorder %d %d MM\n", p.R, p.C)
 				}
 			} else if ok && tgt.Count > 0 {
@@ -208,7 +208,7 @@ func (bot *BotV7) DoTurn(s *State) os.Error {
 				if good {
 					// A good move exists so assume we step to the target
 					if Viz["path"] {
-						VizLine(s.Map, s.ToPoint(seg.Src), s.ToPoint(seg.End), false)
+						VizLine(s.Torus, s.ToPoint(seg.Src), s.ToPoint(seg.End), false)
 					}
 					tgt.Count--
 					nMove++

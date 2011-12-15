@@ -170,7 +170,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 				}
 				if Viz["error"] {
 					p := s.ToPoint(seg.Src)
-					VizLine(s.Map, p, s.ToPoint(seg.End), false)
+					VizLine(s.Torus, p, s.ToPoint(seg.End), false)
 					fmt.Fprintf(os.Stdout, "v tileBorder %d %d MM\n", p.R, p.C)
 				}
 			} else if ok && tgt.Count > 0 {
@@ -213,11 +213,11 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 				if good {
 					// A good move exists so assume we step to the target
 					if Viz["path"] {
-						VizPath(s.Map, s.ToPoint(seg.Src), f.NPathInString(nil, seg.Src, -1, 0), 1)
-						VizPath(s.Map, s.ToPoint(seg.Src), f.NPathInString(nil, seg.Src, -1, 1), 2)
+						VizPath(s.ToPoint(seg.Src), f.NPathInString(nil, seg.Src, -1, 0), 1)
+						VizPath(s.ToPoint(seg.Src), f.NPathInString(nil, seg.Src, -1, 1), 2)
 					}
 					if Viz["goals"] {
-						VizLine(s.Map, s.ToPoint(seg.Src), s.ToPoint(seg.End), false)
+						VizLine(s.Torus, s.ToPoint(seg.Src), s.ToPoint(seg.End), false)
 					}
 					tgt.Count--
 					nMove++
@@ -257,7 +257,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 				maxiter = maxiter + 50
 				eh := s.EnemyHillLocations(0)
 				nadded := 0
-				if idle > 2*len(eh) {
+				if false && idle > 2*len(eh) {
 					nadded = s.AddBorderTargets(idle-2*len(eh), tset, bot.Explore, bot.PriMap[EXPLORE])
 				}
 				for _, loc := range eh {
