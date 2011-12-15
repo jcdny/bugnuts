@@ -2,6 +2,8 @@ package maps
 
 import (
 	"log"
+	"os"
+	"fmt"
 	. "bugnuts/torus"
 	. "bugnuts/debug"
 )
@@ -175,12 +177,12 @@ func (s *SymData) UpdateSymmetryData() {
 	if len(s.Map.SMap) > 0 {
 		maxlen = len(s.Map.SMap)
 	}
-
 	//TMark("hashed")
 
 	for minhash := range check {
 		tile := s.Tiles[minhash]
 		symset, origin, offset, equiv := s.SymAnalyze(minhash)
+		//log.Print("symset, origin, offset, equiv:", symset, origin, offset, equiv)
 		tile.Symmetry = symset
 		tile.Origin = origin
 		tile.Offset = offset
@@ -198,6 +200,9 @@ func (s *SymData) UpdateSymmetryData() {
 			} else {
 				tile.Ignore = true
 			}
+			if false {
+				VizSymTile(s.ToPoints(tile.Locs), valid)
+			}
 		}
 	}
 
@@ -210,11 +215,31 @@ func (s *SymData) UpdateSymmetryData() {
 	}
 }
 
+func VizSymTile(pv []Point, valid bool) {
+	if valid {
+		fmt.Fprintf(os.Stdout, "v slc %d %d %d %.2f\n",
+			0, 255, 0, 1.0)
+	} else {
+		fmt.Fprintf(os.Stdout, "v slc %d %d %d %.2f\n",
+			255, 0, 0, 1.0)
+	}
+	for _, p := range pv {
+		fmt.Fprintf(os.Stdout, "v r %d %d 6 6 false\n", p.R-3, p.C-3)
+		fmt.Fprintf(os.Stdout, "v t %d %d \n", p.R, p.C)
+	}
+	fmt.Fprintf(os.Stdout, "v slc %d %d %d %.2f\n",
+		0, 0, 0, 1.0)
+}
+
 // Returns the minhash, true if there is a potential new symmetry
 func (s *SymData) Update(loc Location) (SymHash, bool) {
 	newsym := false
 
 	minhash, hashes, bits, self := s.SymCompute(Location(loc))
+
+	if Debug[DBG_Symmetry] && WS.Watched(loc, 0) {
+		log.Print("Minhash point, minhash, bits, self", s.ToPoint(loc), minhash, bits, self)
+	}
 	if hashes != nil {
 		s.MinHash[loc] = minhash
 		s.Hashes[loc] = hashes
@@ -467,18 +492,21 @@ func (s *SymData) TransMapValidate(p Point) ([][]Location, bool) {
 	for i := range smap {
 		if smap[i] == nil {
 			marr = s.Translations(Location(i), p, marr, SYMMAXCELLS)
-			if len(marr) == 0 || len(marr) > size {
+			if false && n == 0 {
+				log.Print("len(marr), size", len(marr), size)
+			}
+			if false && len(marr) == 0 || len(marr) > size {
+				log.Print("len(marr), size", len(marr), size)
 				return nil, false
 			}
 			item := UNKNOWN
 			for _, loc := range marr[n:] {
-				// Validate the equiv set only contains either land or water.
-				if item != s.TGrid[loc] {
-					if item == UNKNOWN {
-						item = s.TGrid[loc]
-					} else if s.TGrid[loc] != UNKNOWN {
-						return nil, false
-					}
+				// Validate the equiv set is identical
+				if item == UNKNOWN {
+					item = s.TGrid[loc]
+				} else if item != s.TGrid[loc] {
+					// log.Print("i, n, loc, item, tgrid ", i, n, loc, int(item), s.TGrid[loc])
+					return nil, false
 				}
 				smap[loc] = marr[n:]
 			}

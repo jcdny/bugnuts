@@ -6,6 +6,8 @@ import (
 	"fmt"
 	. "bugnuts/torus"
 	. "bugnuts/util"
+	. "bugnuts/debug"
+	. "bugnuts/watcher"
 )
 
 func TestShiftReduce(t *testing.T) {
@@ -110,7 +112,13 @@ func mapMeBaby(name string) *Map {
 		file = name
 	}
 	m, err := MapLoadFile(file)
-	copy(m.TGrid, m.Grid)
+	// zap non land out.
+	for i, item := range m.Grid {
+		if !(item == LAND || item == WATER) {
+			m.Grid[i] = LAND
+		}
+	}
+	copy(m.TGrid, m.Grid) // need TGrid populated since this is all driven by the "observed grid"
 	if m == nil || err != nil {
 		log.Panicf("Error reading %s: err %v map: %v", file, err, m)
 	}
@@ -188,6 +196,32 @@ func TestSym(t *testing.T) {
 				}
 			}
 		}
+	}
+}
+
+func TestSymMatch(t *testing.T) {
+	//Debug[DBG_Symmetry] = true
+	WS = NewWatches(0, 0, 0)
+	//AllMaps := []string{"test"}
+	for _, name := range AllMaps {
+		m := mapMeBaby(name)
+		if m == nil {
+			t.Error("Map nil")
+		}
+		TPush("UpdateSymmetryData:" + name)
+		m.SymData.UpdateSymmetryData()
+		TPop()
+		peak := Max(m.SymData.NLen[:])
+		var found, cycle, n int
+		for cycle, n = range m.SymData.NLen {
+			if n == peak {
+				break
+			}
+		}
+		if len(m.SMap) > 0 {
+			found = len(m.SMap[0])
+		}
+		log.Print("MAP ", name, " ", m.Rows, " ", m.Cols, " Cycle: ", cycle, " found ", found, found == cycle)
 	}
 }
 
