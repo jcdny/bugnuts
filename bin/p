@@ -26,15 +26,16 @@ export MAPFILE="$MAPS/${MAP}.map"
 echo $MAPFILE
 
 #    --nolaunch \
+#    --food_visible 3 5 \
 
 $TOOLS/playgame.py \
     --fill \
     -I -E -e -O -R \
     --verbose \
-    --turntime 4000 \
+    --turntime 700 \
     --player_seed 41 \
     --engine_seed 41 \
-    --end_wait=2.0 \
+    --end_wait=.25 \
     --log_dir ~/bot/log \
     --turns $TURNS \
     --map_file=$MAPFILE \
@@ -45,7 +46,7 @@ $TOOLS/playgame.py \
     --cutoff_turn 150 \
     --cutoff_percent 0.85 \
     "${BB}8" \
-    "${BB}7" \
     "${BB}5" \
+    "${BB}7" \
     "python $TOOLS/dist/sample_bots/python/GreedyBot.py" \
     "python $TOOLS/dist/sample_bots/python/HunterBot.py" \

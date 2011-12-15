@@ -1,2 +1,2 @@
 #!/bin/sh
-~/bot/src/cmd/bot/bot -b v8 -m "$MAP" -d 1 -V combat,risk,targets,goals,tborder # -w 2:3 #sym,targets,path
+~/bot/src/cmd/bot/bot -b v8 -m "$MAP" -d 1 -V useful,sym # -w 2:3 #sym,targets,path
