@@ -1,0 +1,1 @@
+./bot -b v8 -d=1 -w 30@50,21,1 -T 31 -V combat < i.tmp 2>&1 > /dev/null

@@ -29,6 +29,7 @@ var runBot string
 var mapName string
 var watchPoints string
 var debugLevel int
+var maxTurn int
 
 func init() {
 	//	log.SetFlags(log.Ltime | log.Lmicroseconds | log.Lshortfile)
@@ -45,6 +46,7 @@ func init() {
 	flag.IntVar(&debugLevel, "d", 0, "Debug level")
 	flag.StringVar(&mapName, "m", "", "Map file -- Used to validate generated map, hill guessing etc.")
 	flag.StringVar(&watchPoints, "w", "", "Watch points \"T1:T2@R,C,N[;T1:T2...]\", \":\" will watch everything")
+	flag.IntVar(&maxTurn, "T", 65535, "Max Turn")
 	flag.Parse()
 
 	if BotGet(runBot) == nil {
@@ -52,7 +54,7 @@ func init() {
 		return
 	}
 
-	log.SetPrefix(runBot + ":")
+	SetWatcherPrefix(runBot)
 
 	SetDebugLevel(debugLevel)
 	SetViz(vizList, Viz)
@@ -127,6 +129,10 @@ func main() {
 		}
 		if t.Turn != s.Turn+1 {
 			log.Printf("Turns out of order Turn parse is %d expected %d", t.Turn, s.Turn+1)
+		}
+		if s.Turn > maxTurn {
+			log.Printf("Reached MaxTurn...")
+			break
 		}
 		turns = append(turns, t)
 
