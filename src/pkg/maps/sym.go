@@ -22,10 +22,14 @@ type SymTile struct {
 	Bits      uint8      // bits of info Min(SYMN*SYMN - N*Water, N*Water)
 	Self      uint8      // number of matching self rotations
 	Ignore    bool       // Ignore this tile for symmetry stuff.
-	Origin    Point      // Origin for discovered symmetries
-	Gen       int        // the generator for the origin
-	Translate Point      // The offset for translation symmetry {0,0} for non translation
 	Subtile   Torus      // The dimensions for the subtile == the map dim if none
+	Gen       int        // the generator for the origin
+	Origin    Point      // Origin for discovered symmetries
+	RM1       int
+	RM2       int
+	MR        int
+	MC        int
+	Translate Point      // The offset for translation symmetry {0,0} for non translation
 	EquivSet  []Location // the location list for the identified symmetry of this tile.
 }
 
@@ -37,6 +41,7 @@ type SymData struct {
 	MinHash []SymHash            // Sym data for a given point.
 	Hashes  []*[8]SymHash        // Map from the location to all rotations of the given location
 	Tiles   map[SymHash]*SymTile // Map from minhash to location list.
+	Fails   int
 }
 
 // The bit shuffle for the 8 symmetries a SYMNxSYMN neighborhood
@@ -55,7 +60,7 @@ var symOffsetMap = [8]symOffsets{
 	{0, -1, 1, 0},  // ccw 90
 	{-1, 0, 0, -1}, // ccw 180
 	{0, 1, -1, 0},  // ccw 270
-	{0, 1, 1, 0},   // rot/mirror
+	{0, 1, 1, 0},   // rot/mirror, diagonal 
 	{0, -1, -1, 0}, // rot/mirror
 }
 
@@ -69,7 +74,27 @@ const (
 	SYMRM1
 	SYMRM2
 	SYMNONE
+	SYMMIRBOTH
+	SYMRMBOTH
+	SYMMIR8
+	SYMROT8
 )
+
+var symLabels = [...]string{
+	SYMTRANS:   "Trans",
+	SYMMIRRORC: "MirrC",
+	SYMMIRRORR: "MirrR",
+	SYMROT90:   "Rotat",
+	SYMROT180:  "R_180",
+	SYMROT270:  "R_270",
+	SYMRM1:     "NDiag",
+	SYMRM2:     "PDiag",
+	SYMNONE:    "NONE",
+	SYMMIRBOTH: "MBoth",
+	SYMRMBOTH:  "DBoth",
+	SYMMIR8:    "Mirr8",
+	SYMROT8:    "Rota8",
+}
 
 // Number of symmetry axes
 type symAxes struct {
@@ -172,17 +197,34 @@ func (s *SymData) UpdateSymmetryData() {
 		}
 	}
 
-	maxlen := 0
+	maxlen := 1
 	updated := false
 	if len(s.Map.SMap) > 0 {
 		maxlen = len(s.Map.SMap[0])
 	}
 
+	if s.Fails > 200 {
+		// 200 fails with no new sym - lets give up
+		return
+	}
+
+	// TODO do in order of len of locs... so we dont build a map for 2 then
+	// immediately rebuild for 4
 	for minhash := range check {
 		tile := s.Tiles[minhash]
-		eqlen := s.SymAnalyze(tile)
+		if tile.Ignore || len(tile.Locs) > 16 {
+			// len less than 16 mostly just to avoid catastrophe 
+			// any map with more sym than that is a shit show anyway
+			tile.Ignore = true
+			continue
+		}
 		//log.Print("symset, origin, offset, equiv:", symset, origin, offset, equiv)
-		if !tile.Ignore && eqlen > maxlen {
+		eqlen := s.SymAnalyze(tile)
+		if tile.Ignore {
+			s.Fails++
+			continue
+		}
+		if eqlen > maxlen {
 			smap, valid := s.SymMapValidate(tile)
 			if valid {
 				if Debug[DBG_Symmetry] {
@@ -191,6 +233,7 @@ func (s *SymData) UpdateSymmetryData() {
 				maxlen = eqlen
 				s.Map.SMap = smap
 				updated = true
+				s.Fails = 0
 			} else {
 				tile.Ignore = true
 			}
@@ -248,7 +291,6 @@ func (s *SymData) Update(loc Location) (SymHash, bool) {
 				Self: self,
 			}
 			s.Tiles[minhash] = tile
-			//log.Printf("New hash set")
 		} else {
 			var i int
 			for i = 0; i < len(tile.EquivSet) && loc != tile.EquivSet[i]; i++ {
@@ -402,13 +444,19 @@ func (s *SymData) Tiling(tile *SymTile) Torus {
 			}
 		}
 	}
+	if dim.Size()/ndim.Size() > 20 {
+		return dim
+	}
 	return ndim
 }
 // Update the analysis of a tile and return the length of the infered equiv set
 func (s *SymData) SymAnalyze(tile *SymTile) (equivlen int) {
-	dbg := false
-	//dbg := true
 	tile.Gen = SYMNONE
+	tile.MC = -1
+	tile.MR = -1
+	tile.RM1 = -1
+	tile.RM2 = -1
+
 	equivlen = 0
 
 	if tile == nil || len(tile.Locs) < 2 {
@@ -419,9 +467,6 @@ func (s *SymData) SymAnalyze(tile *SymTile) (equivlen int) {
 
 	// Get the blocking for the map
 	dim := s.Tiling(tile)
-	if dbg {
-		log.Print(s.Torus, dim)
-	}
 
 	// test for Translation symmetry
 	redlist := make([]Point, 0, len(llist))
@@ -432,94 +477,163 @@ func (s *SymData) SymAnalyze(tile *SymTile) (equivlen int) {
 			if s.Hashes[l1][0] == s.Hashes[l2][SYMTRANS] {
 				p2 := dim.Donut(s.ToPoint(l2))
 				n++
-				pd, good := dim.ShiftReduce(p1, p2, SYMMAXCELLS)
-				if false && dbg {
-					log.Print(p1, p2, pd, good)
-				}
-				if good {
-					redlist = append(redlist, pd)
+				if pd, good := dim.ShiftReduce(p1, p2, SYMMAXCELLS); good {
+					redlist = SetAddPoint(redlist, pd)
 				}
 			}
 		}
 	}
-	if dbg {
-		log.Print("pre reduce", redlist)
-	}
+
 	if len(redlist) > 0 {
 		redlist = dim.ReduceReduce(redlist)
 	}
-	if dbg {
-		log.Print("post reduce", redlist)
-	}
 
-	tile.Gen = SYMTRANS
 	tile.Subtile = dim
 	tile.Translate = s.Translation(redlist)
-	if dbg {
-		log.Print("Len is ", s.Size()/dim.Size(), " * ", dim.TranslationLen(tile.Translate))
-	}
-	equivlen = s.Size() / dim.Size() * dim.TranslationLen(tile.Translate)
+	tlen := dim.TranslationLen(tile.Translate)
 
+	if Debug[DBG_Symmetry] {
+		log.Print("Eq Len is ", s.Size()/dim.Size(), " * BLOCKS(", dim.TranslationLen(tile.Translate), ")")
+	}
+	equivlen = s.Size() / dim.Size() * tlen
+	if equivlen > 1 {
+		tile.Gen = SYMTRANS // a tiling is classed as a symtrans.
+	}
 	// If all we got was translations bail out.
-	if n == len(llist)*(len(llist)-1)/2 {
+	if n == len(llist)*(len(llist)-1)/2 || tlen > 1 {
 		return
 	}
 
 	// Look for rotational symmetry, iff we have a square block
 	rotorig := make([]Point, 0, 0)
-	if dim.Rows == dim.Cols {
+	ndiag := 0
+	if dim.Rows == dim.Cols && len(tile.Locs) <= equivlen*8 {
 		for i, l1 := range llist {
 			p1 := dim.Donut(s.ToPoint(l1))
 			for _, l2 := range llist[i+1:] {
-				p2 := dim.Donut(s.ToPoint(l2))
 				if s.Hashes[l1][0] == s.Hashes[l2][SYMROT90] {
+					p2 := dim.Donut(s.ToPoint(l2))
 					porig := dim.Rot(p1, p2, SYMROT90)
 					rotorig = dim.SymAddPoint(rotorig, porig)
 				}
+				if s.Hashes[l1][0] == s.Hashes[l2][SYMRM1] ||
+					s.Hashes[l1][0] == s.Hashes[l2][SYMRM2] {
+					ndiag++
+				}
 			}
 		}
-	}
-
-	// can only have 1 rotation origin.
-	if len(rotorig) > 1 {
-		rotorig = rotorig[:0]
-	} else if len(rotorig) == 1 {
-		tile.Origin = rotorig[0]
-		tile.Gen = SYMROT90
-		equivlen *= 4
-
-		return
+		// can only have 1 rotation origin.
+		if len(rotorig) > 1 {
+			// log.Print("Multiple rotation origins ", rotorig, len(tile.Locs))
+			rotorig = rotorig[:0]
+		} else if len(rotorig) == 1 {
+			tile.Origin = rotorig[0]
+			tile.Gen = SYMROT90
+			equivlen *= 4
+			if false && ndiag > 2 {
+				equivlen *= 2
+				tile.Gen = SYMROT8
+			}
+			return
+		}
 	}
 
 	// Look for mirror symmetry iff we did not find rot sym
 	morigc := make([]Point, 0, 0)
 	morigr := make([]Point, 0, 0)
+	ndiag = 0
 	if len(rotorig) == 0 {
 		for i, l1 := range llist {
 			p1 := dim.Donut(s.ToPoint(l1))
 			for _, l2 := range llist[i+1:] {
-				p2 := dim.Donut(s.ToPoint(l2))
 				if s.Hashes[l1][0] == s.Hashes[l2][SYMMIRRORC] {
+					p2 := dim.Donut(s.ToPoint(l2))
 					morigc = dim.SymAddPoint(morigc, dim.Mirror(p1, p2, 1))
 				}
 				if s.Hashes[l1][0] == s.Hashes[l2][SYMMIRRORR] {
+					p2 := dim.Donut(s.ToPoint(l2))
 					morigr = dim.SymAddPoint(morigr, dim.Mirror(p1, p2, 0))
+				}
+				if s.Hashes[l1][0] == s.Hashes[l2][SYMRM1] ||
+					s.Hashes[l1][0] == s.Hashes[l2][SYMRM2] {
+					ndiag++
 				}
 			}
 		}
 	}
 	if len(morigc) == 1 {
-		tile.Origin.C = morigc[0].C
+		tile.MC = morigc[0].C
 		equivlen *= 2
 		tile.Gen = SYMMIRRORC
 	}
 	if len(morigr) == 1 {
-		tile.Origin.R = morigr[0].R
+		tile.MR = morigr[0].R
 		equivlen *= 2
-		tile.Gen = SYMMIRRORR
+		if tile.Gen == SYMMIRRORC {
+			tile.Gen = SYMMIRBOTH
+		} else {
+			tile.Gen = SYMMIRRORR
+		}
 	}
-	if tile.Gen == SYMMIRRORR || tile.Gen == SYMMIRRORC {
+
+	if ndiag > 2 && dim.Rows == dim.Cols &&
+		tile.Gen == SYMMIRRORR || tile.Gen == SYMMIRRORC || tile.Gen == SYMMIRBOTH {
+		equivlen *= 2
+		tile.Gen = SYMMIR8
+	}
+
+	if tile.Gen != SYMNONE && tile.Gen != SYMTRANS {
 		return equivlen
+	}
+
+	// Look for diagonal symmetry iff we did not find rot/mirror sym
+	rm1orig := make([]int, 0, 0)
+	rm2orig := make([]int, 0, 0)
+OUT:
+	for i, l1 := range llist {
+		p1 := dim.Donut(s.ToPoint(l1))
+		for _, l2 := range llist[i+1:] {
+			p2 := dim.Donut(s.ToPoint(l2))
+			if s.Hashes[l1][0] == s.Hashes[l2][SYMRM1] {
+				rm1orig = SetAddInt(rm1orig, dim.Diag(p1, p2, SYMRM1))
+			}
+			if s.Hashes[l1][0] == s.Hashes[l2][SYMRM2] {
+				rm2orig = SetAddInt(rm2orig, dim.Diag(p1, p2, SYMRM2))
+			}
+			if len(rm2orig) > 2 || len(rm1orig) > 2 {
+				break OUT
+			}
+		}
+	}
+
+	if len(rm1orig) > 1 {
+		//log.Print("RM1 dups: ", rm1orig)
+		rm1orig = rm1orig[:0]
+	}
+	if len(rm1orig) == 1 {
+		tile.Gen = SYMRM1
+		tile.RM1 = rm1orig[0]
+		equivlen *= 2
+	}
+
+	if len(rm2orig) > 1 {
+		//log.Print("RM2 dups: ", rm2orig)
+		rm2orig = rm2orig[:0]
+	}
+	if len(rm2orig) == 1 {
+		tile.RM2 = rm2orig[0]
+		equivlen *= 2
+		if tile.Gen == SYMRM1 {
+			tile.Gen = SYMRMBOTH
+		} else {
+			tile.Gen = SYMRM2
+		}
+	}
+
+	if tile.Gen == SYMRM1 ||
+		tile.Gen == SYMRM2 ||
+		tile.Gen == SYMRMBOTH {
+		return
 	}
 
 	mrotorig := make([]Point, 0, 0)
@@ -527,7 +641,6 @@ func (s *SymData) SymAnalyze(tile *SymTile) (equivlen int) {
 		p1 := dim.Donut(s.ToPoint(l1))
 		for _, l2 := range llist[i+1:] {
 			p2 := dim.Donut(s.ToPoint(l2))
-			//log.Print("ROT:", dim, s.ToPoint(l2), p2)
 			if s.Hashes[l1][0] == s.Hashes[l2][SYMROT180] {
 				mrotorig = dim.SymAddPoint(mrotorig, dim.Rot(p1, p2, SYMROT180))
 			}
@@ -535,35 +648,10 @@ func (s *SymData) SymAnalyze(tile *SymTile) (equivlen int) {
 	}
 
 	if len(mrotorig) > 1 {
-		mrotorig = mrotorig[:0]
+		//log.Print("Multiple rot180 points ", mrotorig, len(tile.Locs))
 	} else if len(mrotorig) == 1 {
 		tile.Origin = mrotorig[0]
 		tile.Gen = SYMROT180
-		equivlen *= 2
-
-		return
-	}
-
-	// Look for diagonal symmetry iff we did not find rot/mirror sym
-	dorig := make([]Point, 0, 0)
-	if false {
-		for i, l1 := range llist {
-			p1 := dim.Donut(s.ToPoint(l1))
-			for _, l2 := range llist[i+1:] {
-				p2 := dim.Donut(s.ToPoint(l2))
-				if s.Hashes[l1][0] == s.Hashes[l2][SYMRM1] {
-					dorig = dim.SymAddPoint(dorig, s.Diag(p1, p2, SYMRM1))
-				}
-				if s.Hashes[l1][0] == s.Hashes[l2][SYMRM2] {
-					dorig = dim.SymAddPoint(dorig, s.Diag(p1, p2, SYMRM2))
-				}
-			}
-		}
-	}
-
-	if len(dorig) > 0 {
-		tile.Origin = dorig[0]
-		tile.Gen = SYMRM1
 		equivlen *= 2
 	}
 
@@ -578,7 +666,7 @@ func (s *SymData) TransMapValidate(p Point) ([][]Location, bool) {
 	n := 0
 	for i := range smap {
 		if smap[i] == nil {
-			marr = s.Translations(Location(i), p, marr, SYMMAXCELLS)
+			marr = s.Torus.Translations(s.Torus, Location(i), p, marr, SYMMAXCELLS)
 			if false && n == 0 {
 				log.Print("len(marr), size", len(marr), size)
 			}
@@ -604,8 +692,129 @@ func (s *SymData) TransMapValidate(p Point) ([][]Location, bool) {
 	return smap, true
 }
 
+func (tile *SymTile) Rot180(t Torus, loc Location, marr []Location) []Location {
+	var pr, pc int
+	st := tile.Subtile
+	p := st.Donut(t.ToPoint(loc))
+	if st.Rows%2 == 0 {
+		pr = p.R - tile.Origin.R + 1
+		pc = p.C - tile.Origin.C + 1
+	} else {
+		pr = tile.Origin.R - p.R
+		pc = tile.Origin.C - p.C
+	}
+
+	marr = append(marr, t.ToLocation(p))
+	marr = append(marr, t.ToLocation(st.Donut(Point{tile.Origin.R - pr, tile.Origin.C - pc})))
+
+	// log.Print(tile.Origin, loc, st, marr[len(marr)-2:], p, 
+	// Point{tile.Origin.R - pr, tile.Origin.C - pc},
+	// st.Donut(Point{tile.Origin.R - pr, tile.Origin.C - pc}))
+
+	return marr
+}
+func (tile *SymTile) Mirrors(t Torus, loc Location, marr []Location) []Location {
+	st := &tile.Subtile
+	if tile.Origin.R == 0 && tile.Origin.C == 0 {
+		return marr
+	}
+	marr = append(marr, t.ToLocations(st.Mirrors(st.Donut(t.ToPoint(loc)), tile.MR, tile.MC))...)
+
+	return marr
+}
+func (tile *SymTile) Rotations(t Torus, loc Location, marr []Location) []Location {
+	var pr, prs, pc, pcs int
+	st := tile.Subtile
+	p := st.Donut(t.ToPoint(loc))
+	pr = p.R - tile.Origin.R
+	pc = p.C - tile.Origin.C
+
+	if st.Rows%2 == 0 {
+		prs = -pr - 1
+		pcs = -pc - 1
+	} else {
+		prs = -pr
+		pcs = -pc
+		if pr == 0 && pc == 0 {
+			// odd square has fixed center point
+			// TODO origin choice should pick odd one so 
+			// we can ignore dups below.  No odd sized maps for 
+			// now though.
+			marr = append(marr, t.ToLocation(p))
+			return marr
+		}
+	}
+
+	marr = append(marr, t.ToLocations([]Point{
+		p,
+		st.Donut(Point{tile.Origin.R + pc, tile.Origin.C + prs}),
+		st.Donut(Point{tile.Origin.R + prs, tile.Origin.C + pcs}),
+		st.Donut(Point{tile.Origin.R + pcs, tile.Origin.C + pr}),
+	})...)
+
+	return marr
+}
+
+func (tile *SymTile) Diagonals(t Torus, loc Location, marr []Location) []Location {
+	st := tile.Subtile
+	if tile.Translate.R != 0 || tile.Translate.C != 0 {
+		return marr
+	}
+
+	p := make([]Point, 0, 4)
+	p = append(p, st.Donut(t.ToPoint(loc)))
+	if tile.RM1 != -1 {
+		p = SetAddPoint(p, st.ReflectRM1(p[0], tile.RM1))
+	}
+	if tile.RM2 != -1 {
+		for _, pp := range p {
+			p = SetAddPoint(p, st.ReflectRM2(pp, tile.RM2))
+		}
+	}
+
+	marr = append(marr, t.ToLocations(p)...)
+
+	return marr
+}
+
 // Given an analyzed tile generate the map for loc, appending map to marr
+// t is the Main map.
 func (tile *SymTile) Generate(t Torus, loc Location, marr []Location) []Location {
+	//mm := make([]Location, 0)
+	//log.Print(tile.Rotations(t, 6894, mm))
+	n := len(marr)
+	// Steps are generate the subtile points
+	switch tile.Gen {
+	case SYMTRANS:
+		marr = tile.Subtile.Translations(t, loc, tile.Translate, marr, SYMMAXCELLS)
+	case SYMMIRRORC, SYMMIRRORR, SYMMIRBOTH, SYMMIR8:
+		marr = tile.Mirrors(t, loc, marr)
+	case SYMROT90, SYMROT8:
+		marr = tile.Rotations(t, loc, marr)
+	case SYMRM1, SYMRM2, SYMRMBOTH:
+		marr = tile.Diagonals(t, loc, marr)
+	case SYMROT180:
+		marr = tile.Rot180(t, loc, marr)
+	case SYMNONE:
+		return marr
+	default:
+		log.Panic("TODO - invalid tile.Gen", tile.Gen)
+	}
+
+	if t.Cols != tile.Subtile.Cols || t.Rows != tile.Subtile.Rows {
+		m := len(marr)
+		for _, l := range marr[n:m] {
+			p := t.ToPoint(l)
+			for c := 0; c < t.Cols/tile.Subtile.Cols; c++ {
+				for r := 0; r < t.Rows/tile.Subtile.Rows; r++ {
+					if r != 0 || c != 0 {
+						np := t.PointAdd(p, Point{r * tile.Subtile.Rows, c * tile.Subtile.Cols})
+						marr = append(marr, t.ToLocation(np))
+					}
+				}
+			}
+		}
+	}
 	return marr
 }
 
@@ -622,20 +831,37 @@ func (s *SymData) SymMapValidate(tile *SymTile) ([][]Location, bool) {
 	for i := range smap {
 		if smap[loc] == nil {
 			marr = tile.Generate(s.Torus, Location(loc), marr)
-			if n == 0 {
-				log.Print("len(marr), size", len(marr), size)
-			}
-			if len(marr) == 0 || len(marr) > size {
-				log.Print("Invalid map len(marr), size, points", len(marr), size, marr[n:])
+			if len(marr) == 0 { // || len(marr) > size {
+				if len(marr) > size {
+					log.Print("Invalid map len(marr), size, points ", len(marr), size, marr[n:])
+					log.Print(tile)
+				}
 				return nil, false
 			}
+
+			found := false
+			for _, mloc := range marr[n:] {
+				if int(mloc) == loc {
+					found = true
+				}
+				if len(smap[mloc]) != 0 {
+					log.Print("Already seen ", loc, mloc, tile)
+				}
+			}
+			if !found {
+				log.Print("loc not returned in marr ", tile.Gen, loc, marr[n:], "\n", tile)
+			}
+
 			item := UNKNOWN
 			for _, mloc := range marr[n:] {
 				// Validate the equiv set is identical
 				if item == UNKNOWN {
 					item = s.TGrid[mloc]
 				} else if item != s.TGrid[mloc] {
-					log.Print("Invalid point found: i, n, loc, item, tgrid ", i, n, loc, int(item), s.TGrid[loc])
+					if Debug[DBG_Symmetry] {
+						log.Print("Invalid point found: i, n, loc, mloc, item, tgrid ",
+							i, n, loc, mloc, int(item), int(s.TGrid[mloc]), marr[n:])
+					}
 					return nil, false
 				}
 				smap[mloc] = marr[n:]
@@ -650,8 +876,9 @@ func (s *SymData) SymMapValidate(tile *SymTile) ([][]Location, bool) {
 	}
 	// Sanity check
 	if len(marr) != size {
-		log.Print("Tiling size mismatch ", len(marr), size)
-
+		if Debug[DBG_Symmetry] {
+			log.Print("Tiling size mismatch ", len(marr), size)
+		}
 		return nil, false
 	}
 
@@ -660,7 +887,9 @@ func (s *SymData) SymMapValidate(tile *SymTile) ([][]Location, bool) {
 
 func (tile *SymTile) String() string {
 	s := ""
-	s += fmt.Sprintf("Hash: %d Bits: %d Self: %d Origin: %v Gen: %d Translate %v Subtile: %v",
-		tile.Hash, tile.Bits, tile.Self, tile.Origin, tile.Gen, tile.Translate, tile.Subtile)
+	s += fmt.Sprintf("Hash: %d Bits: %d Self: %d Origin: %v Gen: %v Translate %v Subtile: %v\n",
+		tile.Hash, tile.Bits, tile.Self, tile.Origin, symLabels[tile.Gen], tile.Translate, tile.Subtile)
+	s += fmt.Sprintf("RM1: %v RM2 %v MR %v MC %v",
+		tile.RM1, tile.RM2, tile.MR, tile.MC)
 	return s
 }

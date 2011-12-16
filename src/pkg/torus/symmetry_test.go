@@ -74,9 +74,9 @@ type RRList struct {
 }
 
 var RR = []RRList{
-	//	{Torus{64, 64}, Torus{16, 16}, []Point{{32, 32}}, []Point{}, []Point{{16, 0}, {0, 16}, {32, 32}}},
-	//	{Torus{102, 129}, Torus{102, 129}, []Point{{34, 43}}, []Point{{34, 43}}, []Point{{34, 43}, {34, 43}, {34, 43}}},
-	{Torus{96, 80}, Torus{96, 80}, []Point{{24, -20}}, []Point{{24, -20}},
+	{Torus{64, 64}, Torus{16, 16}, []Point{{32, 32}}, []Point{}, []Point{{16, 0}, {0, 16}, {32, 32}}},
+	{Torus{102, 129}, Torus{102, 129}, []Point{{34, 43}}, []Point{{34, 43}}, []Point{{34, 43}, {34, 43}, {34, 43}}},
+	{Torus{96, 80}, Torus{96, 80}, []Point{{24, -20}}, []Point{{24, 60}},
 		[]Point{{24, -20}, {24, -20}, {48, 40}, {48, 40}, {24, -20}, {24, -20}, {24, -20}, {24, -20}, {48, 40}, {48, 40}, {24, -20}, {24, -20}, {24, -20}, {24, -20}, {48, 40}, {48, 40}, {24, -20}, {24, -20}, {48, 40}, {48, 40}, {24, -20}, {24, -20}, {24, -20}, {24, -20}}},
 }
 
@@ -91,9 +91,58 @@ func TestReduceReduce(t *testing.T) {
 		for i, p := range l.red {
 			l.red[i] = dim.Donut(p)
 		}
+
 		e = dim.ReduceReduce(l.red)
 		if !reflect.DeepEqual(e, l.re) {
 			t.Error("Reduction mismatched ", e, l.re, " data ", l)
 		}
 	}
+}
+
+func TestDiag(t *testing.T) {
+	m := Torus{100, 100}
+	p1 := Point{17, 84}
+	p2 := Point{11, 90}
+	o := m.Diag(p1, p2, 6)
+	s := m.ReflectRM1(p1, o)
+	if !m.PointEqual(s, p2) {
+		t.Error("Diag RM1 broken ", p1, p2, o, s)
+	}
+	s = m.ReflectRM1(p2, o)
+	if !m.PointEqual(s, p1) {
+		t.Error("Diag RM1 broken ", p1, p2, o, s)
+	}
+
+	m = Torus{67, 97}
+	o = m.Diag(p1, p2, 6)
+	s = m.ReflectRM1(p2, o)
+	if !m.PointEqual(s, p1) {
+		t.Error("Diag RM1 broken ", p1, p2, o, s)
+	}
+
+	m = Torus{100, 100}
+	p1 = Point{0, 0}
+	p2 = Point{20, 20}
+	o = m.Diag(p1, p2, 7)
+	s = m.ReflectRM2(p2, o)
+	if !m.PointEqual(s, p1) {
+		t.Error("Diag RM2 broken ", p1, p2, o, s)
+	}
+	s = m.ReflectRM2(p1, o)
+	if !m.PointEqual(s, p2) {
+		t.Error("Diag RM2 broken ", p1, p2, o, s)
+	}
+
+	m = Torus{67, 91}
+	o = m.Diag(p1, p2, 7)
+	s = m.ReflectRM2(p2, o)
+	if !m.PointEqual(s, p1) {
+		t.Error("Diag RM2 broken ", p1, p2, o, s)
+	}
+	s = m.ReflectRM2(p1, o)
+	if !m.PointEqual(s, p2) {
+		t.Error("Diag RM2 broken ", p1, p2, o, s)
+	}
+
+	// log.Print(m.Diag(p1, p2, 6))
 }

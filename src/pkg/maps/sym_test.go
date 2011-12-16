@@ -164,7 +164,7 @@ func BenchmarkTile8(b *testing.B) {
 }
 
 func TestZSym(t *testing.T) {
-	AllMaps := []string{"maze_p04_22"}
+	//AllMaps := []string{"maze_p04_31"}
 	for _, name := range AllMaps {
 		log.Printf("***************************  %s ***************************************************", name)
 		m := mapMeBaby(name)
@@ -190,13 +190,25 @@ func TestZSym(t *testing.T) {
 		}
 		if len(sym.Tiles) > 0 {
 			bad := 0
+			done := 0
 			for _, tile := range sym.Tiles {
 				if len(tile.Locs) == cycle {
 					eqlen := sym.SymAnalyze(tile)
-					if cycle != eqlen && tile.Self == 0 {
-						if bad > 20 && bad < 24 {
+					if done == 0 && cycle == eqlen && tile.Self == 0 {
+						log.Print("MMM ", tile.Gen, "::\"", name, "\":MapSymData{", cycle, ",", eqlen, ",", tile.Gen,
+							",\"", symLabels[tile.Gen], "\",", sym.Size()/tile.Subtile.Size(),
+							",", tile.Subtile.Rows, ",", tile.Subtile.Cols,
+							",Point{", tile.Translate.R, ",", tile.Translate.C, "}",
+							",", tile.RM1, ",", tile.RM2, ",", tile.MR, ",", tile.MC,
+							",Point{", tile.Origin.R, ",", tile.Origin.C, "}",
+							"},")
+
+						done++
+					}
+					if false && cycle != eqlen && tile.Self == 0 {
+						if bad < 4 {
 							log.Print("Len: ", eqlen, " Tile::", tile, "\n\t", m.ToPoints(tile.Locs))
-							if len(AllMaps) == 1 {
+							if len(AllMaps) == 0 {
 								sym.symdump(tile.Hash, m)
 							}
 						}
@@ -207,20 +219,22 @@ func TestZSym(t *testing.T) {
 			}
 			log.Print("Mismatched: ", bad, " ", name, " ", peak, cycle)
 		}
-
 	}
 }
 
 func TestSymMatch(t *testing.T) {
-	return
 	//Debug[DBG_Symmetry] = true
 	WS = NewWatches(0, 0, 0)
 	//AllMaps := []string{"test"}
-	for _, name := range AllMaps {
+	for name, sd := range MapSym {
+		if false && sd.Gen != SYMRMBOTH {
+			continue
+		}
 		m := mapMeBaby(name)
 		if m == nil {
 			t.Error("Map nil")
 		}
+		log.Print(name)
 		TPush("UpdateSymmetryData:" + name)
 		m.SymData.UpdateSymmetryData()
 		TPop()
@@ -232,10 +246,12 @@ func TestSymMatch(t *testing.T) {
 				break
 			}
 		}
+
 		if len(m.SMap) > 0 {
 			found = len(m.SMap[0])
 		}
-		log.Print("MAP ", name, " ", m.Rows, " ", m.Cols, " Cycle: ", cycle, " found ", found, found == cycle)
+
+		log.Print("MAP ", name, " ", m.Rows, " ", m.Cols, " Cycle: ", cycle, " found ", found, found == cycle, "\n", sd)
 	}
 }
 

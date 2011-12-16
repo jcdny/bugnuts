@@ -30,14 +30,50 @@ func (t *Torus) Rot(p1, p2 Point, sym int) (orig Point) {
 	return
 }
 
-// Either vert or horiz diagonal
-func (t *Torus) Diag(l1, l2 Location, sym int) Point {
-	//p1 := t.ToPoint(l1)
-	//p2 := t.ToPoint(l2)
-	log.Panic("not implemented")
+func (t Torus) ReflectRM1(p1 Point, o int) Point {
+	return t.Donut(Point{p1.C - o, p1.R + o})
+}
 
-	// for now punt
-	return Point{}
+func (t Torus) ReflectRM2(p1 Point, o int) Point {
+	return t.Donut(Point{o - p1.C, o - p1.R})
+}
+
+// Either vert or horiz diagonal
+func (t *Torus) Diag(p1, p2 Point, sym int) (orig int) {
+	orig = -1
+	if sym == 6 {
+		// RM1
+		orig = (p1.C + p2.C - p1.R - p2.R) / 2
+		for orig < 0 {
+			orig += t.Cols
+		}
+	} else if sym == 7 {
+		// RM2
+		// solve for R = 0
+		orig = (p1.C + p2.C + p1.R + p2.R) / 2
+		for orig-t.Cols > 0 {
+			orig -= t.Cols
+		}
+	}
+	//log.Print("sym,p1,p2,orig:", sym, p1, p2, orig)
+
+	return
+}
+
+func (t *Torus) Mirrors(p Point, mr, mc int) []Point {
+	pv := make([]Point, 1, 4)
+	pv[0] = p
+	if mr > -1 {
+		p.R = 2*mr - p.R
+		pv = append(pv, t.Donut(p))
+	}
+	if mc > -1 {
+		for _, pp := range pv {
+			pp.C = 2*mc - p.C
+			pv = append(pv, t.Donut(pp))
+		}
+	}
+	return pv
 }
 
 // Mirror returns the midpoint between two points.  Axis 0 is R and 1
@@ -182,6 +218,26 @@ func (t *Torus) SymAddPoint(in []Point, p Point) []Point {
 	return append(in, p)
 }
 
+func SetAddInt(in []int, p int) []int {
+	for _, ip := range in {
+		if ip == p {
+			return in
+		}
+	}
+
+	return append(in, p)
+}
+
+func SetAddPoint(in []Point, p Point) []Point {
+	for _, ip := range in {
+		if ip.R == p.R && ip.C == p.C {
+			return in
+		}
+	}
+
+	return append(in, p)
+}
+
 // Given a set of translation offsets returns the tiling dimension
 func (t *Torus) BlockDim(in []Point) (dim Torus) {
 	dim = *t
@@ -237,9 +293,9 @@ func (t *Torus) ReduceReduce(in []Point) []Point {
 
 	n := 0
 	for i, p := range in {
-		if p.R == 0 || p.C == 0 {
-			// cant happen?
-			log.Print("Attempt to reduce a blocking translate")
+		if Abs(p.R) < 5 || Abs(p.C) < 5 {
+			// drop nonsensical translates
+			continue
 		} else {
 			if n > 0 && t.PointEqual(in[n-1], p) {
 				continue
@@ -283,7 +339,6 @@ func (t *Torus) ReduceReduce(in []Point) []Point {
 		if t.PointEqual(pm, p) || t.TranslationEquiv(pm, p) {
 			continue
 		}
-		log.Print("adding", p)
 		left = append(left, p)
 	}
 
@@ -323,9 +378,12 @@ func (t *Torus) TranslationEquiv(pm, p Point) bool {
 // Translations produces the list of locations generated from a given
 // Location and translation.  It will return an empty slice in the
 // event that the translation is not periodic in maxcells steps.
-func (t *Torus) Translations(l1 Location, o Point, ll []Location, maxcells int) []Location {
-	ll = append(ll, l1)
-	p1 := t.ToPoint(l1)
+func (t *Torus) Translations(m Torus, l1 Location, o Point, ll []Location, maxcells int) []Location {
+	// NB t is the subtile and m the larger map -- jump through hoops to make 
+	// locations correct...
+	p1 := t.Donut(m.ToPoint(l1))
+	ll = append(ll, m.ToLocation(p1))
+	// log.Print(t, m, l1, m.ToPoint(l1), m.ToLocation(p1), len(ll), maxcells)
 	p := Point{}
 	for i := 1; i < maxcells+1; i++ {
 		p.C = (p1.C + i*o.C) % t.Cols
@@ -339,7 +397,7 @@ func (t *Torus) Translations(l1 Location, o Point, ll []Location, maxcells int) 
 		if p.R == p1.R && p.C == p1.C {
 			return ll
 		}
-		ll = append(ll, Location(p.R*t.Cols+p.C))
+		ll = append(ll, Location(p.R*m.Cols+p.C))
 	}
 	return []Location{}
 }
@@ -353,7 +411,7 @@ func (t *Torus) TransMap(p Point, maxcells int) [][]Location {
 	n := 0
 	for i := range smap {
 		if smap[i] == nil {
-			marr = t.Translations(Location(i), p, marr, maxcells)
+			marr = t.Translations(*t, Location(i), p, marr, maxcells)
 			if len(marr) == 0 || len(marr) > size {
 				return nil
 			}
