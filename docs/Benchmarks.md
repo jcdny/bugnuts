@@ -52,3 +52,21 @@ maps.BenchmarkTile4	      50	  31571460 ns/op
 maps.BenchmarkTile8	      50	  31571220 ns/op
 util.BenchmarkMinV	50000000	        73.5 ns/op
 util.BenchmarkMin	20000000	       107 ns/op
+
+c1.xlarge:
+
+game.BenchmarkParse	     100	  15677190 ns/op
+maps.BenchmarkApplyCached	     100	  15758880 ns/op
+maps.BenchmarkApplyNone	     100	  26980450 ns/op
+maps.BenchmarkApplyNoCache	      50	  37851860 ns/op
+maps.BenchmarkApplyCacheCreateA	      50	  42967940 ns/op
+maps.BenchmarkApplyCacheCreateB	      50	  28350060 ns/op
+maps.BenchmarkCacheAll	      10	 165462000 ns/op
+maps.BenchmarkTransMap	    2000	    784545 ns/op
+maps.BenchmarkTile0	      50	  39894780 ns/op
+maps.BenchmarkTile4	      50	  39509760 ns/op
+maps.BenchmarkTile8	      50	  39231520 ns/op
+engine.BenchmarkEngine	      10	 156166400 ns/op
+engine.BenchmarkEngineOrdered	      10	 168102500 ns/op
+util.BenchmarkMinV	20000000	        99.1 ns/op
+util.BenchmarkMin	20000000	       111 ns/op
