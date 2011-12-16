@@ -1,9 +1,9 @@
 #!/bin/bash
-BIN=~/src/ai/bot/bin
-ROOT=~/src/ai/bot/log/tcp
+BIN=~/bot/bin
+ROOT=~/bot/log/tcp
 
-BOT=bugnutsv8.0
-REMOTENAME=bugnutsv5
+BOT=bugnutsv8.3
+REMOTENAME=bugnutsv6
 
 BHOST=$1
 
@@ -61,5 +61,6 @@ while [ ! -e $ROOT/$BHOST/STOP ] ; do
     ln -sf $DATE/$GAME.log ../${REMOTENAME}.log
     ln -sf $DATE/$GAME.err ../${REMOTENAME}.err
     GAME="`expr $GAME + 1`"
+    curl -o /dev/null -d "email=jeff.davis@gmail.com&stat=$BHOST:played&count=1" http://api.stathat.com/ez &    
 done
 echo "INFO: exited at `date`"
