@@ -4,6 +4,7 @@ import (
 	"math"
 	"fmt"
 	"log"
+	"time"
 	. "bugnuts/torus"
 )
 
@@ -106,20 +107,40 @@ func (m *Map) offsetsCachePopulate(o *Offsets) {
 	}
 }
 
-func (m *Map) OffsetsCachePopulateAll(mask *Mask) {
+func (m *Map) OffsetsCachePopulateAll(mask *Mask, cutoff int64) {
 	// Depends on the nocache flag being set for anything we don't want cached...
+	if time.Nanoseconds() > cutoff {
+		return
+	}
 	m.offsetsCachePopulate(&mask.Offsets)
+	if time.Nanoseconds() > cutoff {
+		return
+	}
 	m.offsetsCachePopulate(&mask.Union)
-	m.offsetsCachePopulate(&mask.MM2O)
+	if time.Nanoseconds() > cutoff {
+		return
+	}
 	for i := 0; i < len(mask.Add); i++ {
 		m.offsetsCachePopulate(&mask.Add[i])
+	}
+	if time.Nanoseconds() > cutoff {
+		return
 	}
 	for i := 0; i < len(mask.Remove); i++ {
 		m.offsetsCachePopulate(&mask.Remove[i])
 	}
-	for i := 0; i < len(mask.MM); i++ {
-		m.offsetsCachePopulate(&mask.MM[i].Offsets)
-		m.offsetsCachePopulate(&mask.MM[i].Add)
+	if time.Nanoseconds() > cutoff {
+		return
+	}
+	if m.R < 10 {
+		m.offsetsCachePopulate(&mask.MM2O)
+		for i := 0; i < len(mask.MM); i++ {
+			if time.Nanoseconds() > cutoff {
+				return
+			}
+			m.offsetsCachePopulate(&mask.MM[i].Offsets)
+			m.offsetsCachePopulate(&mask.MM[i].Add)
+		}
 	}
 }
 

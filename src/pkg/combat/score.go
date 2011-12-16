@@ -4,7 +4,7 @@ import (
 	"log"
 	. "bugnuts/game"
 	. "bugnuts/util"
-	. "bugnuts/debug"
+	. "bugnuts/watcher"
 )
 
 func (ps *PartitionState) ComputeScore(c *Combat) {

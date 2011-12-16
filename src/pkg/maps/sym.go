@@ -5,8 +5,8 @@ import (
 	"os"
 	"fmt"
 	. "bugnuts/torus"
-	. "bugnuts/debug"
 	. "bugnuts/util"
+	. "bugnuts/watcher"
 )
 
 const (

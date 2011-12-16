@@ -7,7 +7,7 @@ import (
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 	. "bugnuts/util"
-	. "bugnuts/debug"
+	. "bugnuts/watcher"
 )
 
 type rMet struct {

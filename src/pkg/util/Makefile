@@ -5,7 +5,6 @@ GOFILES=\
 	gcdlcm.go\
 	math.go\
 	permute.go\
-	timing.go\
 
 include $(GOROOT)/src/Make.pkg
 

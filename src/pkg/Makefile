@@ -22,7 +22,6 @@ DIRS=\
 	statbot\
 	MyBot\
 	combat\
-	debug\
 	engine\
 	game\
 	maps\

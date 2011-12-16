@@ -7,8 +7,8 @@ import (
 	"rand"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
-	. "bugnuts/debug"
 	. "bugnuts/util"
+	. "bugnuts/watcher"
 )
 
 // Compute a path in to a point and return location and steps to minima.

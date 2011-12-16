@@ -6,7 +6,6 @@ import (
 	"fmt"
 	. "bugnuts/torus"
 	. "bugnuts/util"
-	. "bugnuts/debug"
 	. "bugnuts/watcher"
 )
 

@@ -6,8 +6,6 @@ import (
 	"bufio"
 	"os"
 	"fmt"
-	"time"
-	"runtime"
 	"strings"
 	. "bugnuts/maps"
 	. "bugnuts/viz"
@@ -70,12 +68,6 @@ func main() {
 
 	in := bufio.NewReader(os.Stdin)
 
-	// T0 START
-	btime := time.Nanoseconds()
-	etime, stime := btime, btime
-	egc := runtime.MemStats.PauseTotalNs
-	sgc := egc
-
 	// Load game definition
 	g, err := GameScan(in)
 	if err != nil {
@@ -84,7 +76,10 @@ func main() {
 		log.Printf("Game Info:\n%v\n", g)
 	}
 
+	TPush("NewState")
 	s := NewState(g)
+	TPop()
+
 	turns := make([]*Turn, 1, s.Turns+2)
 
 	// Create watch points
@@ -94,39 +89,27 @@ func main() {
 		WS.Load(wlist)
 	}
 
+	TPush("NewBot")
 	bot := NewBot(runBot, s)
+	TPop()
 	if bot == nil {
 		log.Printf("Failed to create bot \"%s\"", runBot)
 		return
 	}
 
-	// TODO this is a hack
-	if runBot == "v7" {
-		s.Testing = false
-	}
-
 	// Send go to tell server we are ready to process turns
 	fmt.Fprintf(os.Stdout, "go\n")
 
-	// Timing for turn 0 
-	// Timing hoohah
-	btime = time.Nanoseconds() // btime is reset since we want per turn time excluding steup.
-	stime, etime = etime, btime
-	sgc, egc = egc, runtime.MemStats.PauseTotalNs
-	if Debug[DBG_TurnTime] {
-		log.Printf("TURN %d %.2fms %.2fms GC",
-			0,
-			float64(etime-stime)/1e6,
-			float64(egc-sgc)/1e6)
-	}
-
 	for {
 		// READ TURN INFO FROM SERVER
+		TPush("@turnscan")
 		var t *Turn
 		t, _ = TurnScan(s.Map, in, t)
+		TPop()
 		if t.End {
 			break
 		}
+
 		if t.Turn != s.Turn+1 {
 			log.Printf("Turns out of order Turn parse is %d expected %d", t.Turn, s.Turn+1)
 		}
@@ -136,34 +119,27 @@ func main() {
 		}
 		turns = append(turns, t)
 
+		TPush("@process")
 		s.ProcessTurn(t)
+		TPop()
+		TPush("@statistics")
 		s.UpdateStatistics(t)
+		TPop()
 
 		if refmap != nil {
+			TPush("@validatemap")
 			count, out := MapValidate(refmap, s.Map)
+			TPop()
 			if count > 0 {
 				log.Print(out)
 			}
 		}
 
 		// Generate order list
+		TPush("@turn")
 		bot.DoTurn(s)
-
-		// Timing hoohah
-		stime, etime = etime, time.Nanoseconds()
-		sgc, egc = egc, runtime.MemStats.PauseTotalNs
-		if Debug[DBG_TurnTime] {
-			log.Printf("TURN %d %.2fms %.2fms GC %.2f SGap",
-				s.Turn,
-				float64(etime-t.Started)/1e6,
-				float64(egc-sgc)/1e6,
-				float64(t.Started-stime)/1e6)
-		}
+		TPop()
 	}
 
-	if Debug[DBG_TurnTime] {
-		etime = time.Nanoseconds()
-		log.Printf("TOTAL TIME %.2fms/turn for %d Turns",
-			float64(etime-btime)/1e6/float64(s.Turn), s.Turn)
-	}
+	TDump("/tmp/" + runBot + ".csv")
 }

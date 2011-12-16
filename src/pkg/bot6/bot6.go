@@ -20,7 +20,6 @@ import (
 	. "bugnuts/state"
 	. "bugnuts/MyBot"
 	. "bugnuts/parameters"
-	. "bugnuts/debug"
 	. "bugnuts/pathing"
 	. "bugnuts/viz"
 	. "bugnuts/game"

@@ -7,7 +7,7 @@ import (
 	. "bugnuts/maps"
 	. "bugnuts/game"
 	. "bugnuts/torus"
-	. "bugnuts/debug"
+	. "bugnuts/watcher"
 )
 
 func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap PartitionMap, cutoff int64, rng *rand.Rand) {

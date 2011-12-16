@@ -8,7 +8,7 @@ import (
 	. "bugnuts/torus"
 	. "bugnuts/pathing"
 	. "bugnuts/util"
-	. "bugnuts/debug"
+	. "bugnuts/watcher"
 )
 
 const PDist = 6  // MAGIC -- enemy max distance for partition
