@@ -1,16 +1,50 @@
 package torus
 
 import (
+	"log"
 	. "bugnuts/util"
 )
+
+func (t *Torus) Rot(p1, p2 Point, sym int) (orig Point) {
+	var r0, c0 int
+	if sym == 3 {
+		c0 = (p1.C + p2.C + p1.R - p2.R + 1) / 2
+		r0 = (p2.C - p1.C + p1.R + p2.R + 1) / 2
+		orig = t.Donut(Point{r0, c0})
+		if orig.R >= t.Rows/2 {
+			orig.R -= t.Rows / 2
+			orig.C -= t.Cols / 2
+			if orig.C < 0 {
+				orig.C += t.Cols
+			}
+		}
+	} else {
+		p := t.Mirror(p1, p2, 0)
+		r0 = p.R
+		p = t.Mirror(p1, p2, 1)
+		c0 = p.C
+		orig = Point{r0, c0}
+	}
+	//log.Print("ROT", t, p1, p2, r0, c0)
+
+	return
+}
+
+// Either vert or horiz diagonal
+func (t *Torus) Diag(l1, l2 Location, sym int) Point {
+	//p1 := t.ToPoint(l1)
+	//p2 := t.ToPoint(l2)
+	log.Panic("not implemented")
+
+	// for now punt
+	return Point{}
+}
 
 // Mirror returns the midpoint between two points.  Axis 0 is R and 1
 // is C.  By convention it will return either the axis closer to {0,0}
 // if the side dimension is even or the axis which exists between the
 // even spread of p1/p2.
-func (t *Torus) Mirror(l1, l2 Location, axis int) int {
-	p1 := t.ToPoint(l1)
-	p2 := t.ToPoint(l2)
+func (t *Torus) Mirror(p1, p2 Point, axis int) Point {
 
 	var o, s int
 	var odd bool
@@ -25,18 +59,26 @@ func (t *Torus) Mirror(l1, l2 Location, axis int) int {
 	}
 
 	if o == 0 {
-		return 0
+		return Point{}
 	}
 
+	//log.Print("mirror", axis, *t, p1, p2, odd, o, s, (s+1)/2)
 	if !odd {
-		if o > (s+1)/2 {
+		if o >= (s+1)/2 {
 			o -= (s + 1) / 2
 		}
 	} else {
 		o = (o + (s+1)/2) % s
 	}
 
-	return o
+	out := Point{}
+	if axis == 0 {
+		out.R = o
+	} else {
+		out.C = o
+	}
+
+	return out
 }
 
 // SymDiff returns the difference between two points.  By convention will return 
@@ -69,9 +111,10 @@ func (t *Torus) SymDiff(l1, l2 Location) Point {
 
 // ShiftReduce will take a translation to its minumum length offset.
 // I should just do this with math but my head hurts.
-func (t *Torus) ShiftReduce(l1, l2 Location, maxcells int) (Point, bool) {
-	p1 := t.ToPoint(l1)
-	p2 := t.ToPoint(l2)
+func (t *Torus) ShiftReduce(p1, p2 Point, maxcells int) (Point, bool) {
+	if t.PointEqual(p1, p2) {
+		return Point{}, false
+	}
 
 	r := p2.R - p1.R
 	c := p2.C - p1.C
@@ -83,22 +126,27 @@ func (t *Torus) ShiftReduce(l1, l2 Location, maxcells int) (Point, bool) {
 		c += t.Cols
 	}
 
+	if r == 0 || c == 0 {
+		return Point{}, false
+	}
+
+	n := Lcm(Lcm(t.Rows, r)/r, Lcm(t.Cols, c)/c)
+	if n > maxcells {
+		return Point{}, false
+	}
+
 	l := 65535
 	rm, cm := r, c
 	coff := [3]int{0, 0, -t.Cols}
 	roff := [3]int{0, -t.Rows, 0}
 
-	for i := 0; i < maxcells+1; i++ {
+	for i := 0; i < n; i++ {
 		cs := (c + i*c) % t.Cols
 		rs := (r + i*r) % t.Rows
-		if cs == 0 && rs == 0 && i != 0 {
-			return Point{R: rm, C: cm}, true
-		}
-
 		for j := 0; j < 3; j++ {
 			css := cs + coff[j]
 			rss := rs + roff[j]
-			if Abs(css)+Abs(rss) < l && (css != 0 || rss != 0) {
+			if Abs(css)+Abs(rss) < l && (css != 0 && rss != 0) {
 				l = Abs(css) + Abs(rss)
 				if rss < 0 {
 					cm = -css
@@ -111,56 +159,163 @@ func (t *Torus) ShiftReduce(l1, l2 Location, maxcells int) (Point, bool) {
 		}
 	}
 
-	return Point{R: 0, C: 0}, false
+	//log.Print(r, c, n, rm, cm)
+
+	return Point{R: rm, C: cm}, true
+}
+
+// point to the list
+func (t *Torus) SymAddPoint(in []Point, p Point) []Point {
+	for p.C-t.Cols > 0 {
+		p.C -= t.Cols
+	}
+	for p.R-t.Rows > 0 {
+		p.R -= t.Rows
+	}
+
+	for _, ip := range in {
+		if ip.C == p.C && ip.R == p.R {
+			return in
+		}
+	}
+
+	return append(in, p)
+}
+
+// Given a set of translation offsets returns the tiling dimension
+func (t *Torus) BlockDim(in []Point) (dim Torus) {
+	dim = *t
+	for _, p := range in {
+		if p.R != p.C && (p.R == 0 || p.C == 0) {
+			if p.C == 0 {
+				dim.Rows = p.R
+			}
+			if p.R == 0 {
+				dim.Cols = p.C
+			}
+		}
+	}
+
+	return dim
+}
+
+func (t *Torus) Translation(in []Point) Point {
+	tr := Point{}
+	n := 0
+	for _, p := range in {
+		if p.R != 0 && p.C != 0 {
+			tr = p
+			n++
+		}
+	}
+	if n == 1 {
+		return tr
+	}
+	return Point{}
+}
+func (t *Torus) TranslationLen(p Point) int {
+	if p.R == 0 && p.C == 0 {
+		return 1
+	}
+	if p.R == 0 {
+		return Abs(t.Cols / p.C)
+	}
+	if p.C == 0 {
+		return Abs(t.Rows / p.R)
+	}
+	result := Abs(Lcm(Lcm(p.R, t.Rows)/p.R, Lcm(p.C, t.Cols)/p.C))
+	//log.Print(t, p, " LEN: ", result, " lcm(r,R)/r ", Lcm(p.R, t.Rows)/p.R, " lcm(c,C)/c ", Lcm(p.C, t.Cols)/p.C)
+
+	return result
 }
 
 // ReduceReduce takes a list of translation offsets and generates the shortest spanning set
-// of offsets
+// of offsets, will remove subtiles.
 func (t *Torus) ReduceReduce(in []Point) []Point {
 	out := make([]Point, 0)
 	left := make([]Point, 0)
 
-	if len(in) == 1 {
+	n := 0
+	for i, p := range in {
+		if p.R == 0 || p.C == 0 {
+			// cant happen?
+			log.Print("Attempt to reduce a blocking translate")
+		} else {
+			if n > 0 && t.PointEqual(in[n-1], p) {
+				continue
+			} else {
+				if n < i {
+					in[n] = p
+				}
+				n++
+			}
+		}
+	}
+	//log.Print(n, in[:n])
+	in = in[:n]
+
+	if len(in) == 0 {
+		return []Point{}
+	} else if len(in) == 1 {
 		out = append(out, in[0])
 		return out
 	}
 
 	// figure out shortest line in set
-	l := Abs(in[0].R) + Abs(in[0].C)
-	min := 0
-	for i, p := range in[1:] {
+	l := 65535
+	min := -1
+	//log.Print("using in", in)
+	for i, p := range in {
 		if Abs(p.R)+Abs(p.C) < l {
 			l = Abs(p.R) + Abs(p.C)
 			min = i
 		}
 	}
+	if min < 0 {
+		log.Print("no min")
+		return []Point{}
+	} else {
+		//log.Print("min ", in[min])
+	}
 
 	pm := in[min]
-	for i, p := range in {
-		if i == min || t.TranslationEquiv(pm, p) {
+	for _, p := range in {
+		if t.PointEqual(pm, p) || t.TranslationEquiv(pm, p) {
 			continue
 		}
+		log.Print("adding", p)
 		left = append(left, p)
 	}
+
 	if len(left) == 0 {
 		out = append(out, pm)
 		return out
 	}
-
 	return append(out, t.ReduceReduce(left)...)
 }
 
 // TranslationEquiv returns true if pm and p are equivalent translations
 func (t *Torus) TranslationEquiv(pm, p Point) bool {
 	if pm.R != 0 && Abs(pm.R) < Abs(p.R) && Abs(p.R)%Abs(pm.R) == 0 {
-		if p.C == pm.C*(p.R/pm.R) || p.C == pm.C*(p.R/pm.R)-t.Cols {
-			return true
+		n := pm.C * p.R / pm.R
+		for n < p.C {
+			n += t.Cols
 		}
+		for n > p.C {
+			n -= t.Cols
+		}
+		return n == p.C
 	}
+
 	if pm.C != 0 && Abs(pm.C) < Abs(p.C) && Abs(p.C)%Abs(pm.C) == 0 {
-		if p.R == pm.R*(p.C/pm.C) || p.R == pm.R*(p.C/pm.C)-t.Rows {
-			return true
+		n := pm.R * p.C / pm.C
+		for n < p.R {
+			n += t.Rows
 		}
+		for n > p.R {
+			n -= t.Rows
+		}
+		return n == p.R
 	}
 	return false
 }

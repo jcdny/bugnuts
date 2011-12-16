@@ -10,13 +10,16 @@ import (
 	. "bugnuts/watcher"
 )
 
+func init() {
+	//AllMaps = []string{"test"}
+	log.SetFlags(log.Lshortfile)
+}
+
 func TestShiftReduce(t *testing.T) {
 	T := Torus{Rows: 7, Cols: 7}
 
-	l1 := Location(0)
 	p2 := Point{-1, 3}
-	l2 := T.ToLocation(p2)
-	p, good := T.ShiftReduce(l1, l2, SYMMAXCELLS)
+	p, good := T.ShiftReduce(Point{}, p2, SYMMAXCELLS)
 	if !good || p.R != 2 || p.C != 1 {
 		t.Errorf("ShiftReduce: expected {2 1} got %v", good, p)
 	}
@@ -25,11 +28,9 @@ func TestShiftReduce(t *testing.T) {
 func TestMirror(t *testing.T) {
 	T := Torus{72, 72}
 	p1 := Point{43, 0}
-	l1 := T.ToLocation(p1)
 	p2 := Point{43, 65}
-	l2 := T.ToLocation(p2)
-	m := T.Mirror(l1, l2, 1)
-	if m != 33 {
+	m := T.Mirror(p1, p2, 1)
+	if m.C != 33 {
 		t.Errorf("Mirror: %v %v: %d", p1, p2, m)
 	}
 }
@@ -162,12 +163,8 @@ func BenchmarkTile8(b *testing.B) {
 	}
 }
 
-func TestSym(t *testing.T) {
-	//AllMaps := []string{"random_walk_10p_02"}
-	//AllMaps := []string{"maze_04p_02"}
-	//AllMaps := []string{"../crazy"}
-	//AllMaps := []string{"cell_maze_p06_01"}
-	AllMaps := []string{"maze_p04_02"}
+func TestZSym(t *testing.T) {
+	AllMaps := []string{"maze_p04_22"}
 	for _, name := range AllMaps {
 		log.Printf("***************************  %s ***************************************************", name)
 		m := mapMeBaby(name)
@@ -183,23 +180,39 @@ func TestSym(t *testing.T) {
 
 		log.Printf("MAP %s Tiles: %d entries rows %d cols %d", name, len(sym.Tiles), m.Rows, m.Cols)
 		log.Printf("NLen: %v", sym.NLen)
+
+		peak := Max(sym.NLen[:])
+		var cycle, n int
+		for cycle, n = range sym.NLen {
+			if n == peak {
+				break
+			}
+		}
 		if len(sym.Tiles) > 0 {
-			done := 0
-			for minhash, tile := range sym.Tiles {
-				if done < 2 && len(tile.Locs) < 20 {
-					sf, p1, p2, _ := sym.SymAnalyze(minhash)
-					if true {
-						done++
-						log.Printf("Analyze: %v %v %v bits %d self %d: len %d, ex: %v", sf, p1, p2, tile.Bits, tile.Self, len(tile.Locs), m.ToPoints(tile.Locs)[:4])
+			bad := 0
+			for _, tile := range sym.Tiles {
+				if len(tile.Locs) == cycle {
+					eqlen := sym.SymAnalyze(tile)
+					if cycle != eqlen && tile.Self == 0 {
+						if bad > 20 && bad < 24 {
+							log.Print("Len: ", eqlen, " Tile::", tile, "\n\t", m.ToPoints(tile.Locs))
+							if len(AllMaps) == 1 {
+								sym.symdump(tile.Hash, m)
+							}
+						}
+						bad++
 						//sym.symdump(minhash, m)
 					}
 				}
 			}
+			log.Print("Mismatched: ", bad, " ", name, " ", peak, cycle)
 		}
+
 	}
 }
 
 func TestSymMatch(t *testing.T) {
+	return
 	//Debug[DBG_Symmetry] = true
 	WS = NewWatches(0, 0, 0)
 	//AllMaps := []string{"test"}
@@ -211,6 +224,7 @@ func TestSymMatch(t *testing.T) {
 		TPush("UpdateSymmetryData:" + name)
 		m.SymData.UpdateSymmetryData()
 		TPop()
+
 		peak := Max(m.SymData.NLen[:])
 		var found, cycle, n int
 		for cycle, n = range m.SymData.NLen {
@@ -234,12 +248,14 @@ func (sym *SymData) symdump(tile SymHash, m *Map) {
 	str := "\n"
 	for _, l1 := range llist {
 		// offset matrix
+		p1 := sym.ToPoint(l1)
 		for _, l2 := range llist {
 			var pd Point
+			p2 := sym.ToPoint(l2)
 			good := false
 			if l1 != l2 {
 				if sym.Hashes[l1][0] == sym.Hashes[l2][0] {
-					pd, good = m.ShiftReduce(l1, l2, SYMMAXCELLS)
+					pd, good = m.ShiftReduce(p1, p2, SYMMAXCELLS)
 					if good {
 						redlist = append(redlist, pd)
 					}

@@ -44,20 +44,24 @@ func (t *Torus) ToPoint(l Location) (p Point) {
 // Donut converts a Point which may be outside the canonical torus to 
 // a Point with 0 <= R < Rows and 0 <= C < Cols.
 func (t *Torus) Donut(p Point) Point {
-	if p.R < 0 {
+	for p.R < 0 {
 		p.R += t.Rows
 	}
-	if p.R >= t.Rows {
+	for p.R >= t.Rows {
 		p.R -= t.Rows
 	}
-	if p.C < 0 {
+	for p.C < 0 {
 		p.C += t.Cols
 	}
-	if p.C >= t.Cols {
+	for p.C >= t.Cols {
 		p.C -= t.Cols
 	}
 
 	return p
+}
+
+func (t *Torus) Equal(t1 Torus) bool {
+	return t.Rows == t1.Rows && t.Cols == t1.Cols
 }
 
 // PointEqual compares two Points for equality and assumes they are already in standard coordinates.
