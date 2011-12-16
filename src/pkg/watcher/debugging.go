@@ -1,8 +1,7 @@
-package debug
+package watcher
 
 import (
 	"log"
-	. "bugnuts/watcher"
 )
 
 const (
