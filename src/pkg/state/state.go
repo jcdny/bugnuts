@@ -7,6 +7,7 @@ import (
 	. "bugnuts/torus"
 	. "bugnuts/game"
 	. "bugnuts/combat"
+	. "bugnuts/watcher"
 )
 
 type Hill struct {
@@ -61,8 +62,12 @@ func NewState(g *GameInfo) *State {
 	s.AttackMask = MakeMask(s.AttackRadius2, s.Rows, s.Cols)
 
 	// Populate calculated locations caches.
-	m.OffsetsCachePopulateAll(s.ViewMask)
-	m.OffsetsCachePopulateAll(s.AttackMask)
+	TPush("View Cache Populate")
+	m.OffsetsCachePopulateAll(s.ViewMask, s.Cutoff-200e6)
+	TPop()
+	TPush("Attack Cache Populate")
+	m.OffsetsCachePopulateAll(s.AttackMask, s.Cutoff-200e6)
+	TPop()
 
 	// From every point on the map we know nothing.
 	for i := range s.Met.Unknown {

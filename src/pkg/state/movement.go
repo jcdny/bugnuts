@@ -8,7 +8,7 @@ import (
 	. "bugnuts/torus"
 	. "bugnuts/maps"
 	. "bugnuts/game"
-	. "bugnuts/debug"
+	. "bugnuts/watcher"
 )
 
 func (s *State) MoveAnt(from, to Location) bool {
