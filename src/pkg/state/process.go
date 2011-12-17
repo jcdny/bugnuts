@@ -80,7 +80,7 @@ func (s *State) ProcessTurn(t *Turn) {
 	}
 
 	s.ProcessVisible(t.A, 0, s.Turn)
-	s.UpdateSymmetryData()
+	s.UpdateSymmetryData(time.Nanoseconds() + 20*MS)
 
 	s.ProcessFood(t.F, s.Turn)
 	s.ProcessAnts(t.A, 0, s.Turn)
