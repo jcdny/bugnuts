@@ -11,7 +11,15 @@ import (
 	. "bugnuts/game"
 	. "bugnuts/engine"
 	. "bugnuts/MyBot"
+	. "bugnuts/watcher"
 )
+
+func init() {
+	SetWatcherPrefix("sb")
+	log.SetFlags(log.Lshortfile)
+	Debug[DBG_GatherTime] = true
+	Debug[DBG_TurnTime] = true
+}
 
 func statMe(in, out, user string) {
 	match, err := replay.Load(in)
@@ -46,6 +54,10 @@ func statMe(in, out, user string) {
 	s := NewState(&match.GameInfo)
 	bot := NewBot("sb", s)
 
+	if bot == nil {
+		log.Print("error creating bot", bot)
+		return
+	}
 	sb := bot.(*StatBot)
 	sb.SetTrueState(g, unum)
 
@@ -65,12 +77,27 @@ func statMe(in, out, user string) {
 }
 
 func TestStatBot(t *testing.T) {
-	replays, _ := ioutil.ReadFile("testdata/bugnuts.tmp")
-	for _, file := range strings.Split(string(replays), "\n")[:10] {
+	var replaylist []string
+	var user string
+	if false {
+		user = "a1k0n"
+		replays, err := ioutil.ReadFile("testdata/" + user + ".tmp")
+		if err != nil {
+			t.Error(err)
+		}
+		replaylist = strings.Split(string(replays), "\n")
+	} else {
+		replaylist = []string{"fluxid.38928.replay"}
+		user = "bugnutsv6"
+	}
+
+	for _, file := range replaylist {
+		if file == "" {
+			continue
+		}
 		in := "testdata/" + file
 		t := strings.Split(file, "/")
-		out := "testdata/tmp/" + t[len(t)-1] + ".csv"
-		user := "bugnutsv5"
+		out := "testdata/" + t[len(t)-1] + ".csv"
 		log.Print("Read ", in, " write ", out, " for ", user)
 		statMe(in, out, user)
 	}
