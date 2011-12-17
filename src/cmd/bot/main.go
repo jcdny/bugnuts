@@ -10,7 +10,6 @@ import (
 	. "bugnuts/maps"
 	. "bugnuts/viz"
 	. "bugnuts/watcher"
-	. "bugnuts/debug"
 	. "bugnuts/state"
 	. "bugnuts/game"
 	. "bugnuts/MyBot"
@@ -39,7 +38,7 @@ func init() {
 		vizHelp += "," + flag
 	}
 
-	flag.StringVar(&runBot, "b", "v7", "Which bot to run\n\t"+strings.Join(BotList(), "\n\t"))
+	flag.StringVar(&runBot, "b", "v8", "Which bot to run\n\t"+strings.Join(BotList(), "\n\t"))
 	flag.StringVar(&vizList, "V", "", vizHelp)
 	flag.IntVar(&debugLevel, "d", 0, "Debug level")
 	flag.StringVar(&mapName, "m", "", "Map file -- Used to validate generated map, hill guessing etc.")
@@ -60,6 +59,8 @@ func init() {
 
 func main() {
 	//TurnTimer()
+	wd, _ := os.Getwd()
+	log.Print("Running bot in ", wd)
 
 	var refmap *Map
 	if mapName != "" {
@@ -75,19 +76,19 @@ func main() {
 	} else if Debug[DBG_Start] {
 		log.Printf("Game Info:\n%v\n", g)
 	}
+	TurnSet(0)
+	// Create watch points
+	WS = NewWatches(g.Rows, g.Cols, g.Turns)
+	if len(watchPoints) > 0 {
+		wlist := strings.Split(watchPoints, ";")
+		WS.Load(wlist)
+	}
 
 	TPush("NewState")
 	s := NewState(g)
 	TPop()
 
 	turns := make([]*Turn, 1, s.Turns+2)
-
-	// Create watch points
-	WS = NewWatches(s.Rows, s.Cols, s.Turns)
-	if len(watchPoints) > 0 {
-		wlist := strings.Split(watchPoints, ";")
-		WS.Load(wlist)
-	}
 
 	TPush("NewBot")
 	bot := NewBot(runBot, s)
@@ -141,5 +142,12 @@ func main() {
 		TPop()
 	}
 
-	TDump("/tmp/" + runBot + ".csv")
+	// If we are running on tcp dump to file
+	if Debug[DBG_GatherTime] {
+		file := "/tmp/" + runBot + ".csv"
+		if os.Getenv("BHOST") != "" {
+			file = os.Getenv("BHOST") + "-" + os.Getenv("GAME") + "-" + runBot + ".csv"
+		}
+		TDump(file)
+	}
 }
