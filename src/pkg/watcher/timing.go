@@ -127,10 +127,10 @@ func TDump(file string) {
 	fmt.Fprintf(fd, "name,turn,count,accumulated,started,stopped\n")
 	for i := 0; i < len(TurnTimer.Started); i++ {
 		if TurnTimer.Started[i] != 0 && TurnTimer.Stopped[i] != 0 {
+			elapsed := float64(TurnTimer.Stopped[i]-TurnTimer.Started[i]) / 1e6
 			fmt.Fprintf(fd, "%s,%d,%d,%.2f,%.2f,%.2f\n",
 				TurnTimer.Name, i, TurnTimer.Count[i],
-				0.0, 0.0,
-				float64(TurnTimer.Stopped[i]-TurnTimer.Started[i])/1e6)
+				elapsed, 0.0, elapsed)
 		}
 	}
 
