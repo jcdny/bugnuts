@@ -39,6 +39,7 @@ type State struct {
 	Stats        *Statistics        //Computed statistics
 	Met          *Metrics           // Map Metrics
 	C            *Combat
+	Cprev        *Combat
 
 	Testing bool
 	// Caches

@@ -137,12 +137,14 @@ func (s *State) ProcessTurn(t *Turn) {
 	s.Met.HBorder = s.StepHorizon(s.Met.HBorder)
 	s.UpdateHillMaps()
 	s.MonteCarloDensity()
+	s.Cprev = s.C
 	s.CombatSetup()
 }
 
 func (s *State) CombatSetup() {
 	s.C = NewCombat(s.Map, s.AttackMask, 10)
 	s.C.Setup(s.Ants)
+
 }
 
 // Given list of player/location update Land visible

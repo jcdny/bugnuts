@@ -1,8 +1,12 @@
 package state
 
 import (
+	"log"
 	. "bugnuts/game"
 	. "bugnuts/maps"
+	. "bugnuts/combat"
+	. "bugnuts/torus"
+	. "bugnuts/util"
 )
 
 type TurnStatistics struct {
@@ -15,13 +19,18 @@ type TurnStatistics struct {
 	Died    [MaxPlayers]int // Chronicle of a Death Foretold
 	DiedAll int             // Total deaths seen
 	//Gathered    [MaxPlayers]int // How much food did we see gathered
+	Suicide     [MaxPlayers]int
 	StaticCount [MaxPlayers]int // Count of unmoved ants
+	PRisk       [MaxPlayers][MaxRiskStat]int
 }
 
 type Statistics struct {
+	NP      int
 	DiedMap []int // Death count per location
 	//StaticMap      []int            // Turns given cell has been occupied by the same player.
 	//PlayerMap      []int            // used to drive static map
+	RiskTot        [MaxPlayers][MaxRiskStat]int
+	SuicideTot     [MaxPlayers]int
 	DiedTot        [MaxPlayers]int  // Chronicle of a Death Foretold, Running total of deaths seen
 	DiedTotAll     int              // Total number of deaths seen this game
 	SeenMax        [MaxPlayers]int  // Maximum number seen
@@ -45,8 +54,11 @@ func NewStatistics(g *GameInfo) *Statistics {
 
 func (s *State) UpdateStatistics(turn *Turn) {
 	ts := &s.Stats.TStats[turn.Turn]
-	s.Stats.ProcessDeadAnts(ts, turn.D)
-	s.Stats.ProcessSeen(ts, turn.A, turn.Turn)
+	s.Stats.ProcessSeen(ts, turn.A, turn.Turn, s.Cprev)
+	s.Stats.ProcessDeadAnts(ts, turn.D, s.Cprev)
+	log.Print("Rtot  ", s.Stats.RiskTot[0:s.Stats.NP])
+	log.Print("PRisk ", ts.PRisk[0:s.Stats.NP])
+
 	ts.Food = len(turn.F)
 
 	// Horizon count
@@ -74,26 +86,69 @@ func (s *State) UpdateStatistics(turn *Turn) {
 	}
 }
 
-func (s *Statistics) ProcessDeadAnts(ts *TurnStatistics, deadants []PlayerLoc) {
+func (s *Statistics) ProcessDeadAnts(ts *TurnStatistics, deadants []PlayerLoc, c *Combat) {
+	if len(deadants) == 0 {
+		return
+	}
+
+	suicide := make(map[Location]int, 20)
 	for _, pl := range deadants {
 		ts.Died[pl.Player]++
 		ts.DiedAll++
 		s.DiedTot[pl.Player]++
 		s.DiedMap[pl.Loc]++
+		if _, ok := suicide[pl.Loc]; ok {
+			ts.Suicide[pl.Player]++
+			s.SuicideTot[pl.Player]++
+			suicide[pl.Loc]++
+			log.Print("suicide", pl)
+		} else {
+			suicide[pl.Loc] = 1
+		}
 	}
 	s.DiedTotAll += ts.DiedAll
 
+	if c != nil {
+		for _, pl := range deadants {
+			if n, ok := suicide[pl.Loc]; ok && n == 1 {
+				r, ok := c.Risk[pl.Player][pl.Loc]
+				if !ok {
+					r = RiskNone
+				} else {
+					log.Print("rdeath ", r, pl)
+				}
+				s.RiskTot[pl.Player][r]++
+			}
+		}
+	}
+
 }
 
-func (s *Statistics) ProcessSeen(ts *TurnStatistics, ants []PlayerLoc, turn int) {
+func (s *Statistics) ProcessSeen(ts *TurnStatistics, ants []PlayerLoc, turn int, c *Combat) {
 	for _, pl := range ants {
 		ts.Seen[pl.Player]++
 		ts.SeenAll++
 	}
+
 	for i, n := range ts.Seen {
 		if n >= s.SeenMax[i] {
+			if n > 0 {
+				s.NP = MaxV(s.NP, i+1)
+			}
 			s.SeenMax[i] = n
 			s.SeenMaxTurn[i] = turn
+		}
+	}
+
+	if c != nil {
+		for _, pl := range ants {
+			r, ok := c.Risk[pl.Player][pl.Loc]
+			if !ok {
+				r = RiskNone
+			} else {
+				// log.Print("rlife ",r, pl)
+			}
+			ts.PRisk[pl.Player][r]++
 		}
 	}
 }
