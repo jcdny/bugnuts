@@ -74,6 +74,7 @@ func (pmap *PartitionMap) Get(from Location) []Location {
 
 type pStat struct {
 	tot    int
+	nc     int
 	menemy int
 	pn     [MaxPlayers]int // count of ants per player
 	pp     [MaxPlayers]int // count of ants per player post prune
@@ -150,6 +151,7 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 				pstat.tot++
 			}
 		}
+		pstat.nc = pstat.tot
 		pstat.menemy = Max(pstat.pn[1:])
 	}
 
@@ -196,33 +198,32 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 	// Now prune any ant which need not be involved in combat...
 	for ploc, ap := range parts {
 		log.Print("Pruning ", ploc)
-		found := false
 		for np, n := range pstats[ploc].pn {
 			if n > 0 {
-				found = found || ap.prune(pstats[ploc], np, c)
+				ap.prune(pstats[ploc], np, c)
 			}
 		}
-		// Nuke any partition with no ants in combat
-		if !found {
-			parts[ploc] = &AntPartition{}, false
-		}
-	}
-
-	// Finally disolve partitions which are 1-1
-	// just rely on normal risk behavior on those.
-	for ploc := range parts {
-		if pstats[ploc].tot < 3 {
-			parts[ploc] = &AntPartition{}, false
+		// Finally make any partition which is 1-1 combat
+		// empty
+		if pstats[ploc].nc < 3 {
+			pstats[ploc].nc = 0
+			ap.Pants = append(ap.Pants, ap.Ants...)
+			ap.Ants = ap.Ants[:0]
 		}
 	}
 
 	return parts, pmap
 }
 
+// Return true if any of the given player are in combat post prune.
 func (ap *AntPartition) prune(stat *pStat, np int, c *Combat) bool {
 	// skip the ants not part of np
 	// also a bit of a hack... set playermap to -1 for now.
 	// this is so pruning is easier.
+	if len(ap.Ants) == 0 {
+		return false
+	}
+
 	ants := make([]Location, 0, len(ap.Ants))
 	n := 0
 	for _, loc := range ap.Ants {
@@ -315,9 +316,7 @@ func NewPartitionState(c *Combat, ap *AntPartition) *PartitionState {
 		}
 	}
 
-	// sanity
 	if ps.PLive < 2 {
-		log.Panic("Partition with less than 2 players")
 		return ps
 	}
 

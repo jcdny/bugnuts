@@ -8,6 +8,10 @@ import (
 )
 
 func (ps *PartitionState) ComputeScore(c *Combat) {
+	if ps == nil || len(ps.P) == 0 {
+		return
+	}
+
 	N := make([]int, len(ps.P))
 	for i := range ps.P {
 		N[i] = len(ps.P[i].First)
@@ -20,6 +24,9 @@ func (ps *PartitionState) ComputeScore(c *Combat) {
 		move[ip] = make([]AntMove, ps.ALive)
 		ib, ie := 0, 0
 		for np := 0; np < ps.PLive; np++ {
+			if len(p) == 0 {
+				log.Print("Bad P:", len(ps.P), ps.ALive, N)
+			}
 			ib, ie = ie, ie+len(ps.P[np].First[p[np]])
 			//log.Print("Perm,Player,Scenario,ib,ie,total", ip, np, p[np], ib, ie, ps.ALive)
 			copy(move[ip][ib:ie], ps.P[np].First[p[np]])
