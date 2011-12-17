@@ -11,6 +11,7 @@ import (
 	. "bugnuts/state"
 	. "bugnuts/MyBot"
 	. "bugnuts/parameters"
+	. "bugnuts/watcher"
 	. "bugnuts/pathing"
 	. "bugnuts/viz"
 	. "bugnuts/game"

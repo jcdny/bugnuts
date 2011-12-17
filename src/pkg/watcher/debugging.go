@@ -5,7 +5,8 @@ import (
 )
 
 const (
-	DBG_TurnTime = iota + 1
+	DBG_GatherTime = iota + 1
+	DBG_TurnTime
 	DBG_Iterations
 	DBG_Start
 	DBG_Threat
@@ -27,7 +28,7 @@ var WS *Watches
 
 // DebugLevels are cumulative, but a 0 resets all to false and a -Level unsets.
 var debugLevels = [][]int{
-	0: {0},
+	0: {DBG_GatherTime},
 	1: {DBG_TurnTime},
 	2: {DBG_Iterations, DBG_Symmetry},
 	3: {DBG_Targets, DBG_Threat},

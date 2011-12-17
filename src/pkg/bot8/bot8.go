@@ -11,6 +11,7 @@ import (
 	. "bugnuts/state"
 	. "bugnuts/MyBot"
 	. "bugnuts/parameters"
+	. "bugnuts/watcher"
 	. "bugnuts/pathing"
 	. "bugnuts/viz"
 	. "bugnuts/game"
@@ -159,9 +160,9 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 		}
 
 		for _, seg := range segs {
-			ant := ants[seg.Src]
+			ant, aok := ants[seg.Src]
 			tgt, ok := (*tset)[seg.End]
-			if !ok && seg.End != 0 {
+			if !aok || (!ok && seg.End != 0) {
 				if Debug[DBG_MoveErrors] {
 					log.Printf("Move from %v(%d) to %v(%d) no target ant: %#v",
 						s.ToPoint(seg.Src), seg.Src, s.ToPoint(seg.End), seg.End, ant)

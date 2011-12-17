@@ -7,6 +7,7 @@ import (
 	. "bugnuts/torus"
 	. "bugnuts/util"
 	. "bugnuts/watcher"
+	. "bugnuts/watcher"
 )
 
 func init() {

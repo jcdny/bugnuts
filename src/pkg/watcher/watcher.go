@@ -7,6 +7,7 @@ import (
 	"math"
 	"log"
 	"sync"
+	"time"
 	. "bugnuts/util"
 	. "bugnuts/torus"
 )
@@ -33,6 +34,11 @@ func TurnSet(t int) {
 	pre := globalTurn.prefix
 	globalTurn.lock.Unlock()
 	log.SetPrefix(pre + ":" + strconv.Itoa(t) + ":")
+	// TODO fix this.
+	TurnTimer.Started[t] = time.Nanoseconds()
+	if t > 0 {
+		TurnTimer.Stopped[t-1] = TurnTimer.Started[t]
+	}
 }
 
 func TurnGet() int {
@@ -40,6 +46,13 @@ func TurnGet() int {
 	t := globalTurn.turn
 	globalTurn.lock.Unlock()
 	return t
+}
+
+func TurnElapsed() int64 {
+	globalTurn.lock.Lock()
+	t := globalTurn.turn
+	globalTurn.lock.Unlock()
+	return time.Nanoseconds() - TurnTimer.Started[t]
 }
 
 type Watch struct {

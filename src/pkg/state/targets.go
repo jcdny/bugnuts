@@ -7,9 +7,9 @@ import (
 	"sort"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
+	. "bugnuts/watcher"
 	. "bugnuts/pathing"
 	. "bugnuts/util"
-	. "bugnuts/watcher"
 )
 
 type Target struct {

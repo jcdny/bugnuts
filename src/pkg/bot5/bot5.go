@@ -24,6 +24,7 @@ import (
 	. "bugnuts/state"
 	. "bugnuts/parameters"
 	. "bugnuts/MyBot"
+	. "bugnuts/watcher"
 	. "bugnuts/viz"
 )
 

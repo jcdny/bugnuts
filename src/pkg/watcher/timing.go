@@ -19,11 +19,15 @@ type TimingData struct {
 }
 
 var Times = make(map[string]*TimingData, 100)
-
+var TurnTimer *TimingData
 var LMark []int64 = make([]int64, 0, 10)
 var LStr []string = make([]string, 0, 10)
 
 //Todo channels and stuff
+
+func init() {
+	TurnTimer = NewTimingData("turntimer", 2000)
+}
 
 func NewTimingData(name string, n int) *TimingData {
 	td := &TimingData{
@@ -41,14 +45,14 @@ func TPush(s string) {
 	LMark = append(LMark, mark)
 	LStr = append(LStr, s)
 
-	if s[0] == '@' {
+	if Debug[DBG_GatherTime] && s[0] == '@' {
 		turn := TurnGet()
 		t, ok := Times[s]
 		if !ok {
-			t = NewTimingData(s, 2500)
+			t = NewTimingData(s[1:], 2500)
 			Times[s] = t
 		}
-		if t.Started[turn] != 0 {
+		if t.Started[turn] == 0 {
 			t.Started[turn] = mark
 		}
 		t.stack++
@@ -68,7 +72,7 @@ func TPop() int64 {
 	LMark = LMark[:len(LMark)-1]
 	LStr = LStr[:len(LStr)-1]
 
-	if s[0] == '@' {
+	if Debug[DBG_GatherTime] && s[0] == '@' {
 		if t, ok := Times[s]; ok {
 			t.Total += diff
 			t.Accumulate[t.TLast] += diff
@@ -78,16 +82,20 @@ func TPop() int64 {
 			} else {
 				t.stack--
 			}
-			log.Printf("** %.2fms/%.2fms/%.2fms %s",
-				float64(diff)/1e6,
-				float64(t.Accumulate[t.TLast])/1e6,
-				float64(t.Total)/1e6,
-				s)
+			if Debug[DBG_TurnTime] && s[0] == '@' {
+				log.Printf("** %.2fms/%.2fms/%.2fms %s",
+					float64(diff)/1e6,
+					float64(t.Accumulate[t.TLast])/1e6,
+					float64(t.Total)/1e6,
+					s)
+			}
 			return diff / 1e6
 		}
 	}
 
-	log.Printf("** %.2fms %s", float64(diff)/1000000.0, s)
+	if Debug[DBG_TurnTime] && s[0] == '@' {
+		log.Printf("** %.2fms %s", float64(diff)/1000000.0, s)
+	}
 
 	return diff / 1e6
 }
@@ -106,6 +114,9 @@ func TMark(s string) int64 {
 }
 
 func TDump(file string) {
+	if !Debug[DBG_GatherTime] {
+		log.Print("Attempt to store turn time data not accumulated")
+	}
 	fd, err := os.Create(file)
 	if err != nil {
 		log.Print("Failed to create ", file, ": ", err)
@@ -114,13 +125,24 @@ func TDump(file string) {
 	defer fd.Close()
 
 	fmt.Fprintf(fd, "name,turn,count,accumulated,started,stopped\n")
+	for i := 0; i < len(TurnTimer.Started); i++ {
+		if TurnTimer.Started[i] != 0 && TurnTimer.Stopped[i] != 0 {
+			fmt.Fprintf(fd, "%s,%d,%d,%.2f,%.2f,%.2f\n",
+				TurnTimer.Name, i, TurnTimer.Count[i],
+				0.0, 0.0,
+				float64(TurnTimer.Stopped[i]-TurnTimer.Started[i])/1e6)
+		}
+	}
+
 	for _, t := range Times {
 		for i := 0; i <= t.TLast; i++ {
-			fmt.Fprintf(fd, "%s,%d,%d,%.2f,%.2f,%.2f\n",
-				t.Name, i, t.Count[i],
-				float64(t.Accumulate[i])/1e6,
-				float64(t.Started[i])/1e6,
-				float64(t.Stopped[i])/1e6)
+			if i > 0 || t.Count[i] > 0 {
+				fmt.Fprintf(fd, "%s,%d,%d,%.2f,%.2f,%.2f\n",
+					t.Name, i, t.Count[i],
+					float64(t.Accumulate[i])/1e6,
+					float64(t.Started[i]-TurnTimer.Started[i])/1e6,
+					float64(t.Stopped[i]-TurnTimer.Started[i])/1e6)
+			}
 		}
 	}
 }

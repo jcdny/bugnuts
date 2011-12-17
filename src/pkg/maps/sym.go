@@ -5,8 +5,8 @@ import (
 	"os"
 	"fmt"
 	. "bugnuts/torus"
-	. "bugnuts/util"
 	. "bugnuts/watcher"
+	. "bugnuts/util"
 )
 
 const (
@@ -186,6 +186,9 @@ func (m *Map) Tile(minBits uint8) *SymData {
 }
 
 func (s *SymData) UpdateSymmetryData() {
+	TPush("@updatesymmetry")
+	defer TPop()
+
 	check := make(map[SymHash]bool, 100)
 	for l, item := range s.TGrid {
 		loc := Location(l)
