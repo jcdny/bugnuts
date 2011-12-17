@@ -7,7 +7,6 @@ import (
 	. "bugnuts/torus"
 	. "bugnuts/util"
 	. "bugnuts/watcher"
-	. "bugnuts/watcher"
 )
 
 func init() {
@@ -236,7 +235,7 @@ func TestSymMatch(t *testing.T) {
 		}
 		log.Print(name)
 		TPush("UpdateSymmetryData:" + name)
-		m.SymData.UpdateSymmetryData()
+		m.SymData.UpdateSymmetryData(0)
 		TPop()
 
 		peak := Max(m.SymData.NLen[:])

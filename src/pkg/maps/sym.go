@@ -4,6 +4,8 @@ import (
 	"log"
 	"os"
 	"fmt"
+	"time"
+	"rand"
 	. "bugnuts/torus"
 	. "bugnuts/watcher"
 	. "bugnuts/util"
@@ -42,6 +44,7 @@ type SymData struct {
 	Hashes  []*[8]SymHash        // Map from the location to all rotations of the given location
 	Tiles   map[SymHash]*SymTile // Map from minhash to location list.
 	Fails   int
+	Check   map[SymHash]bool // list of pending tiles to check.  possibly carried over from a previous turn.
 }
 
 // The bit shuffle for the 8 symmetries a SYMNxSYMN neighborhood
@@ -165,6 +168,7 @@ func (m *Map) NewSymData(minBits uint8) *SymData {
 		MinHash: make([]SymHash, m.Size()),
 		Hashes:  make([]*[8]SymHash, m.Size()),
 		Tiles:   make(map[SymHash]*SymTile, m.Size()/4),
+		Check:   make(map[SymHash]bool, 300),
 	}
 	s.NLen[0] = s.Size()
 	s.Offsets = PointsToOffsets(symPointOffsets, m.Cols)
@@ -185,18 +189,37 @@ func (m *Map) Tile(minBits uint8) *SymData {
 	return s
 }
 
-func (s *SymData) UpdateSymmetryData() {
+func (s *SymData) UpdateSymmetryData(cutoff int64) {
 	TPush("@updatesymmetry")
 	defer TPop()
 
-	check := make(map[SymHash]bool, 100)
-	for l, item := range s.TGrid {
-		loc := Location(l)
-		if item != UNKNOWN && s.Hashes[loc] == nil {
-			hash, newsym := s.Update(loc)
-			if newsym {
-				check[hash] = true
+	if len(s.Check) < 40 {
+		size := Location(s.Size())
+		loc := Location(rand.Intn(int(size)))
+		for _ = range s.TGrid {
+			item := s.TGrid[loc]
+
+			rtime := cutoff - time.Nanoseconds()
+			if cutoff != 0 && rtime < 0 {
+				if Debug[DBG_Symmetry] {
+					log.Print("Cutoff in UpdateSymmetryData - Hashing")
+				}
+				return
+			} else if rtime < 3*1e6 && len(s.Check) > 0 {
+				// don't cosume all our time updating tiles...	
+				if Debug[DBG_Symmetry] {
+					log.Print("Bailing on updating tiles to check some...")
+				}
+				break
 			}
+
+			if item != UNKNOWN && s.Hashes[loc] == nil {
+				hash, newsym := s.Update(loc)
+				if newsym {
+					s.Check[hash] = true
+				}
+			}
+			loc = (loc + 1327) % size
 		}
 	}
 
@@ -213,7 +236,18 @@ func (s *SymData) UpdateSymmetryData() {
 
 	// TODO do in order of len of locs... so we dont build a map for 2 then
 	// immediately rebuild for 4
-	for minhash := range check {
+	for minhash := range s.Check {
+		// bail out if we have reached the cutoff or we found a sym with less then 
+		// 5ms to cutoff
+		rtime := cutoff - time.Nanoseconds()
+		if cutoff != 0 && (rtime < 0 || (updated && rtime < 1*1e6)) {
+			if Debug[DBG_Symmetry] {
+				log.Print("Cutoff in UpdateSymmetryData - Checking")
+			}
+			break
+		}
+		s.Check[minhash] = false, false
+
 		tile := s.Tiles[minhash]
 		if tile.Ignore || len(tile.Locs) > 16 {
 			// len less than 16 mostly just to avoid catastrophe 
@@ -866,7 +900,7 @@ func (s *SymData) SymMapValidate(tile *SymTile) ([][]Location, bool) {
 				// Validate the equiv set is identical
 				if item == UNKNOWN {
 					item = s.TGrid[mloc]
-				} else if item != s.TGrid[mloc] {
+				} else if item != s.TGrid[mloc] && s.TGrid[mloc] != UNKNOWN {
 					if Debug[DBG_Symmetry] {
 						log.Print("Invalid point found: i, n, loc, mloc, item, tgrid ",
 							i, n, loc, mloc, int(item), int(s.TGrid[mloc]), marr[n:])

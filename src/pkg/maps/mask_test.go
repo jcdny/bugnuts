@@ -130,7 +130,7 @@ func TestApplyCacheCreate(t *testing.T) {
 func TestCacheAll(t *testing.T) {
 	m := NewMap(bRows, bCols, 1)
 	mm := MakeMask(bMask, bRows, bCols)
-	m.OffsetsCachePopulateAll(mm)
+	m.OffsetsCachePopulateAll(mm, 0)
 
 	r := int(mm.Offsets.R)
 	e := 2*r*(bRows+bCols) - 4*r*r
@@ -225,6 +225,6 @@ func BenchmarkCacheAll(b *testing.B) {
 
 	for i := 0; i < b.N; i++ {
 		mm := MakeMask(bMask, bRows, bCols)
-		m.OffsetsCachePopulateAll(mm)
+		m.OffsetsCachePopulateAll(mm, 0)
 	}
 }

@@ -108,6 +108,9 @@ func (m *Map) offsetsCachePopulate(o *Offsets) {
 }
 
 func (m *Map) OffsetsCachePopulateAll(mask *Mask, cutoff int64) {
+	if cutoff == 0 {
+		cutoff = time.Nanoseconds() + 20*1e9 // 20 seconds from now
+	}
 	// Depends on the nocache flag being set for anything we don't want cached...
 	if time.Nanoseconds() > cutoff {
 		return
