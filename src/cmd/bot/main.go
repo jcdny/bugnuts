@@ -105,9 +105,9 @@ func main() {
 		// READ TURN INFO FROM SERVER
 		TPush("@turnscan")
 		var t *Turn
-		t, _ = TurnScan(s.Map, in, t)
+		t, err = TurnScan(s.Map, in, t)
 		TPop()
-		if t.End {
+		if t.End || err != nil {
 			break
 		}
 
