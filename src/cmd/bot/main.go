@@ -60,7 +60,7 @@ func init() {
 func main() {
 	//TurnTimer()
 	wd, _ := os.Getwd()
-	log.Print("Running bot in ", wd)
+	log.Print("Running bot in ", wd, " GAME: \"", os.Getenv("GAME"), "\", BHOST: \"", os.Getenv("BHOST"), "\"")
 
 	var refmap *Map
 	if mapName != "" {
@@ -137,7 +137,7 @@ func main() {
 		}
 
 		// Generate order list
-		TPush("@turn")
+		TPush("@doturn")
 		bot.DoTurn(s)
 		TPop()
 	}
