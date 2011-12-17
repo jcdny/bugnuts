@@ -35,8 +35,10 @@ func TurnSet(t int) {
 	globalTurn.lock.Unlock()
 	log.SetPrefix(pre + ":" + strconv.Itoa(t) + ":")
 	// TODO fix this.
-	TurnTimer.Started[t] = time.Nanoseconds()
-	if t > 0 {
+	if TurnTimer.Started[t] == 0 {
+		TurnTimer.Started[t] = time.Nanoseconds()
+	}
+	if t > 0 && TurnTimer.Stopped[t-1] == 0 {
 		TurnTimer.Stopped[t-1] = TurnTimer.Started[t]
 	}
 }
