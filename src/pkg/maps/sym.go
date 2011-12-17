@@ -847,12 +847,18 @@ func (s *SymData) SymMapValidate(tile *SymTile) ([][]Location, bool) {
 				if int(mloc) == loc {
 					found = true
 				}
-				if len(smap[mloc]) != 0 {
-					log.Print("Already seen ", loc, mloc, tile)
+				if Debug[DBG_Symmetry] {
+					if len(smap[mloc]) != 0 {
+						log.Print("Already seen ", loc, mloc, tile)
+					}
 				}
 			}
+
 			if !found {
-				log.Print("loc not returned in marr ", tile.Gen, loc, marr[n:], "\n", tile)
+				if Debug[DBG_Symmetry] {
+					log.Print("loc not returned in marr ", tile.Gen, loc, marr[n:], "\n", tile)
+				}
+				return nil, false
 			}
 
 			item := UNKNOWN
