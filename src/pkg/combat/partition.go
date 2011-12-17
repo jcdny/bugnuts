@@ -15,16 +15,19 @@ const PDist = 6  // MAGIC -- enemy max distance for partition
 const FPDist = 4 // MAGIC -- friendly distance to pull into partition
 
 type AntPartition struct {
-	Ants []Location
-	PS   *PartitionState
+	PLoc  Location
+	Ants  []Location
+	Pants []Location
+	PS    *PartitionState
 }
 
 type Partitions map[Location]*AntPartition
 // PartitionMap maps an ant to the partitions it belongs to
 type PartitionMap map[Location]map[Location]struct{}
 
-func NewAntPartition() *AntPartition {
+func NewAntPartition(ploc Location) *AntPartition {
 	p := &AntPartition{
+		PLoc: ploc,
 		Ants: make([]Location, 0, 8),
 	}
 	return p
@@ -55,6 +58,8 @@ func (pmap *PartitionMap) Add(from, to Location) {
 	// map a location to a partition
 	pm[to] = struct{}{}
 }
+
+// Returns the list of partition keys for a given ant
 func (pmap *PartitionMap) Get(from Location) []Location {
 	pm, ok := (*pmap)[from]
 	if !ok || len(pm) == 0 {
@@ -70,7 +75,8 @@ func (pmap *PartitionMap) Get(from Location) []Location {
 type pStat struct {
 	tot    int
 	menemy int
-	pn     [MaxPlayers]int
+	pn     [MaxPlayers]int // count of ants per player
+	pp     [MaxPlayers]int // count of ants per player post prune
 }
 
 func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
@@ -109,7 +115,7 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 					} else {
 						ap, ok := parts[ploc] // ap = a partition
 						if !ok {
-							ap = NewAntPartition()
+							ap = NewAntPartition(ploc)
 						}
 						parts[ploc] = ap
 					}
@@ -140,7 +146,7 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 		pstat := pstats[ploc]
 		for _, loc := range ap.Ants {
 			if c.PlayerMap[loc] > -1 {
-				pstat.pn[c.PlayerMap[loc]] += 1
+				pstat.pn[c.PlayerMap[loc]]++
 				pstat.tot++
 			}
 		}
@@ -154,7 +160,7 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 			log.Print("growing ", ploc, pstats[ploc])
 		}
 		pstat := pstats[ploc]
-		if pstat.pn[0] < pstat.menemy+2 { // MAGIC
+		if pstat.pn[0] < pstat.menemy+3 { // MAGIC
 		NEXT:
 			for _, loc := range ap.Ants {
 				if c.PlayerMap[loc] == 0 {
@@ -172,7 +178,7 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 
 								pstat.pn[0]++
 								pstat.tot++
-								if pstat.pn[0] > pstat.menemy+2 {
+								if pstat.pn[0] > pstat.menemy+3 {
 									break NEXT
 								}
 								pmap.Add(nloc, ploc)
@@ -187,6 +193,21 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 		}
 	}
 
+	// Now prune any ant which need not be involved in combat...
+	for ploc, ap := range parts {
+		log.Print("Pruning ", ploc)
+		found := false
+		for np, n := range pstats[ploc].pn {
+			if n > 0 {
+				found = found || ap.prune(pstats[ploc], np, c)
+			}
+		}
+		// Nuke any partition with no ants in combat
+		if !found {
+			parts[ploc] = &AntPartition{}, false
+		}
+	}
+
 	// Finally disolve partitions which are 1-1
 	// just rely on normal risk behavior on those.
 	for ploc := range parts {
@@ -195,13 +216,76 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 		}
 	}
 
-	for i := 0; i < len(Ants); i++ {
-		if len(Ants[i]) > 0 {
-			c.PFill[i] = ThreatFill(c.Map, c.Threat1, c.PThreat1[i], 10, 0)
+	return parts, pmap
+}
+
+func (ap *AntPartition) prune(stat *pStat, np int, c *Combat) bool {
+	// skip the ants not part of np
+	// also a bit of a hack... set playermap to -1 for now.
+	// this is so pruning is easier.
+	ants := make([]Location, 0, len(ap.Ants))
+	n := 0
+	for _, loc := range ap.Ants {
+		if c.PlayerMap[loc] == np {
+			ants = append(ants, loc)
+			c.PlayerMap[loc] = -1
+		} else {
+			ap.Ants[n] = loc
+			n++
 		}
 	}
+	ap.Ants = ap.Ants[:n]
+	// now have 2 lists, ants not me (ap.Ants) and ants to check (ants)
+	log.Print("P ", np, " Others ", n, " me ", len(ants))
 
-	return parts, pmap
+	// now go through and for any ant in combat add it to cant and put it in map
+	// iterate until we have a round with no adds
+	cants := make([]Location, 0, len(ants))
+	for {
+		n = 0
+		for _, loc := range ants {
+			var d int
+			for d = 0; d < 5; d++ {
+				nl := c.LocStep[loc][d]
+				if c.PlayerMap[nl] > -1 {
+					break
+				}
+				if _, ok := c.Risk[np][nl]; ok {
+					break
+				}
+			}
+			if d < 5 {
+				cants = append(cants, loc)
+				c.PlayerMap[loc] = np
+			} else {
+				ants[n] = loc
+				n++
+			}
+		}
+		if len(ants) == n {
+			break
+		} else {
+			ants = ants[:n]
+		}
+	}
+	// Trunc and bash player id back in for ants not in combat
+	for _, loc := range ants {
+		c.PlayerMap[loc] = np
+	}
+
+	// update stats
+	stat.tot -= stat.pn[np] - len(ants)
+	stat.pp[np] = stat.pn[np] - len(ants)
+
+	// set pants to ants
+	ap.Pants = append(ap.Pants, ants...)
+	ap.Ants = append(ap.Ants, cants...)
+
+	// at this point ants are ants that were not in combat or connected to 
+	// an ant in combat are in ants, cants are combat ants
+	log.Print("player ", np, " ants nc ", len(ants), " combat ", len(cants))
+
+	return len(cants) > 0
 }
 
 // NewPartitionState creates the move list and player states

@@ -1,6 +1,7 @@
 package combat
 
 import (
+	. "bugnuts/game"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 	. "bugnuts/pathing"
@@ -46,14 +47,6 @@ func ThreatBorder(m *Map, gthreat []int, pthreat []int, size int) (surf []Locati
 
 	return
 }
-
-const (
-	RiskSafe = iota
-	RiskAverse
-	RiskNeutral
-	Suicidal
-	MaxRiskStat
-)
 
 func (c *Combat) Riskly(Ants []map[Location]int) []map[Location]int {
 	return RiskMark(c.Map, &c.AttackMask.Offsets, Ants, c.Ants1, c.Threat1, c.PThreat1)

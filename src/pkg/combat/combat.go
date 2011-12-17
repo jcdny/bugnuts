@@ -115,8 +115,7 @@ func (c *Combat) ResetAlloc() {
 	}
 }
 
-// Compute initial ant threat. returns a count of dead found.
-// Should be 0 unless something has gone horribly wrong.
+// Compute initial ant threat and threat fill.
 func (c *Combat) Setup(ants []map[Location]int) {
 	dead := make([]PlayerLoc, 0)
 	for np := range ants {
@@ -128,6 +127,14 @@ func (c *Combat) Setup(ants []map[Location]int) {
 			c.AddAnt(np, loc, dead)
 		}
 	}
+
+	for i := 0; i < len(ants); i++ {
+		if len(ants[i]) > 0 {
+			c.PFill[i] = ThreatFill(c.Map, c.Threat1, c.PThreat1[i], 10, 0)
+		}
+	}
+
+	c.Risk = c.Riskly(ants)
 
 	if len(dead) > 0 {
 		log.Panic("Dead ants found in setup", len(dead))

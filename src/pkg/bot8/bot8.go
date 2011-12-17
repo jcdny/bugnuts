@@ -124,7 +124,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	if Viz["combat"] {
 		VizFrenemies(s, ap, pmap)
 	}
-	s.C.Risk = s.C.Riskly(s.Ants)
+	// s.C.Risk = s.C.Riskly(s.Ants) // done in setup now.
 	s.C.Run(ants, ap, pmap, s.Cutoff, s.Rand)
 
 	iter := -1
