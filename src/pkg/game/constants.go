@@ -10,3 +10,7 @@ const (
 	Suicidal
 	MaxRiskStat
 )
+
+const (
+	MS = 1000000
+)

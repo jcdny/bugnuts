@@ -9,6 +9,7 @@ import (
 	"time"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
+	. "bugnuts/watcher"
 )
 
 type PlayerLoc struct {
@@ -106,6 +107,8 @@ func TurnScan(m *Map, in *bufio.Reader, tl *Turn) (*Turn, os.Error) {
 
 	var err os.Error
 	var line string
+	TPush("@readgap")
+	gap := true
 	for {
 		line, err = in.ReadString('\n')
 		if err != nil {
@@ -129,6 +132,8 @@ func TurnScan(m *Map, in *bufio.Reader, tl *Turn) (*Turn, os.Error) {
 
 		words := strings.SplitN(line, " ", 5)
 		if words[0] == "turn" {
+			gap = false
+			TPop()
 			t.Started = time.Nanoseconds()
 			if len(words) != 2 {
 				log.Printf("Invalid command format: \"%s\"", line)
@@ -192,5 +197,8 @@ func TurnScan(m *Map, in *bufio.Reader, tl *Turn) (*Turn, os.Error) {
 		err = nil
 	}
 
+	if gap {
+		TPop()
+	}
 	return t, err
 }
