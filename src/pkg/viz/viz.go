@@ -12,6 +12,7 @@ import (
 	. "bugnuts/pathing"
 	. "bugnuts/combat"
 	. "bugnuts/maps"
+	. "bugnuts/game"
 )
 
 var Viz = map[string]bool{
@@ -271,6 +272,7 @@ func vizCircle(p Point, r float64, fill bool) {
 func VizFrenemies(s *State, ap Partitions, pmap map[Location]map[Location]struct{}) {
 	i := 0
 	for ploc, p := range ap {
+		pp := s.ToPoint(ploc)
 		slc(qual6[i%6], 1)
 		for _, loc := range p.Ants {
 			p := s.ToPoint(loc)
@@ -281,7 +283,18 @@ func VizFrenemies(s *State, ap Partitions, pmap map[Location]map[Location]struct
 				sfc(cWhite, 1)
 			} else {
 				vizCircle(p, .75, false)
-				pp := s.ToPoint(ploc)
+				VizLine(s.Map.Torus, p, pp, false)
+			}
+		}
+		// Now do ants which were removed.  dont circle (although do circle seed)
+		for _, loc := range p.Pants {
+			p := s.ToPoint(loc)
+			//log.Printf("ploc %v loc %v pmap %v", ploc, loc, pmap[loc])
+			if loc == ploc {
+				sfc(qual6[i%6], .5)
+				vizCircle(p, .75, true)
+				sfc(cWhite, 1)
+			} else {
 				VizLine(s.Map.Torus, p, pp, false)
 			}
 		}
