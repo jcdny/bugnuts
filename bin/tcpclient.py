@@ -149,8 +149,9 @@ def tcp(host, port, bot_command, user, password, options):
         pass
 
     try:
+        bot.stdin.close()
+        time.sleep(10)
         bot.kill()
-        time.sleep(0.5)
         bot.wait()
     except:
         pass

@@ -2,10 +2,10 @@
 BIN=~/bot/bin
 ROOT=~/bot/log/tcp
 
-BOT=bugnutsv8.3
-REMOTENAME=bugnutsv6
+REMOTENAME=bugnutsv7
 
-BHOST=$1
+export BHOST=$1
+BOT=$2
 
 ARCH="`uname -s`"
 DATE="`date +%Y%m%d-%H%M`"
@@ -35,7 +35,7 @@ exec > $LOG 2> $ERR
 cd $ROOT/$BHOST/$DATE
 echo "INFO: $EXE started at `date` LOG $ROOT"
 
-GAME=0
+export GAME=0
 while [ ! -e $ROOT/$BHOST/STOP ] ; do
     D="`expr $GAME % 1000`"
     if [ $D -eq 0 ]; then
