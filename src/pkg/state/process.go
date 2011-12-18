@@ -313,23 +313,24 @@ func (s *State) UpdateHillMaps() {
 	s.Met.FHill, _, _ = MapFillSeed(s.Map, lend, 1)
 
 	outbound := make(map[Location]int)
-	R := MinV(MaxV(MinV(s.Rows, s.Cols)/s.NHills[0]/2, 8), 16)
-	samples, _ := s.Met.FHill.Sample(s.Rand, 0, R, R)
+	R := uint16(MinV(MaxV(MinV(s.Rows, s.Cols)/s.NHills[0], 8), 24))
+	samples, _ := s.Met.FHill.Sample(s.Rand, 0, int(R), int(R))
 
-	if false {
+	if Debug[DBG_Metrics] {
 		log.Printf("Updating hill fill for player 0 %#v", lend)
 		log.Printf("Outbound Radius %d samples: %d", R, len(samples))
 	}
+
 	for _, loc := range samples {
 		outbound[loc] = 1
 	}
 
 	if len(outbound) < 1 {
-		log.Panicf("UpdateHillMaps no outside border")
+		log.Print("WARNING: UpdateHillMaps no outside border")
 	} else {
 		s.Met.FDownhill, _, _ = MapFillSeed(s.Map, outbound, 1)
 		for i, d := range s.Met.FHill.Depth {
-			if int(d) > R {
+			if d > R {
 				s.Met.FDownhill.Depth[i] = 0
 				s.Met.FDownhill.Seed[i] = 0
 			}
