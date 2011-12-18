@@ -4,6 +4,7 @@ NOW=`date +%Y%m%d-%H%M`
 DEST=/tmp/dist.$NOW
 rm -rf /tmp/XX
 mkdir -p $DEST/tmp
+mkdir -p $DEST/build
 
 cp `find . -name \*.go \
   -a ! -name \*_test\*.go \
@@ -19,27 +20,35 @@ for a in *.go; do
     rm $a
 done
 cd $DEST
-echo "Building in $DEST"
+zip -q $DEST.zip *.go && echo "$DEST.zip created"
+cd $DEST/build
+unzip -q $DEST.zip
+
+echo "Building in $DEST/build"
 echo "Files with bugnuts/ : `grep -l "bugnuts/" *.go`"
 
 6g -o _go_.6 *.go
-6l -o tmp/bot _go_.6
+6l -o bot _go_.6
 
-if [ ! -x tmp/bot ]; then
+if [ ! -x ./bot ]; then
     echo "Build failed"
     exit 1
 fi
 
-./tmp/bot < ~/bot/src/cmd/bot/testdata/test.input > tmp/test.out 2> tmp/test.err || echo "WARNING: execute failed for bot"
+./bot < ~/bot/src/cmd/bot/testdata/test.input > test.out 2> test.err || echo "WARNING: execute failed for bot"
 
-if [ ! -s tmp/test.out ]; then
-    echo "WARNING: test failed, empty moves file $DEST/tmp/test.out"
+if [ ! -s test.out ]; then
+    echo "WARNING: test failed, empty moves file $DEST/build/test.out"
     exit 1
+else
+    BAD=`egrep -v '^(o [0-9][0-9]* [0-9][0-9]* [news]|go)$' test.out | wc -l`
+    if [ "$BAD" -ne "0" ]; then
+        echo "WARNING: $BAD non move lines in output"
+    fi
 fi
 
-if [ -s tmp/test.err ]; then
-    echo "WARNING: nonzero stderr `wc -l <$DEST/tmp/test.err` lines in $DEST/tmp/test.err"
+if [ -s test.err ]; then
+    echo "WARNING: nonzero stderr `wc -l <$DEST/build/test.err` lines in $DEST/build/test.err"
+    head -n 5 $DEST/build/test.err
 fi
-
-cd $DEST
-zip $DEST.zip *.go && echo "$DEST.zip created"
+cp $DEST.zip ~/tmp
