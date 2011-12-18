@@ -291,7 +291,7 @@ func VizFrenemies(s *State, ap Partitions, pmap map[Location]map[Location]struct
 			p := s.ToPoint(loc)
 			//log.Printf("ploc %v loc %v pmap %v", ploc, loc, pmap[loc])
 			if loc == ploc {
-				sfc(qual6[i%6], .5)
+				sfc(cWhite, .5)
 				vizCircle(p, .75, true)
 				sfc(cWhite, 1)
 			} else {
