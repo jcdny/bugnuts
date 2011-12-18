@@ -15,14 +15,19 @@ type Combat struct {
 	AttackMask *Mask
 	PlayerMap  []int
 	AntCount   []int
-	Threat     []int   // Global threat
-	PThreat    [][]int // Player's Own Threat
-	Ants1      []int   // bitmask of possible ants
-	Threat1    []int   // One Step Threat
-	PThreat1   [][]int // Player's one step threat
-	PThreat1Pr []int   // one step threat prob (only computed for player 0)
-	PFill      []*Fill // Distance to Threat1 surface
+	Threat     []int      // Global threat
+	PThreat    [][]int    // Player's Own Threat
+	Ants1      []int      // bitmask of possible ants
+	Threat1    []int      // One Step Threat
+	PThreat1   [][]int    // Player's one step threat
+	PThreat1Pr []int      // one step threat prob (only computed for player 0)
+	PFill      []*Fill    // Distance to Threat1 surface
+	TBPathin   []int      // The pathin count to the threat border player 0 enemies
+	TBPathout  []int      // The pathin count to the threat border player 0
+	Border     []Location // The threat border player 0
 	Risk       []map[Location]int
+	ECutoff    int
+	FCutoff    int
 }
 
 var _minusone [MAXMAPSIZE]int
@@ -129,8 +134,23 @@ func (c *Combat) Setup(ants []map[Location]int) {
 	}
 
 	for i := 0; i < len(ants); i++ {
+		maxdepth := uint16(10)
+		var border, interior []Location
 		if len(ants[i]) > 0 {
-			c.PFill[i] = ThreatFill(c.Map, c.Threat1, c.PThreat1[i], 10, 0)
+			if i == 0 {
+				maxdepth = 0
+			}
+			c.PFill[i], border, interior = ThreatFill(c.Map, c.Threat1, c.PThreat1[i], maxdepth, 0)
+
+			if i == 0 {
+				c.TBPathin, c.ECutoff = ThreatPathin(c.PFill[0], ants[1:])
+				c.TBPathout, c.FCutoff = ThreatPathin(c.PFill[0], ants[:1])
+				c.Border = border
+			}
+
+			for _, loc := range interior {
+				c.PFill[i].Depth[loc] = 1
+			}
 		}
 	}
 

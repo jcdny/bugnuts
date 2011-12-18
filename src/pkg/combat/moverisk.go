@@ -31,8 +31,8 @@ type rScore struct {
 }
 
 func (ps *PartitionState) FirstStepRisk(c *Combat) {
-	tdepth := []int{0, 0, 0, 65535, 65535}
-	trisk := []int{Suicidal, RiskNeutral, RiskAverse, RiskAverse, RiskAverse}
+	tdepth := []int{0, 0, 65535, 65535}
+	trisk := []int{RiskNeutral, RiskAverse, RiskNeutral, RiskAverse}
 
 	for np := range ps.P {
 		rs, davg, _ := riskmet(c, ps.P[np].Moves)

@@ -98,7 +98,7 @@ func TestRiskMark(t *testing.T) {
 	c.Setup(Ants)
 	rm := RiskMark(m, &mask.Offsets, Ants, c.Ants1, c.Threat1, c.PThreat1)
 	for i := 0; i < NP; i++ {
-		n := make([]int, MaxRiskStat)
+		n := make([]int, game.MaxRiskStat)
 		for _, r := range rm[i] {
 			n[r]++
 		}

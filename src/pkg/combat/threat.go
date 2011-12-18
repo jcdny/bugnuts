@@ -8,18 +8,31 @@ import (
 )
 
 // Threatfill returns a fill with the distance to the threat surface
-func ThreatFill(m *Map, gthreat []int, pthreat []int, maxdepth uint16, size int) *Fill {
-	tb, interior := ThreatBorder(m, gthreat, pthreat, size)
+func ThreatFill(m *Map, gthreat []int, pthreat []int, maxdepth uint16, size int) (ft *Fill, tb, interior []Location) {
+	tb, interior = ThreatBorder(m, gthreat, pthreat, size)
 	torig := make(map[Location]int, len(tb))
 	for _, loc := range tb {
 		torig[loc] = 2
 	}
-	ft := NewFill(m)
+	ft = NewFill(m)
 	ft.MapFillSeedMD(torig, 2, maxdepth)
-	for _, loc := range interior {
-		ft.Depth[loc] = 1
+
+	return
+}
+
+func ThreatPathin(f *Fill, ants []map[Location]int) (pathin []int, cutoff int) {
+	pathin = make([]int, f.Size())
+
+	for i := range ants {
+		for loc := range ants[i] {
+			if f.Depth[loc] != 0 {
+				pathin[f.Seed[loc]]++
+			} else {
+				cutoff++
+			}
+		}
 	}
-	return ft
+	return
 }
 
 // ThreatBorder returns a list of locations where the threat as adjacent to a no threat location.

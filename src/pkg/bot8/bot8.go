@@ -70,6 +70,11 @@ func (bot *BotV8) GenerateTargets(s *State) *TargetSet {
 		tset.Add(FOOD, loc, 1, bot.PriMap[FOOD])
 	}
 
+	if s.Turn > 120 && s.Turn%20 == 0 {
+		ts := make(TargetSet, 0)
+		bot.Explore = &ts
+	}
+
 	tset.Merge(bot.Explore)
 
 	// TODO handle different priorities/attack counts
@@ -257,7 +262,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 				maxiter = maxiter + 50
 				eh := s.EnemyHillLocations(0)
 				nadded := 0
-				if false && idle > 2*len(eh) {
+				if idle > 3*len(eh) {
 					nadded = s.AddBorderTargets(idle-2*len(eh), tset, bot.Explore, bot.PriMap[EXPLORE])
 				}
 				for _, loc := range eh {

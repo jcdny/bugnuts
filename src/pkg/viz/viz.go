@@ -191,6 +191,25 @@ func Visualize(s *State) {
 			}
 		}
 	}
+
+	if Viz["combat"] {
+		if s.C != nil || len(s.C.TBPathin) > 0 {
+			for nn := 1; nn < 9; nn++ {
+				if nn == 8 {
+					sfc(cBlue, .6)
+				} else {
+					sfc(heat16[nn*2], .4)
+				}
+				for l, n := range s.C.TBPathin {
+					if n == nn || n > 7 {
+						p := s.ToPoint(Location(l))
+						fmt.Fprintf(os.Stdout, "v t %d %d\n", p.R, p.C)
+					}
+				}
+			}
+			sfc(cBlack, 1.0)
+		}
+	}
 }
 
 func VizTargets(s *State, tset *TargetSet) {
