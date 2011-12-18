@@ -19,6 +19,7 @@ type AntPartition struct {
 	Ants  []Location
 	Pants []Location
 	PS    *PartitionState
+	stat  *pStat
 }
 
 type Partitions map[Location]*AntPartition
@@ -151,7 +152,6 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 				pstat.tot++
 			}
 		}
-		pstat.nc = pstat.tot
 		pstat.menemy = Max(pstat.pn[1:])
 	}
 
@@ -203,13 +203,14 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 				ap.prune(pstats[ploc], np, c)
 			}
 		}
-		// Finally make any partition which is 1-1 combat
-		// empty
+		// Finally drop any partition where there is 1 of me
 		if pstats[ploc].nc < 3 {
+			log.Print(ploc, " zapping pstats: ", pstats[ploc])
 			pstats[ploc].nc = 0
 			ap.Pants = append(ap.Pants, ap.Ants...)
 			ap.Ants = ap.Ants[:0]
 		}
+		ap.stat = pstats[ploc]
 	}
 
 	return parts, pmap
@@ -275,7 +276,8 @@ func (ap *AntPartition) prune(stat *pStat, np int, c *Combat) bool {
 	}
 
 	// update stats
-	stat.tot -= stat.pn[np] - len(ants)
+	stat.tot -= len(ants)
+	stat.nc += len(cants)
 	stat.pp[np] = stat.pn[np] - len(ants)
 
 	// set pants to ants

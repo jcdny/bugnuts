@@ -37,12 +37,14 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 	// TODO prioritize partition resolution...
 	for {
 		for ploc, ap := range part {
+			log.Print(ploc, " len(ap.Ants) ", len(ap.Ants))
 			if len(ap.Ants) == 0 {
 				continue
 			}
 
 			if ap.PS == nil {
 				ap.PS = NewPartitionState(c, ap)
+				log.Print("Doing calc for ", ploc, " ALive ", ap.PS.ALive)
 				ap.PS.FirstStepRisk(c)
 			}
 

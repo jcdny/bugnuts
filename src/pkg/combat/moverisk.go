@@ -3,6 +3,7 @@ package combat
 import (
 	"log"
 	"sort"
+	"fmt"
 	. "bugnuts/game"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
@@ -35,10 +36,18 @@ func (ps *PartitionState) FirstStepRisk(c *Combat) {
 
 	for np := range ps.P {
 		rs, davg, _ := riskmet(c, ps.P[np].Moves)
-		tdepth[2] = davg
-		ps.P[np].First = make([][]AntMove, len(tdepth))
-		for d := 0; d < len(tdepth); d++ {
-			ps.P[np].First[d] = moveEmRisk(rs, tdepth[d], c, trisk[d])
+		if len(ps.P[np].Moves) < 4 {
+			TPush("@movegen")
+			ps.P[np].First = allMoves(rs, RiskNeutral, c)
+			TPop()
+			log.Print("generated ", len(ps.P[np].First), " moves for ", len(rs), " ants")
+		}
+		if len(ps.P[np].First) > 16 || len(ps.P[np].First) == 0 {
+			tdepth[2] = davg
+			ps.P[np].First = make([][]AntMove, len(tdepth))
+			for d := 0; d < len(tdepth); d++ {
+				ps.P[np].First[d] = moveEmRisk(rs, tdepth[d], c, trisk[d])
+			}
 		}
 	}
 }
@@ -110,6 +119,91 @@ func (p rScoreSlice) Less(i, j int) bool {
 	}
 	return p[i].target < p[j].target
 
+}
+
+// given a list of ants generates all permissible moves
+// discard permutations that are not valid and remove duplicates
+// also collapse non risk states
+func allMoves(rs []rScore, risktype int, c *Combat) [][]AntMove {
+	// because of how I dedup this cant be > 5
+	if len(rs) > 4 {
+		return [][]AntMove{}
+	}
+
+	pl := Permutations(len(rs), 5)
+	plv := make([][]int, 0, len(pl))
+
+	dedup := make(map[int64]struct{}, len(pl))
+	tolist := make([]Location, len(rs))
+
+	if false {
+		s := ""
+		for _, r := range rs {
+			s += fmt.Sprintf("%d ", r.am.From)
+		}
+	}
+	for _, p := range pl {
+		var m int
+		for m = 0; m < len(p); m++ {
+			d := p[m]
+			if !rs[m].met[d].step || rs[m].met[d].risk > risktype {
+				break
+			}
+			c.AntCount[rs[m].met[d].to]++
+			c.AntCount[rs[m].am.From]--
+			if rs[m].met[d].risk != RiskNone {
+				tolist[m] = rs[m].met[d].to
+			} else {
+				tolist[m] = 65535
+			}
+		}
+		if m == len(p) {
+			// check if to counts are all 1
+			var mc int
+			for mc = 0; mc < len(p); mc++ {
+				d := p[mc]
+				if c.AntCount[rs[mc].met[d].to] != 1 {
+					break
+				}
+			}
+			if mc == len(p) {
+				if len(p) > 1 {
+					sort.Sort(LocationSlice(tolist))
+					sig := int64(0)
+					for _, l := range tolist {
+						sig = (sig << 16) + int64(l)
+					}
+					if _, ok := dedup[sig]; !ok {
+						plv = append(plv, p)
+						dedup[sig] = struct{}{}
+					}
+				} else {
+					plv = append(plv, p)
+				}
+			}
+		}
+		// reset any ant we provisionally moved.
+		for mr := 0; mr < m; mr++ {
+			d := p[mr]
+			c.AntCount[rs[mr].met[d].to]--
+			c.AntCount[rs[mr].am.From]++
+		}
+	}
+	// plv now contains the set of permissible permutations, gen 1st move set.
+	// TODO remove swaps....
+
+	moves := make([][]AntMove, len(plv))
+	mbuf := make([]AntMove, len(rs)*len(plv))
+	n := 0
+	for pn, p := range plv {
+		for i, d := range p {
+			mbuf[n] = AntMove{From: rs[i].am.From, D: rs[i].met[d].d, To: rs[i].met[d].to, Player: rs[i].am.Player}
+			n++
+		}
+		moves[pn] = mbuf[n-len(p) : n]
+	}
+
+	return moves
 }
 
 // MoveEm given a list of AntMove update D and To for the move in the given direction
