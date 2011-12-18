@@ -45,14 +45,13 @@ func (p AntSlice) Less(i, j int) bool {
 	if p[i].Goalp != p[j].Goalp {
 		return p[i].Goalp
 	}
-	if p[i].Goalp && p[i].Steps[0] != p[j].Steps[0] {
-		return p[i].Steps[0] < p[j].Steps[0]
-	}
 	if p[i].NFree != p[j].NFree {
 		// order by min degree of freedom but 0 degree last.
 		return p[i].NFree < p[j].NFree && p[i].NFree != 0
 	}
-
+	if p[i].Goalp && p[i].Steps[0] != p[j].Steps[0] {
+		return p[i].Steps[0] < p[j].Steps[0]
+	}
 	return p[i].Perm > p[j].Perm
 }
 

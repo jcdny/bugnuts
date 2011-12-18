@@ -46,8 +46,11 @@ type PlayerState struct {
 	Moves  []AntMove
 	First  [][]AntMove
 	// move scoring
-	Score []int
+	Score []float64
 	Best  int
+	rs    []rScore
+	davg  int
+	dmin  int
 }
 
 func (pmap *PartitionMap) Add(from, to Location) {
@@ -205,16 +208,18 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 				ap.prune(pstats[ploc], np, c)
 			}
 		}
-		// Finally drop any partition where there is 1 of me
-		if pstats[ploc].nc < 3 {
-			if Debug[DBG_Combat] {
-				log.Print(ploc, " zapping pstats: ", pstats[ploc])
+		if false {
+			// Finally drop any partition where there is 1 of me
+			if pstats[ploc].nc < 3 {
+				if Debug[DBG_Combat] {
+					log.Print(ploc, " zapping pstats: ", pstats[ploc])
+				}
+				pstats[ploc].nc = 0
+				ap.Pants = append(ap.Pants, ap.Ants...)
+				ap.Ants = ap.Ants[:0]
 			}
-			pstats[ploc].nc = 0
-			ap.Pants = append(ap.Pants, ap.Ants...)
-			ap.Ants = ap.Ants[:0]
+			ap.stat = pstats[ploc]
 		}
-		ap.stat = pstats[ploc]
 	}
 
 	return parts, pmap
@@ -353,7 +358,7 @@ func NewPartitionState(c *Combat, ap *AntPartition) *PartitionState {
 }
 
 func (ps *PlayerState) bestScore() (best []int) {
-	ms := Max(ps.Score[:])
+	ms := MaxF64(ps.Score[:])
 	for i, s := range ps.Score {
 		if s == ms {
 			best = append(best, i)

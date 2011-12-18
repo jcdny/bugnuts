@@ -28,6 +28,7 @@ type Combat struct {
 	Risk       []map[Location]int
 	ECutoff    int
 	FCutoff    int
+	Score      func(dead []AntMove, np int) (score float64)
 }
 
 var _minusone [MAXMAPSIZE]int
@@ -39,7 +40,7 @@ func init() {
 	}
 }
 
-func NewCombat(m *Map, am *Mask, np int) *Combat {
+func NewCombat(m *Map, am *Mask, np int, score func(dead []AntMove, np int) (score float64)) *Combat {
 	c := &Combat{
 		Map:        m,
 		AttackMask: am,
@@ -52,6 +53,7 @@ func NewCombat(m *Map, am *Mask, np int) *Combat {
 		PThreat1:   make([][]int, np),
 		PThreat1Pr: make([]int, m.Size()),
 		PFill:      make([]*Fill, np),
+		Score:      score,
 	}
 	copy(c.PlayerMap, _minusone[:len(c.PlayerMap)])
 
@@ -61,7 +63,7 @@ func NewCombat(m *Map, am *Mask, np int) *Combat {
 // Copy a Combat struct.  Just copies the things the combat section uses 
 // metrics.
 func (c *Combat) Copy() *Combat {
-	cc := NewCombat(c.Map, c.AttackMask, len(c.PThreat))
+	cc := NewCombat(c.Map, c.AttackMask, len(c.PThreat), c.Score)
 	copy(cc.PlayerMap, c.PlayerMap)
 	copy(cc.AntCount, c.AntCount)
 	copy(cc.Threat, c.Threat)
@@ -142,7 +144,7 @@ func (c *Combat) Setup(ants []map[Location]int) {
 			}
 			c.PFill[i], border, interior = ThreatFill(c.Map, c.Threat1, c.PThreat1[i], maxdepth, 0)
 
-			if i == 0 {
+			if false && i == 0 {
 				c.TBPathin, c.ECutoff = ThreatPathin(c.PFill[0], ants[1:])
 				c.TBPathout, c.FCutoff = ThreatPathin(c.PFill[0], ants[:1])
 				c.Border = border

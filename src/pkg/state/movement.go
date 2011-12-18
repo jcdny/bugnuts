@@ -83,7 +83,7 @@ func (s *State) AntStep(loc Location, riskOff bool) *AntStep {
 		Dest:    make([]Location, 0, 4),
 		Steps:   make([]int, 0, 4),
 		N:       make([]*Neighborhood, 5),
-		NFree:   1,
+		NFree:   0,
 		Perm:    s.Rand.Int(),
 	}
 	nh := new([5]Neighborhood)
@@ -96,6 +96,13 @@ func (s *State) AntStep(loc Location, riskOff bool) *AntStep {
 	for d := 0; d < 5; d++ {
 		nloc := s.Map.LocStep[loc][d]
 		s.Neighborhood(nloc, as.N[d], Direction(d))
+		if riskOff {
+			as.N[d].Threat -= 3 // MAGIC
+			if as.N[d].Threat <= 0 {
+				as.N[d].Threat = 0
+				as.N[d].PrThreat = 0
+			}
+		}
 		as.N[d].Perm = int(permute[d])
 		//log.Printf("%v %v %v", s.ToPoint(nloc), Direction(d), s.Map.Grid[nloc])
 
@@ -106,17 +113,8 @@ func (s *State) AntStep(loc Location, riskOff bool) *AntStep {
 			as.N[d].Valid = true
 		} else if s.ValidStep(nloc) {
 			as.N[d].Valid = true
-			as.NFree++
-		}
-	}
-
-	if riskOff {
-		// Risk Off so decrement threat.
-		for i := 0; i < 5; i++ {
-			as.N[i].Threat -= 3 // MAGIC
-			if as.N[i].Threat <= 0 {
-				as.N[i].Threat = 0
-				as.N[i].PrThreat = 0
+			if as.N[d].Threat == 0 {
+				as.NFree++
 			}
 		}
 	}
@@ -164,7 +162,7 @@ func (s *State) GenerateMoves(antsIn []*AntStep) {
 		if Debug[DBG_Movement] {
 			log.Printf("ants: %d: %v", len(ants), ants)
 			for i, ant := range ants {
-				log.Printf("ants #%d: %v", i, ant)
+				log.Printf("ants #%d: %#v", i, ant)
 			}
 		}
 		stuck := 0
@@ -201,6 +199,7 @@ func (s *State) Step(ant *AntStep) bool {
 	if ant.Move == InvalidMove {
 		sort.Sort(ENSlice(ant.N))
 		if Debug[DBG_Movement] {
+			log.Printf("move %#v", ant)
 			for i, N := range ant.N {
 				log.Printf("STEP %d %#v", i, N)
 			}

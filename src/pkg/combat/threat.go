@@ -1,10 +1,12 @@
 package combat
 
 import (
+	"log"
 	. "bugnuts/game"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 	. "bugnuts/pathing"
+	. "bugnuts/watcher"
 )
 
 // Threatfill returns a fill with the distance to the threat surface
@@ -74,13 +76,22 @@ func RiskMark(m *Map, o *Offsets, Ants []map[Location]int, amask, Tg []int, Tp [
 			for d := 0; d < 5; d++ {
 				loc := m.LocStep[aloc][d]
 				myt := Tg[loc] - Tp[np][loc]
+				if WS.Watched(loc, np) {
+					log.Print("Compute for player ", np, " at ", m.ToPoint(loc), " Tg, Tp: ", Tg[loc], Tp[np][loc])
+				}
 				if myt != 0 && amask[loc]&PlayerFlag[np] != 0 {
 					if _, ok := rm[np][loc]; !ok {
 						// only locations where there is any 1 step risk
 						mint := 999
 						m.ApplyOffsetsBreak(loc, o, func(nl Location) bool {
+							if WS.Watched(loc, np) {
+								log.Print(m.ToPoint(nl), amask[nl], amask[nl]&PlayerMask[np], PlayerList[amask[nl]&PlayerMask[np]])
+							}
 							if amask[nl]&PlayerMask[np] != 0 {
 								for _, tp := range PlayerList[amask[nl]&PlayerMask[np]] {
+									if WS.Watched(loc, np) {
+										log.Print(tp, Tg[nl], Tp[tp][nl])
+									}
 									t := Tg[nl] - Tp[tp][nl]
 									if t < mint {
 										mint = t
@@ -89,6 +100,9 @@ func RiskMark(m *Map, o *Offsets, Ants []map[Location]int, amask, Tg []int, Tp [
 							}
 							return mint >= myt
 						})
+						if WS.Watched(loc, np) {
+							log.Print("Compute for player ", np, " at ", loc, " mint: ", mint)
+						}
 						switch {
 						case mint < myt:
 							rm[np][loc] = Suicidal

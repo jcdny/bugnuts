@@ -90,7 +90,7 @@ func (g *Game) Replay(r *replay.Replay, tmin, tmax int, canonicalorder bool) {
 	food := r.FoodLocations(g.Map, 0, tmax)
 	hills := r.HillLocations(g.Map, 0, tmax)
 
-	g.C = combat.NewCombat(g.Map, g.AttackMask, len(g.Players))
+	g.C = combat.NewCombat(g.Map, g.AttackMask, len(g.Players), nil)
 
 	for i := 0; i <= tmax; i++ {
 		g.Turn = i + tmin + 1

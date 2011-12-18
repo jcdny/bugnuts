@@ -9,6 +9,7 @@ import (
 	"bugnuts/maps"
 	"bugnuts/torus"
 	"bugnuts/game"
+	"bugnuts/watcher"
 )
 
 const (
@@ -22,6 +23,10 @@ const (
 	COLS = 125
 )
 
+func init() {
+	watcher.WS = watcher.NewWatches(ROWS, COLS, 10)
+	//watcher.WS.Load([]string{"0@0,0"})
+}
 func makeAnts(m *maps.Map, np, nant int) []map[torus.Location]int {
 	ants := make(map[torus.Location]struct{}, np*nant)
 	for len(ants) < np*nant {

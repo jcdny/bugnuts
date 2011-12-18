@@ -1,11 +1,11 @@
 #!/bin/bash
 BIN=~/bot/bin
-ROOT=~/bot/log/tcp
-
-REMOTENAME=bugnutsv7
 
 export BHOST=$1
-BOT=$2
+export REMOTENAME=$2
+export BOT=$3
+
+ROOT=~/bot/log/tcp/$REMOTENAME
 
 ARCH="`uname -s`"
 DATE="`date +%Y%m%d-%H%M`"
@@ -20,6 +20,7 @@ if [ ! -x $EXE ]; then
     exit 1
 fi
 
+mkdir -p $ROOT
 cd $ROOT || exit 1
 if [ -e $ROOT/$BHOST/STOP  ] ; then
     echo "WARNING: $ROOT/$BHOST/STOP exists.  Remove it to run"

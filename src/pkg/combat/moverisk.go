@@ -27,28 +27,36 @@ type rScore struct {
 	depth  int
 	target int
 	perm   int
+	free   int
+	freed  int // for single degree of freedom this is the direction...
+	nrisk  int // count of positions with risk.
 	met    [5]rMet
 }
 
-func (ps *PartitionState) FirstStepRisk(c *Combat) {
+func (ps *PartitionState) FirstStepRisk(c *Combat, maxperm int) {
+	TPush("@firststeprisk")
+	defer TPop()
+
 	tdepth := []int{0, 0, 65535, 65535}
 	trisk := []int{RiskNeutral, RiskAverse, RiskNeutral, RiskAverse}
 
 	for np := range ps.P {
-		rs, davg, _ := riskmet(c, ps.P[np].Moves)
+		if ps.P[np].rs == nil {
+			ps.P[np].rs, ps.P[np].davg, ps.P[np].dmin = riskmet(c, ps.P[np].Moves)
+		}
+
 		if len(ps.P[np].Moves) < 4 {
-			TPush("@movegen")
-			ps.P[np].First = allMoves(rs, RiskNeutral, c)
-			TPop()
+			ps.P[np].First = allMoves(ps.P[np].rs, RiskNeutral, c)
 			if Debug[DBG_Combat] {
-				log.Print("generated ", len(ps.P[np].First), " moves for ", len(rs), " ants")
+				log.Print("generated ", len(ps.P[np].First), " moves for ", len(ps.P[np].rs), " ants")
 			}
 		}
+
 		if len(ps.P[np].First) > 16 || len(ps.P[np].First) == 0 {
-			tdepth[2] = davg
+			tdepth[2] = ps.P[np].davg
 			ps.P[np].First = make([][]AntMove, len(tdepth))
 			for d := 0; d < len(tdepth); d++ {
-				ps.P[np].First[d] = moveEmRisk(rs, tdepth[d], c, trisk[d])
+				ps.P[np].First[d] = moveEmRisk(ps.P[np].rs, tdepth[d], c, trisk[d])
 			}
 		}
 	}
@@ -63,16 +71,26 @@ func riskmet(c *Combat, ants []AntMove) (rs []rScore, davg, dmin int) {
 		r := &rs[i]
 		am := &ants[i]
 		r.am = am
+		r.free = 4
+		r.freed = 4
 		for d := 0; d < 5; d++ {
 			r.met[d].d = Direction(d)
 			loc := c.Map.LocStep[am.From][d]
 			r.met[d].to = loc
 			if risk, ok := c.Risk[am.Player][loc]; ok {
 				r.met[d].risk = risk
+				r.nrisk++
 			}
 			r.met[d].depth = int(c.PFill[am.Player].Depth[loc])
 			if c.Ants1[loc]&PlayerFlag[am.Player] != 0 {
 				r.met[d].step = true
+			}
+			if d < 5 {
+				if r.met[d].risk == Suicidal || !r.met[d].step {
+					r.free--
+				} else {
+					r.freed = d
+				}
 			}
 			// for orig loc we save depth for prioritizing moves
 			if d == 4 {
@@ -116,11 +134,13 @@ type rScoreSlice []rScore
 func (p rScoreSlice) Len() int      { return len(p) }
 func (p rScoreSlice) Swap(i, j int) { p[i], p[j] = p[j], p[i] }
 func (p rScoreSlice) Less(i, j int) bool {
+	if p[i].nrisk != 0 && p[j].nrisk == 0 {
+		return true
+	}
 	if p[i].target != p[j].target {
 		return p[i].target < p[j].target
 	}
 	return p[i].target < p[j].target
-
 }
 
 // given a list of ants generates all permissible moves
@@ -210,9 +230,13 @@ func allMoves(rs []rScore, risktype int, c *Combat) [][]AntMove {
 
 // MoveEm given a list of AntMove update D and To for the move in the given direction
 func moveEmRisk(rs []rScore, tdepth int, c *Combat, risktype int) []AntMove {
+	nrmove := 0
 	for i := range rs {
-		rs[i].am.D = NoMovement
-		rs[i].am.To = rs[i].am.From
+		if rs[i].nrisk != 0 {
+			nrmove++
+		}
+		rs[i].am.D = InvalidMove
+		rs[i].am.To = -1
 		rs[i].target = Abs(rs[i].depth - tdepth)
 		for d := 0; d < 5; d++ {
 			rs[i].met[d].target = Abs(rs[i].met[d].depth - tdepth)
@@ -228,11 +252,13 @@ func moveEmRisk(rs []rScore, tdepth int, c *Combat, risktype int) []AntMove {
 		}
 	}
 
+	sort.Sort(rScoreSlice(rs))
+
 	var moved, nm int
-	for nm, moved = 1, 0; moved < len(rs) && nm != 0; nm = 0 {
+	for nm, moved = 1, 0; nrmove > 0 && moved < len(rs) && nm != 0; nm = 0 {
 		// TODO resort/shuffle per time through.  really need to do constraint propigagtion
 		// but the constraint of the deadline is binding.
-		for i := moved; i < len(rs); i++ {
+		for i := moved; nrmove > 0 && i < len(rs); i++ {
 			sort.Sort(rMetSlice(rs[i].met[:]))
 			am := rs[i].am
 			if WS.Watched(am.From, am.Player) {
@@ -244,17 +270,20 @@ func moveEmRisk(rs []rScore, tdepth int, c *Combat, risktype int) []AntMove {
 				rs[i].am.To = rs[i].met[0].to
 			}
 
-			if am.D != NoMovement {
+			if am.D < NoMovement {
 				if WS.Watched(am.From, am.Player) {
 					log.Print(am.From, " moved ", am.To)
 				}
 				c.AntCount[am.To]++
 				c.AntCount[am.From]--
 
+				if rs[i].nrisk > 0 {
+					nrmove--
+				}
+
 				if moved < i {
 					rs[moved], rs[i] = rs[i], rs[moved]
 				}
-
 				moved++
 				nm++
 			}
@@ -267,8 +296,9 @@ func moveEmRisk(rs []rScore, tdepth int, c *Combat, risktype int) []AntMove {
 		c.AntCount[rs[i].am.To]--
 	}
 
-	moves := make([]AntMove, len(rs))
-	for i := range rs {
+	moves := make([]AntMove, moved)
+	for i := 0; i < moved; i++ {
+		// log.Print(*rs[i].am)
 		moves[i] = *rs[i].am
 	}
 

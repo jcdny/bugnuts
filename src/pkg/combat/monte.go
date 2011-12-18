@@ -28,6 +28,18 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 		return
 	}
 
+	for ploc, ap := range part {
+		if Debug[DBG_Combat] {
+			log.Print("Starting processing for partition ", ploc, " len(ap.Ants) ", len(ap.Ants))
+		}
+		if len(ap.Ants) == 0 {
+			continue
+		}
+
+		ap.PS = NewPartitionState(c, ap)
+		ap.PS.FirstStepRisk(c, 0)
+	}
+
 	// compute the per partition time budget
 	budget := (cutoff - time.Nanoseconds() - 30*MS) / int64(N*3) / 2
 	if budget < 0 {
@@ -40,18 +52,6 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 			if Debug[DBG_Combat] {
 				log.Print("Starting processing for partition ", ploc, " len(ap.Ants) ", len(ap.Ants))
 			}
-			if len(ap.Ants) == 0 {
-				continue
-			}
-
-			if ap.PS == nil {
-				ap.PS = NewPartitionState(c, ap)
-				if Debug[DBG_Combat] {
-					log.Print("Doing calc for ", ploc, " ALive ", ap.PS.ALive)
-				}
-				ap.PS.FirstStepRisk(c)
-			}
-
 			t := time.Nanoseconds() + budget
 			if t > cutoff {
 				now := time.Nanoseconds()
@@ -62,9 +62,8 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 				break
 			}
 
-			// c.Sim(ap, ploc, t, rng)
 			if Debug[DBG_Combat] {
-				log.Print("Scoring ", ploc)
+				log.Print("****************************** Scoring ", ploc)
 			}
 			ap.PS.ComputeScore(c)
 		}
@@ -119,6 +118,7 @@ func setMoves(ants map[Location]*AntStep, part Partitions, rng *rand.Rand) {
 				am.Steptot += 5 // MAGIC - ants in combat tend not to path to anything
 				am.Goalp = true
 				am.Combat = mp[loc]
+				togoo[move.To] = struct{}{}
 			} else {
 				log.Print("COLLISION ", move.To)
 			}

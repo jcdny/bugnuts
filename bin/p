@@ -21,7 +21,7 @@ export MAP9="cell_maze_p04_03"
 export MAP10="cell_maze_p06_04"
 export MAPT="test"
 
-export MAP=$MAPT
+export MAP=$MAP9
 export MAPFILE="$MAPS/${MAP}.map"
 echo $MAPFILE
 
@@ -32,7 +32,7 @@ $TOOLS/playgame.py \
     --fill \
     -I -E -e -O -R \
     --verbose \
-    --turntime 700 \
+    --turntime 300 \
     --player_seed 41 \
     --engine_seed 41 \
     --end_wait=.25 \
@@ -47,6 +47,5 @@ $TOOLS/playgame.py \
     --cutoff_percent 0.85 \
     "${BB}8" \
     "${BB}5" \
-    "${BB}7" \
     "python $TOOLS/dist/sample_bots/python/GreedyBot.py" \
     "python $TOOLS/dist/sample_bots/python/HunterBot.py" \

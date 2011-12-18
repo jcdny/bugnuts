@@ -21,6 +21,14 @@ func Max(x []int) int {
 
 	return xm
 }
+func MaxF64(x []float64) float64 {
+	xm := -math.MaxFloat64
+	for _, y := range x {
+		xm = math.Fmax(xm, y)
+	}
+
+	return xm
+}
 
 func Min(x []int) int {
 	xm := math.MaxInt32

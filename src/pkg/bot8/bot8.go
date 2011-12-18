@@ -15,6 +15,7 @@ import (
 	. "bugnuts/pathing"
 	. "bugnuts/viz"
 	. "bugnuts/game"
+	. "bugnuts/util"
 )
 
 type BotV8 struct {
@@ -70,7 +71,11 @@ func (bot *BotV8) GenerateTargets(s *State) *TargetSet {
 		tset.Add(FOOD, loc, 1, bot.PriMap[FOOD])
 	}
 
-	if s.Turn > 120 && s.Turn%20 == 0 {
+	// we have a ton of food targets when symmetry is high....
+	if false && len(s.Map.SMap) > 0 && len(s.Map.SMap[0]) > 5 {
+		ts := make(TargetSet, 0)
+		bot.Explore = &ts
+	} else if s.Turn > 140 && s.Turn%20 == 0 {
 		ts := make(TargetSet, 0)
 		bot.Explore = &ts
 	}
@@ -131,6 +136,30 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	}
 	// s.C.Risk = s.C.Riskly(s.Ants) // done in setup now.
 	s.C.Run(ants, ap, pmap, s.Cutoff, s.Rand)
+
+	// bash in blocks for any location where enemies only have 1 degree of freedom...
+	ablock := make([]Location, 0, 500)
+	for i := range s.Ants {
+		if i > 0 {
+			for l := range s.Ants[i] {
+				var d int
+				nfree := 4
+				for d = 0; d < 4; d++ {
+					nl := s.Map.LocStep[l][d]
+					if s.C.PlayerMap[nl] == i || !StepableItem[s.Map.Grid[nl]] {
+						nfree--
+					}
+				}
+				if nfree < 2 {
+					s.Map.Grid[l] = BLOCK
+					ablock = append(ablock, l)
+				}
+			}
+		}
+	}
+	if Debug[DBG_Combat] {
+		log.Print("Set blocks on ", len(ablock), " enemy ants")
+	}
 
 	iter := -1
 	maxiter := 50
@@ -262,11 +291,14 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 				maxiter = maxiter + 50
 				eh := s.EnemyHillLocations(0)
 				nadded := 0
-				if idle > 3*len(eh) {
-					nadded = s.AddBorderTargets(idle-2*len(eh), tset, bot.Explore, bot.PriMap[EXPLORE])
+				if idle > 4*len(eh) {
+					newview := MinV(idle-2*len(eh), MaxV(s.Stats.LTS.Horizon/s.ViewRadius2-len(*bot.Explore), 5))
+					log.Print("Adding explore points currently ", len(*bot.Explore), " looking to add ", newview, s.Size(), s.Stats.LTS.Horizon)
+					nadded = s.AddBorderTargets(newview, tset, bot.Explore, bot.PriMap[EXPLORE])
 				}
 				for _, loc := range eh {
 					(*tset)[loc].Count += (idle - nadded) / len(eh)
+					(*tset)[loc].Count = MinV((*tset)[loc].Count, len(s.Ants[0])/4)
 				}
 			}
 		}

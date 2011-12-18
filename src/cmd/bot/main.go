@@ -77,6 +77,7 @@ func main() {
 		log.Printf("Game Info:\n%v\n", g)
 	}
 	TurnSet(0)
+
 	// Create watch points
 	WS = NewWatches(g.Rows, g.Cols, g.Turns)
 	if len(watchPoints) > 0 {

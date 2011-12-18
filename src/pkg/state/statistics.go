@@ -2,6 +2,7 @@ package state
 
 import (
 	"log"
+	"math"
 	. "bugnuts/game"
 	. "bugnuts/maps"
 	. "bugnuts/combat"
@@ -23,6 +24,7 @@ type TurnStatistics struct {
 	Suicide     [MaxPlayers]int
 	StaticCount [MaxPlayers]int // Count of unmoved ants
 	PRisk       [MaxPlayers][MaxRiskStat]int
+	Score       [MaxPlayers]float64 // a scaling factor for combat
 }
 
 type Statistics struct {
@@ -39,6 +41,7 @@ type Statistics struct {
 	HorizonMax     int              // Maximum known state extent
 	HorizonMaxTurn int              // turn on which we had max knowledge
 	TStats         []TurnStatistics // per turn statistics
+	LTS            *TurnStatistics  // last computed turn stats.
 }
 
 func NewStatistics(g *GameInfo) *Statistics {
@@ -86,6 +89,35 @@ func (s *State) UpdateStatistics(turn *Turn) {
 			}
 		}
 		ts.Unknown = nunk
+	}
+
+	s.Stats.LTS = ts
+	s.Stats.ComputeScore(s.Cprev)
+}
+
+func (s *Statistics) ComputeScore(c *Combat) {
+	// we are more aggresive towards players we outnumber esp if 
+	// we have the most ant however if we have not seen much of the
+	// map we are risk averse 
+	if s.LTS == nil {
+		return
+	}
+	// fraction of map seen
+	vis := .1
+	if c != nil {
+		vis = float64(c.Size()-s.LTS.Horizon) / float64(c.Size())
+	}
+
+	frac := float64(s.LTS.Seen[0]) / float64(s.LTS.SeenAll)
+
+	for i := range s.LTS.Seen {
+		frace := float64(s.LTS.Seen[i]) / float64(s.LTS.SeenAll)
+		s.LTS.Score[i] = math.Fmax(math.Fmin(frac*vis*vis/frace, 3), .5)
+	}
+	s.LTS.Score[0] = -1.0
+
+	if Debug[DBG_Scoring] {
+		log.Print("Score per player is ", s.LTS.Score[0:s.NP])
 	}
 }
 

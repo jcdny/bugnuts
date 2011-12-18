@@ -45,7 +45,7 @@ func TPush(s string) {
 	LMark = append(LMark, mark)
 	LStr = append(LStr, s)
 
-	if Debug[DBG_GatherTime] && s[0] == '@' {
+	if s[0] == '+' || (Debug[DBG_GatherTime] && s[0] == '@') {
 		turn := TurnGet()
 		t, ok := Times[s]
 		if !ok {
@@ -62,6 +62,10 @@ func TPush(s string) {
 }
 
 func TPop() int64 {
+	return TPopn(0)
+}
+
+func TPopn(n int) int64 {
 	if len(LMark) < 1 {
 		return 0
 	}
@@ -72,8 +76,9 @@ func TPop() int64 {
 	LMark = LMark[:len(LMark)-1]
 	LStr = LStr[:len(LStr)-1]
 
-	if Debug[DBG_GatherTime] && s[0] == '@' {
+	if s[0] == '+' || (Debug[DBG_GatherTime] && s[0] == '@') {
 		if t, ok := Times[s]; ok {
+			t.Count[t.TLast] += n - 1 // we set to 1 in TPush
 			t.Total += diff
 			t.Accumulate[t.TLast] += diff
 			if t.stack < 2 {
@@ -82,7 +87,7 @@ func TPop() int64 {
 			} else {
 				t.stack--
 			}
-			if Debug[DBG_TurnTime] && s[0] == '@' {
+			if Debug[DBG_TurnTime] && (s[0] == '@' || s[0] == '+') {
 				log.Printf("** %.2fms/%.2fms/%.2fms %s",
 					float64(diff)/1e6,
 					float64(t.Accumulate[t.TLast])/1e6,
@@ -93,7 +98,7 @@ func TPop() int64 {
 		}
 	}
 
-	if Debug[DBG_TurnTime] && s[0] == '@' {
+	if Debug[DBG_TurnTime] && (s[0] == '@' || s[0] == '+') {
 		log.Printf("** %.2fms %s", float64(diff)/1000000.0, s)
 	}
 

@@ -137,12 +137,30 @@ func (s *State) ProcessTurn(t *Turn) {
 	s.Met.HBorder = s.StepHorizon(s.Met.HBorder)
 	s.UpdateHillMaps()
 	s.MonteCarloDensity()
-	s.Cprev = s.C
 	s.CombatSetup()
 }
 
+func (s *State) GetScorer() func(dead []AntMove, np int) (score float64) {
+	return func(dead []AntMove, np int) (score float64) {
+		if np != 0 {
+			log.Panic("only scores for player 0 now")
+		}
+
+		for _, da := range dead {
+			score = s.Stats.LTS.Score[da.Player]
+		}
+
+		return score
+	}
+}
+
 func (s *State) CombatSetup() {
-	s.C = NewCombat(s.Map, s.AttackMask, 10)
+	score := ScoreRiskAverse
+	if s.Turn > 400 {
+		score = ScoreRiskNeutral
+	}
+	s.Cprev = s.C
+	s.C = NewCombat(s.Map, s.AttackMask, 10, score)
 	s.C.Setup(s.Ants)
 
 }

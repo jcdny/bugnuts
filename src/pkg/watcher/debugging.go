@@ -22,6 +22,7 @@ const (
 	DBG_Symmetry
 	DBG_Metrics
 	DBG_Statistics
+	DBG_Scoring
 	maxDBG
 )
 
@@ -32,7 +33,7 @@ var WS *Watches
 // DebugLevels are cumulative, but a 0 resets all to false and a -Level unsets.
 var debugLevels = [][]int{
 	0: {DBG_GatherTime},
-	1: {DBG_TurnTime, DBG_Combat},
+	1: {DBG_TurnTime, DBG_Combat, DBG_Scoring},
 	2: {DBG_Iterations, DBG_Symmetry},
 	3: {DBG_Targets, DBG_Threat},
 	4: {0, DBG_Movement},
