@@ -201,14 +201,14 @@ func (s *SymData) UpdateSymmetryData(cutoff int64) {
 
 			rtime := cutoff - time.Nanoseconds()
 			if cutoff != 0 && rtime < 0 {
-				if Debug[DBG_Symmetry] {
+				if Debug[DBG_Symmetry] || Debug[DBG_Timeouts] {
 					log.Print("Cutoff in UpdateSymmetryData - Hashing")
 				}
 				return
 			} else if rtime < 3*1e6 && len(s.Check) > 0 {
 				// don't cosume all our time updating tiles...	
-				if Debug[DBG_Symmetry] {
-					log.Print("Bailing on updating tiles to check some...")
+				if Debug[DBG_Symmetry] || Debug[DBG_Timeouts] {
+					log.Print("Bailing on updating tiles to do some checks...")
 				}
 				break
 			}
@@ -241,7 +241,7 @@ func (s *SymData) UpdateSymmetryData(cutoff int64) {
 		// 5ms to cutoff
 		rtime := cutoff - time.Nanoseconds()
 		if cutoff != 0 && (rtime < 0 || (updated && rtime < 1*1e6)) {
-			if Debug[DBG_Symmetry] {
+			if Debug[DBG_Symmetry] || Debug[DBG_Timeouts] {
 				log.Print("Cutoff in UpdateSymmetryData - Checking")
 			}
 			break

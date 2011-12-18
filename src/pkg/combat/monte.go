@@ -37,22 +37,28 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 	// TODO prioritize partition resolution...
 	for {
 		for ploc, ap := range part {
-			log.Print(ploc, " len(ap.Ants) ", len(ap.Ants))
+			if Debug[DBG_Combat] {
+				log.Print("Starting processing for partition ", ploc, " len(ap.Ants) ", len(ap.Ants))
+			}
 			if len(ap.Ants) == 0 {
 				continue
 			}
 
 			if ap.PS == nil {
 				ap.PS = NewPartitionState(c, ap)
-				log.Print("Doing calc for ", ploc, " ALive ", ap.PS.ALive)
+				if Debug[DBG_Combat] {
+					log.Print("Doing calc for ", ploc, " ALive ", ap.PS.ALive)
+				}
 				ap.PS.FirstStepRisk(c)
 			}
 
 			t := time.Nanoseconds() + budget
 			if t > cutoff {
 				now := time.Nanoseconds()
-				log.Print("Out of time in Run combat parts, cutoff, budget (ms):",
-					len(part), cutoff-now/1000000, budget/1000000)
+				if Debug[DBG_Timeouts] {
+					log.Print("Out of time in Run combat parts, cutoff, budget (ms):",
+						len(part), cutoff-now/1000000, budget/1000000)
+				}
 				break
 			}
 

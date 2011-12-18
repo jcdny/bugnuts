@@ -7,6 +7,7 @@ import (
 	. "bugnuts/combat"
 	. "bugnuts/torus"
 	. "bugnuts/util"
+	. "bugnuts/watcher"
 )
 
 type TurnStatistics struct {
@@ -56,8 +57,10 @@ func (s *State) UpdateStatistics(turn *Turn) {
 	ts := &s.Stats.TStats[turn.Turn]
 	s.Stats.ProcessSeen(ts, turn.A, turn.Turn, s.Cprev)
 	s.Stats.ProcessDeadAnts(ts, turn.D, s.Cprev)
-	log.Print("Rtot  ", s.Stats.RiskTot[0:s.Stats.NP])
-	log.Print("PRisk ", ts.PRisk[0:s.Stats.NP])
+	if Debug[DBG_Statistics] {
+		log.Print("Rtot  ", s.Stats.RiskTot[0:s.Stats.NP])
+		log.Print("PRisk ", ts.PRisk[0:s.Stats.NP])
+	}
 
 	ts.Food = len(turn.F)
 
@@ -101,7 +104,9 @@ func (s *Statistics) ProcessDeadAnts(ts *TurnStatistics, deadants []PlayerLoc, c
 			ts.Suicide[pl.Player]++
 			s.SuicideTot[pl.Player]++
 			suicide[pl.Loc]++
-			log.Print("suicide", pl)
+			if Debug[DBG_Statistics] {
+				log.Print("suicide", pl)
+			}
 		} else {
 			suicide[pl.Loc] = 1
 		}
@@ -114,7 +119,7 @@ func (s *Statistics) ProcessDeadAnts(ts *TurnStatistics, deadants []PlayerLoc, c
 				r, ok := c.Risk[pl.Player][pl.Loc]
 				if !ok {
 					r = RiskNone
-				} else {
+				} else if Debug[DBG_Statistics] {
 					log.Print("rdeath ", r, pl)
 				}
 				s.RiskTot[pl.Player][r]++

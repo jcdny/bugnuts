@@ -40,7 +40,9 @@ func (ps *PartitionState) FirstStepRisk(c *Combat) {
 			TPush("@movegen")
 			ps.P[np].First = allMoves(rs, RiskNeutral, c)
 			TPop()
-			log.Print("generated ", len(ps.P[np].First), " moves for ", len(rs), " ants")
+			if Debug[DBG_Combat] {
+				log.Print("generated ", len(ps.P[np].First), " moves for ", len(rs), " ants")
+			}
 		}
 		if len(ps.P[np].First) > 16 || len(ps.P[np].First) == 0 {
 			tdepth[2] = davg

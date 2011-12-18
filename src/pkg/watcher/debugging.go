@@ -7,6 +7,7 @@ import (
 const (
 	DBG_GatherTime = iota + 1
 	DBG_TurnTime
+	DBG_Timeouts
 	DBG_Iterations
 	DBG_Start
 	DBG_Threat
@@ -20,6 +21,7 @@ const (
 	DBG_BorderTargets
 	DBG_Symmetry
 	DBG_Metrics
+	DBG_Statistics
 	maxDBG
 )
 

@@ -197,7 +197,9 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 
 	// Now prune any ant which need not be involved in combat...
 	for ploc, ap := range parts {
-		log.Print("Pruning ", ploc)
+		if Debug[DBG_Combat] {
+			log.Print("Pruning ", ploc)
+		}
 		for np, n := range pstats[ploc].pn {
 			if n > 0 {
 				ap.prune(pstats[ploc], np, c)
@@ -205,7 +207,9 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 		}
 		// Finally drop any partition where there is 1 of me
 		if pstats[ploc].nc < 3 {
-			log.Print(ploc, " zapping pstats: ", pstats[ploc])
+			if Debug[DBG_Combat] {
+				log.Print(ploc, " zapping pstats: ", pstats[ploc])
+			}
 			pstats[ploc].nc = 0
 			ap.Pants = append(ap.Pants, ap.Ants...)
 			ap.Ants = ap.Ants[:0]
@@ -238,7 +242,9 @@ func (ap *AntPartition) prune(stat *pStat, np int, c *Combat) bool {
 	}
 	ap.Ants = ap.Ants[:n]
 	// now have 2 lists, ants not me (ap.Ants) and ants to check (ants)
-	log.Print("P ", np, " Others ", n, " me ", len(ants))
+	if Debug[DBG_Combat] {
+		log.Print("Pruning player ", np, " others ", n, " own ", len(ants))
+	}
 
 	// now go through and for any ant in combat add it to cant and put it in map
 	// iterate until we have a round with no adds
@@ -286,7 +292,9 @@ func (ap *AntPartition) prune(stat *pStat, np int, c *Combat) bool {
 
 	// at this point ants are ants that were not in combat or connected to 
 	// an ant in combat are in ants, cants are combat ants
-	log.Print("player ", np, " ants nc ", len(ants), " combat ", len(cants))
+	if Debug[DBG_Combat] {
+		log.Print("player ", np, " ants noncombat ", len(ants), " combat ", len(cants))
+	}
 
 	return len(cants) > 0
 }
@@ -303,7 +311,7 @@ func NewPartitionState(c *Combat, ap *AntPartition) *PartitionState {
 			players[c.PlayerMap[loc]]++
 			ps.ALive++
 		} else {
-			log.Print("Invalid ap player loc %v removing it", c.ToPoint(loc))
+			log.Print("WARNING: Invalid ap player loc %v removing it", c.ToPoint(loc))
 			log.Print(ap, c.PlayerMap[loc])
 			copy(ap.Ants[i:len(ap.Ants)-1], ap.Ants[i+1:])
 		}
@@ -353,6 +361,7 @@ func (ps *PlayerState) bestScore() (best []int) {
 	}
 	return
 }
+
 func DumpPartitionState(ps *PartitionState) string {
 	s := fmt.Sprintf("Players %d Ants %d: ", ps.PLive, ps.ALive)
 	for i := range ps.P {
