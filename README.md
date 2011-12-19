@@ -6,12 +6,7 @@ A Go learning experience...
 
 Clone the git repo here - `git clone git://github.com/jcdny/bugnuts.git`
 
-## Commentary
+This branch is the final submission code.  The script src/pkg/dist.sh constructs the actual submission.
 
-See docs/Log.md and docs/Ideas.md
-
-## Status
-
-Bot is too stupid for own good.
 
 
