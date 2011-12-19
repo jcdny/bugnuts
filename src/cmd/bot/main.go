@@ -144,7 +144,7 @@ func main() {
 	}
 
 	// If we are running on tcp dump to file
-	if Debug[DBG_GatherTime] {
+	if Debug[DBG_TimingDetails] {
 		file := "/tmp/" + runBot + ".csv"
 		if os.Getenv("BHOST") != "" {
 			file = os.Getenv("BHOST") + "-" + os.Getenv("GAME") + "-" + runBot + ".csv"

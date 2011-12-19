@@ -8,6 +8,7 @@ const (
 	DBG_GatherTime = iota + 1
 	DBG_TurnTime
 	DBG_Timeouts
+	DBG_TimingDetails
 	DBG_Iterations
 	DBG_Start
 	DBG_Threat
@@ -37,6 +38,7 @@ var debugLevels = [][]int{
 	2: {DBG_Iterations, DBG_Symmetry},
 	3: {DBG_Targets, DBG_Threat},
 	4: {0, DBG_Movement},
+	5: {0, DBG_Sample},
 }
 
 func SetDebugLevel(dlev int) {

@@ -147,20 +147,23 @@ func (s *State) GetScorer() func(dead []AntMove, np int) (score float64) {
 		}
 
 		for _, da := range dead {
-			score = s.Stats.LTS.Score[da.Player]
+			score += s.Stats.LTS.Score[da.Player]
+			if s.Met.FHill.Depth[da.From] < 10 &&
+				s.Met.FHill.Depth[da.From] > 0 &&
+				da.Player != 0 {
+				score += 1.0
+			}
 		}
+		// log.Print("Scorer: ", dead, " scored with ", s.Stats.LTS.Score)
 
 		return score
 	}
+
 }
 
 func (s *State) CombatSetup() {
-	score := ScoreRiskAverse
-	if s.Turn > 400 {
-		score = ScoreRiskNeutral
-	}
 	s.Cprev = s.C
-	s.C = NewCombat(s.Map, s.AttackMask, 10, score)
+	s.C = NewCombat(s.Map, s.AttackMask, 10, s.GetScorer())
 	s.C.Setup(s.Ants)
 
 }
@@ -330,8 +333,16 @@ func (s *State) UpdateHillMaps() {
 
 	s.Met.FHill, _, _ = MapFillSeed(s.Map, lend, 1)
 
+	elend := make(map[Location]int)
+	for _, hill := range s.EnemyHillLocations(0) {
+		elend[hill] = 1
+	}
+	if len(elend) > 0 {
+		s.Met.EHill, _, _ = MapFillSeed(s.Map, elend, 1)
+	}
+
 	outbound := make(map[Location]int)
-	R := uint16(MinV(MaxV(MinV(s.Rows, s.Cols)/s.NHills[0], 8), 24))
+	R := uint16(MinV(MaxV(MinV(s.Rows, s.Cols)/s.NHills[0], 10), 20))
 	samples, _ := s.Met.FHill.Sample(s.Rand, 0, int(R), int(R))
 
 	if Debug[DBG_Metrics] {

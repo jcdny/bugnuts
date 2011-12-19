@@ -29,6 +29,8 @@ type Combat struct {
 	ECutoff    int
 	FCutoff    int
 	Score      func(dead []AntMove, np int) (score float64)
+
+	Targets []Location // a list of points to add as targets
 }
 
 var _minusone [MAXMAPSIZE]int
@@ -53,6 +55,7 @@ func NewCombat(m *Map, am *Mask, np int, score func(dead []AntMove, np int) (sco
 		PThreat1:   make([][]int, np),
 		PThreat1Pr: make([]int, m.Size()),
 		PFill:      make([]*Fill, np),
+		Targets:    make([]Location, 20),
 		Score:      score,
 	}
 	copy(c.PlayerMap, _minusone[:len(c.PlayerMap)])

@@ -23,6 +23,7 @@ type Metrics struct {
 	// Fills
 	FDownhill *Fill // Downhill from my own hills
 	FHill     *Fill // Distance to my hills
+	EHill     *Fill // Distance to my hills
 	// FViewHill *Fill // Distance to visibility boundary for my hills
 	// FAll      *Fill // All hill fill
 	// MC distributions

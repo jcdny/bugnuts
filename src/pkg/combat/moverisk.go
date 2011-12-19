@@ -33,20 +33,25 @@ type rScore struct {
 	met    [5]rMet
 }
 
-func (ps *PartitionState) FirstStepRisk(c *Combat, maxperm int) {
+func (ps *PartitionState) FirstStepRisk(c *Combat, full bool) int {
 	TPush("@firststeprisk")
 	defer TPop()
 
 	tdepth := []int{0, 0, 65535, 65535}
 	trisk := []int{RiskNeutral, RiskAverse, RiskNeutral, RiskAverse}
+	antperm := 1
 
 	for np := range ps.P {
 		if ps.P[np].rs == nil {
 			ps.P[np].rs, ps.P[np].davg, ps.P[np].dmin = riskmet(c, ps.P[np].Moves)
 		}
 
-		if len(ps.P[np].Moves) < 4 {
-			ps.P[np].First = allMoves(ps.P[np].rs, RiskNeutral, c)
+		if (full && len(ps.P[np].Moves) <= 4) || len(ps.P[np].Moves) == 1 {
+			risk := RiskNeutral
+			if np != 0 || len(ps.P[np].Moves) == 1 {
+				risk = Suicidal
+			}
+			ps.P[np].First = allMoves(ps.P[np].rs, risk, c)
 			if Debug[DBG_Combat] {
 				log.Print("generated ", len(ps.P[np].First), " moves for ", len(ps.P[np].rs), " ants")
 			}
@@ -59,7 +64,12 @@ func (ps *PartitionState) FirstStepRisk(c *Combat, maxperm int) {
 				ps.P[np].First[d] = moveEmRisk(ps.P[np].rs, tdepth[d], c, trisk[d])
 			}
 		}
+		if len(ps.P[np].Moves) > 0 && len(ps.P[np].First) > 0 {
+			antperm *= len(ps.P[np].Moves) * len(ps.P[np].First)
+		}
 	}
+
+	return antperm
 }
 
 func riskmet(c *Combat, ants []AntMove) (rs []rScore, davg, dmin int) {
@@ -147,6 +157,7 @@ func (p rScoreSlice) Less(i, j int) bool {
 // discard permutations that are not valid and remove duplicates
 // also collapse non risk states
 func allMoves(rs []rScore, risktype int, c *Combat) [][]AntMove {
+	t := Torus{44, 84}
 	// because of how I dedup this cant be > 5
 	if len(rs) > 4 {
 		return [][]AntMove{}
@@ -169,6 +180,9 @@ func allMoves(rs []rScore, risktype int, c *Combat) [][]AntMove {
 		for m = 0; m < len(p); m++ {
 			d := p[m]
 			if !rs[m].met[d].step || rs[m].met[d].risk > risktype {
+				if Debug[DBG_Combat] {
+					log.Print("** Drop ", m, d, rs[m].am.From, !rs[m].met[d].step, rs[m].met[d].risk > risktype)
+				}
 				break
 			}
 			c.AntCount[rs[m].met[d].to]++
@@ -176,6 +190,9 @@ func allMoves(rs []rScore, risktype int, c *Combat) [][]AntMove {
 			if rs[m].met[d].risk != RiskNone {
 				tolist[m] = rs[m].met[d].to
 			} else {
+				if Debug[DBG_Combat] {
+					log.Print("Safe ", t.ToPoint(rs[m].met[d].to))
+				}
 				tolist[m] = 65535
 			}
 		}
@@ -185,6 +202,9 @@ func allMoves(rs []rScore, risktype int, c *Combat) [][]AntMove {
 			for mc = 0; mc < len(p); mc++ {
 				d := p[mc]
 				if c.AntCount[rs[mc].met[d].to] != 1 {
+					if Debug[DBG_Combat] {
+						log.Print("** Drop ", mc, p, p[mc], " collision ", rs[mc].met[d].to)
+					}
 					break
 				}
 			}
@@ -198,6 +218,10 @@ func allMoves(rs []rScore, risktype int, c *Combat) [][]AntMove {
 					if _, ok := dedup[sig]; !ok {
 						plv = append(plv, p)
 						dedup[sig] = struct{}{}
+					} else {
+						if Debug[DBG_Combat] {
+							log.Print("Drop ", p, " dup ")
+						}
 					}
 				} else {
 					plv = append(plv, p)

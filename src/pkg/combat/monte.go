@@ -4,11 +4,22 @@ import (
 	"log"
 	"time"
 	"rand"
+	"sort"
 	. "bugnuts/maps"
 	. "bugnuts/game"
 	. "bugnuts/torus"
 	. "bugnuts/watcher"
 )
+
+type pSize struct {
+	N   int
+	Loc Location
+}
+type pSizeSlice []pSize
+
+func (p pSizeSlice) Len() int           { return len(p) }
+func (p pSizeSlice) Less(i, j int) bool { return p[i].N < p[j].N }
+func (p pSizeSlice) Swap(i, j int)      { p[i], p[j] = p[j], p[i] }
 
 func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap PartitionMap, cutoff int64, rng *rand.Rand) {
 	TPush("@combat")
@@ -19,14 +30,18 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 	}
 	// count active partitions
 	N := 0
+	NAnts := 0
 	for _, ap := range part {
 		if len(ap.Ants) > 0 {
 			N++
+			NAnts += len(ap.Ants)
 		}
 	}
 	if N == 0 {
 		return
 	}
+
+	psort := make(pSizeSlice, 0, len(part))
 
 	for ploc, ap := range part {
 		if Debug[DBG_Combat] {
@@ -37,18 +52,25 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 		}
 
 		ap.PS = NewPartitionState(c, ap)
-		ap.PS.FirstStepRisk(c, 0)
+		full := len(ap.Ants) < 5 || (N == 1 && len(ap.Ants) < 6)
+		antperm := ap.PS.FirstStepRisk(c, full)
+		psort = append(psort, pSize{N: antperm, Loc: ploc})
 	}
+	sort.Sort(psort)
+	// log.Print("PSort data : ", psort)
 
 	// compute the per partition time budget
-	budget := (cutoff - time.Nanoseconds() - 30*MS) / int64(N*3) / 2
+	budget := (cutoff - time.Nanoseconds() - 100*MS) / int64(N*3) / 2
 	if budget < 0 {
 		return
 	}
 
 	// TODO prioritize partition resolution...
 	for {
-		for ploc, ap := range part {
+		for i := range psort {
+			ploc := psort[i].Loc
+			ap := part[psort[i].Loc]
+
 			if Debug[DBG_Combat] {
 				log.Print("Starting processing for partition ", ploc, " len(ap.Ants) ", len(ap.Ants))
 			}
@@ -65,7 +87,7 @@ func (c *Combat) Run(ants map[Location]*AntStep, part Partitions, pmap Partition
 			if Debug[DBG_Combat] {
 				log.Print("****************************** Scoring ", ploc)
 			}
-			ap.PS.ComputeScore(c)
+			ap.PS.ComputeScore(c, cutoff)
 		}
 		break
 	}
@@ -109,18 +131,22 @@ func setMoves(ants map[Location]*AntStep, part Partitions, rng *rand.Rand) {
 	togoo := make(map[Location]struct{}, len(mm))
 	for loc, move := range mm {
 		if am, ok := ants[loc]; !ok {
-			log.Print("Attempt to move an unfound ant", loc)
+			if Debug[DBG_Combat] {
+				log.Print("WARNING: Attempt to move an unfound ant", loc) // known uissue since did not fix partition merge.
+			}
 		} else {
 			if _, found := togoo[move.To]; !found {
 				am.N[move.D].Combat = 1
 				am.Dest = append(am.Dest, move.To)
 				am.Steps = append(am.Steps, 1)
-				am.Steptot += 5 // MAGIC - ants in combat tend not to path to anything
+				am.Steptot += 4 // MAGIC - ants in combat tend not to path to anything
 				am.Goalp = true
 				am.Combat = mp[loc]
 				togoo[move.To] = struct{}{}
 			} else {
-				log.Print("COLLISION ", move.To)
+				if Debug[DBG_Combat] {
+					log.Print("COLLISION ", move.To)
+				}
 			}
 		}
 	}
@@ -135,7 +161,7 @@ func (c *Combat) xSim(ap *AntPartition, ploc Location, cutoff int64, rng *rand.R
 }
 
 func xMonteSim(c *Combat, ps *PartitionState, rng *rand.Rand) {
-	ps.ComputeScore(c)
+	ps.ComputeScore(c, 0)
 	best := ps.P[0].bestScore()
 	if len(best) == len(ps.P[0].Score) {
 		ps.P[0].Best = 1

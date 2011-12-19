@@ -236,6 +236,18 @@ func VizMCPaths(s *State) {
 			fmt.Fprintf(os.Stdout, "v t %d %d\n", p.R, p.C)
 		}
 	}
+
+	sfc(cBlack, 1.0)
+}
+
+func VizTiles(s *State, locs []Location, r, g, b int) {
+	fmt.Fprintf(os.Stdout, "v sfc %d %d %d %.2f\n",
+		r, g, b, .5)
+	for _, loc := range locs {
+		p := s.ToPoint(loc)
+		fmt.Fprintf(os.Stdout, "v t %d %d\n", p.R, p.C)
+	}
+	sfc(cBlack, 1.0)
 }
 
 func VizMCHillIn(s *State) {

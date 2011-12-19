@@ -59,6 +59,48 @@ OUT:
 	return loc, -(steps + 1)
 }
 
+// NPathInPath computes an N step path to a minima.  If steps == -1 then
+// go to minima and return steps taken; if steps == 0 it's a noop, more for
+// clean logic elsewhere.
+func (f *Fill) NPathInPath(r *rand.Rand, start Location, steps int) (path []Location) {
+
+	if steps == 0 {
+		return []Location{}
+	} else if steps < -1 {
+		steps = -1
+	}
+
+	path = append(path, start)
+	loc := start
+	depth := f.Depth[loc]
+
+OUT:
+	for {
+		var d Direction
+		for _, d = range Permute4G(r) {
+			nl := f.LocStep[loc][d]
+			nd := f.Depth[nl]
+			// log.Printf("steps %d New Loc %d Dir %s Depth %d", steps, nl, d, nd)
+			if nd < depth && nd > 0 {
+				loc = nl
+				path = append(path, loc)
+				depth = nd
+				steps--
+				if steps == 0 {
+					break OUT
+				} else {
+					break
+				}
+			}
+		}
+		if d == NoMovement {
+			break
+		}
+	}
+
+	return
+}
+
 func (f *Fill) NPathInString(r *rand.Rand, start Location, steps int, perm int) string {
 	if steps == 0 {
 		return "-"

@@ -40,6 +40,8 @@ type State struct {
 	Met          *Metrics           // Map Metrics
 	C            *Combat
 	Cprev        *Combat
+	HChop        map[Location][]Location
+	HCRisk       map[Location]int
 
 	Testing bool
 	// Caches
@@ -55,6 +57,8 @@ func NewState(g *GameInfo) *State {
 		Map:      m,
 		Met:      NewMetrics(m),
 		Stats:    NewStatistics(g),
+		HChop:    make(map[Location][]Location, 32),
+		HCRisk:   make(map[Location]int, 32),
 	}
 
 	// Mask Cache

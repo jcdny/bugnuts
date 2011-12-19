@@ -6,6 +6,7 @@ import (
 	"os"
 	"fmt"
 	"log"
+	"time"
 	. "bugnuts/maps"
 	. "bugnuts/torus"
 	. "bugnuts/state"
@@ -55,6 +56,70 @@ func NewBotV8(s *State, pset *Parameters) Bot {
 	return mb
 }
 
+func BlockEm(s *State) []Location {
+	// bash in blocks for any location where enemies only have 1 degree of freedom...
+	ablock := make([]Location, 0, 500)
+	for loc, t := range s.C.Threat1 {
+		if t > 7 && s.C.PThreat[0][loc] < 2 &&
+			s.Map.Grid[loc] == LAND {
+			s.Map.Grid[loc] = BLOCK
+			ablock = append(ablock, Location(loc))
+		}
+	}
+
+	return ablock
+}
+
+func ChopEm(s *State) {
+	origin := make(map[Location]int, len(s.Ants[0]))
+	for loc := range s.Ants[0] {
+		origin[loc] = 1
+	}
+	f := NewFill(s.Map)
+	// will only find neighbors withing 2x8 steps.
+	f.MapFillSeed(origin, 1)
+
+	for _, hill := range s.EnemyHillLocations(0) {
+		if f.Depth[hill] != 0 {
+			s.HChop[hill] = []Location{}, false
+			s.HCRisk[hill] = 0, false
+		} else {
+			// a hill we cant reach
+			brisk := 1000000
+			var bpath []Location
+			if nb, ok := s.HCRisk[hill]; ok {
+				brisk = nb
+				bpath = s.HChop[hill]
+			}
+			locs, _ := f.Sample(s.Rand, 20, 0, 100)
+			for _, loc := range locs {
+				if s.Met.EHill.Seed[loc] == hill {
+					nrisk := 0
+					path := s.Met.EHill.NPathInPath(s.Rand, loc, -1)
+
+					for _, ploc := range path {
+						nrisk += s.C.Threat[ploc] - s.C.PThreat[0][ploc]
+					}
+					if nrisk < brisk {
+						bpath = path
+						brisk = nrisk
+					}
+				}
+			}
+			if len(bpath) > 0 {
+				// log.Print(s.ToPoints(bpath))
+				s.HChop[hill] = bpath
+				s.HCRisk[hill] = brisk
+				for _, loc := range bpath {
+					if s.Map.Grid[loc] == BLOCK {
+						s.Map.Grid[loc] = LAND
+					}
+				}
+			}
+		}
+	}
+}
+
 func (bot *BotV8) GenerateTargets(s *State) *TargetSet {
 	tset := &TargetSet{}
 
@@ -75,7 +140,7 @@ func (bot *BotV8) GenerateTargets(s *State) *TargetSet {
 	if false && len(s.Map.SMap) > 0 && len(s.Map.SMap[0]) > 5 {
 		ts := make(TargetSet, 0)
 		bot.Explore = &ts
-	} else if s.Turn > 140 && s.Turn%20 == 0 {
+	} else if s.Turn > 150 && s.Turn%30 == 0 {
 		ts := make(TargetSet, 0)
 		bot.Explore = &ts
 	}
@@ -129,7 +194,10 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	}
 
 	// Lets combat a bit.
-	ap, pmap := s.C.Partition(s.Ants)
+	ap, pmap, ctargets := s.C.Partition(s.Ants)
+	for _, loc := range ctargets {
+		tset.Add(RALLY, loc, 1, bot.PriMap[RALLY])
+	}
 	// Now visualize the frenemies.
 	if Viz["combat"] {
 		VizFrenemies(s, ap, pmap)
@@ -137,34 +205,28 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 	// s.C.Risk = s.C.Riskly(s.Ants) // done in setup now.
 	s.C.Run(ants, ap, pmap, s.Cutoff, s.Rand)
 
-	// bash in blocks for any location where enemies only have 1 degree of freedom...
-	ablock := make([]Location, 0, 500)
-	for i := range s.Ants {
-		if i > 0 {
-			for l := range s.Ants[i] {
-				var d int
-				nfree := 4
-				for d = 0; d < 4; d++ {
-					nl := s.Map.LocStep[l][d]
-					if s.C.PlayerMap[nl] == i || !StepableItem[s.Map.Grid[nl]] {
-						nfree--
-					}
-				}
-				if nfree < 2 {
-					s.Map.Grid[l] = BLOCK
-					ablock = append(ablock, l)
-				}
-			}
+	ablock := BlockEm(s)
+	ChopEm(s)
+
+	if Debug[DBG_Sample] {
+		VizTiles(s, ablock, 0, 0, 255)
+		log.Print("Set blocks on ", len(ablock), " cells ", s.ToPoints(ablock))
+		for loc, chop := range s.HChop {
+			VizTiles(s, chop, 0, 255, 0)
+			log.Print("Set cuts to ", s.ToPoint(loc))
 		}
-	}
-	if Debug[DBG_Combat] {
-		log.Print("Set blocks on ", len(ablock), " enemy ants")
 	}
 
 	iter := -1
 	maxiter := 50
 	nMove := 1
 	for len(ants) > 0 && tset.Pending() > 0 && nMove != 0 {
+		if time.Nanoseconds() > s.Cutoff {
+			if Debug[DBG_Timeouts] {
+				log.Print("Turn cutoff on iteration ", iter, " in DoTurn")
+			}
+			break
+		}
 		iter++
 		nMove = 0
 
@@ -260,7 +322,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 					ant.Dest = append(ant.Dest, seg.End)
 					ant.Steptot = seg.Steps
 
-					if tgt.Terminal {
+					if tgt.Terminal || len(ant.Dest) > 15 || ant.Steptot > 50 {
 						endants = append(endants, ant)
 					} else {
 						ants[seg.End] = ant
@@ -293,7 +355,9 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 				nadded := 0
 				if idle > 4*len(eh) {
 					newview := MinV(idle-2*len(eh), MaxV(s.Stats.LTS.Horizon/s.ViewRadius2-len(*bot.Explore), 5))
-					log.Print("Adding explore points currently ", len(*bot.Explore), " looking to add ", newview, s.Size(), s.Stats.LTS.Horizon)
+					if Debug[DBG_Targets] {
+						log.Print("Adding explore points currently ", len(*bot.Explore), " looking to add ", newview, s.Size(), s.Stats.LTS.Horizon)
+					}
 					nadded = s.AddBorderTargets(newview, tset, bot.Explore, bot.PriMap[EXPLORE])
 				}
 				for _, loc := range eh {

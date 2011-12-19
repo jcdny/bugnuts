@@ -111,8 +111,12 @@ func (s *Statistics) ComputeScore(c *Combat) {
 	frac := float64(s.LTS.Seen[0]) / float64(s.LTS.SeenAll)
 
 	for i := range s.LTS.Seen {
-		frace := float64(s.LTS.Seen[i]) / float64(s.LTS.SeenAll)
-		s.LTS.Score[i] = math.Fmax(math.Fmin(frac*vis*vis/frace, 3), .5)
+		if TurnGet() < 60 { // MAGIC
+			s.LTS.Score[i] = .4
+		} else {
+			frace := float64(s.LTS.Seen[i]) / float64(s.LTS.SeenAll)
+			s.LTS.Score[i] = math.Fmax(math.Fmin(frac*vis*vis/frace, 2.0), .3)
+		}
 	}
 	s.LTS.Score[0] = -1.0
 

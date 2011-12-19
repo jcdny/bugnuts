@@ -84,7 +84,7 @@ type pStat struct {
 	pp     [MaxPlayers]int // count of ants per player post prune
 }
 
-func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
+func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap, []Location) {
 	// how many ants are there
 	nant := 0
 	for _, ants := range Ants {
@@ -208,6 +208,7 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 				ap.prune(pstats[ploc], np, c)
 			}
 		}
+
 		if false {
 			// Finally drop any partition where there is 1 of me
 			if pstats[ploc].nc < 3 {
@@ -222,68 +223,99 @@ func (c *Combat) Partition(Ants []map[Location]int) (Partitions, PartitionMap) {
 		}
 	}
 
-	return parts, pmap
+	// really finally generate a set of targets for each partition to coalesce...
+	targets := make([]Location, 0, len(parts)*3)
+	for _, ap := range parts {
+		for _, loc := range ap.Ants {
+			if c.PlayerMap[loc] == 0 {
+				mstep := 9999
+				for nloc, nn := range near[loc] {
+					if c.PlayerMap[nloc] == 0 {
+						mstep = MinV(mstep, nn.Steps)
+					}
+				}
+				for nloc, nn := range near[loc] {
+					if c.PlayerMap[nloc] == 0 && nn.Steps == mstep {
+						targets = append(targets, nn.L[1], nn.L[2])
+						// log.Print("adding targets: ", nn)
+						break
+					}
+				}
+			}
+		}
+	}
+
+	return parts, pmap, targets
 }
 
 // Return true if any of the given player are in combat post prune.
 func (ap *AntPartition) prune(stat *pStat, np int, c *Combat) bool {
 	// skip the ants not part of np
-	// also a bit of a hack... set playermap to -1 for now.
-	// this is so pruning is easier.
 	if len(ap.Ants) == 0 {
 		return false
 	}
 
 	ants := make([]Location, 0, len(ap.Ants))
+
 	n := 0
 	for _, loc := range ap.Ants {
 		if c.PlayerMap[loc] == np {
 			ants = append(ants, loc)
-			c.PlayerMap[loc] = -1
 		} else {
 			ap.Ants[n] = loc
 			n++
 		}
 	}
+
 	ap.Ants = ap.Ants[:n]
-	// now have 2 lists, ants not me (ap.Ants) and ants to check (ants)
+	// now have 2 lists, ants not me (ap.Ants) and ants to check (pending)
 	if Debug[DBG_Combat] {
-		log.Print("Pruning player ", np, " others ", n, " own ", len(ants))
+		log.Print("Pruning player ", np, " others ", n, " own ", ants)
 	}
 
 	// now go through and for any ant in combat add it to cant and put it in map
 	// iterate until we have a round with no adds
-	cants := make([]Location, 0, len(ants))
+	cants := make(map[Location]struct{}, len(ants))
+	n = 0
+	for _, loc := range ants {
+		var d int
+		for d = 0; d < 5; d++ {
+			if _, ok := c.Risk[np][c.LocStep[loc][d]]; ok {
+				break
+			}
+		}
+		if d < 5 {
+			cants[Location(loc)] = struct{}{}
+		} else {
+			ants[n] = Location(loc)
+			n++
+		}
+	}
+	if Debug[DBG_Combat] {
+		log.Print("passive ants ", ants, " combat ants ", cants)
+	}
+	ants = ants[:n]
 	for {
 		n = 0
 		for _, loc := range ants {
 			var d int
-			for d = 0; d < 5; d++ {
-				nl := c.LocStep[loc][d]
-				if c.PlayerMap[nl] > -1 {
-					break
-				}
-				if _, ok := c.Risk[np][nl]; ok {
+			for d = 0; d < 4; d++ {
+				if _, ok := cants[c.LocStep[loc][d]]; ok {
 					break
 				}
 			}
-			if d < 5 {
-				cants = append(cants, loc)
-				c.PlayerMap[loc] = np
+			if d < 4 {
+				cants[Location(loc)] = struct{}{}
 			} else {
-				ants[n] = loc
+				ants[n] = Location(loc)
 				n++
 			}
 		}
-		if len(ants) == n {
+		if n == len(ants) {
 			break
 		} else {
 			ants = ants[:n]
 		}
-	}
-	// Trunc and bash player id back in for ants not in combat
-	for _, loc := range ants {
-		c.PlayerMap[loc] = np
 	}
 
 	// update stats
@@ -293,9 +325,11 @@ func (ap *AntPartition) prune(stat *pStat, np int, c *Combat) bool {
 
 	// set pants to ants
 	ap.Pants = append(ap.Pants, ants...)
-	ap.Ants = append(ap.Ants, cants...)
+	for loc := range cants {
+		ap.Ants = append(ap.Ants, loc)
+	}
 
-	// at this point ants are ants that were not in combat or connected to 
+	// at this point ants are ants that were not in combat or connected to
 	// an ant in combat are in ants, cants are combat ants
 	if Debug[DBG_Combat] {
 		log.Print("player ", np, " ants noncombat ", len(ants), " combat ", len(cants))

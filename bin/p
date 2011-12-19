@@ -21,7 +21,7 @@ export MAP9="cell_maze_p04_03"
 export MAP10="cell_maze_p06_04"
 export MAPT="test"
 
-export MAP=$MAP9
+export MAP=$MAP2
 export MAPFILE="$MAPS/${MAP}.map"
 echo $MAPFILE
 
@@ -33,8 +33,8 @@ $TOOLS/playgame.py \
     -I -E -e -O -R \
     --verbose \
     --turntime 300 \
-    --player_seed 41 \
-    --engine_seed 41 \
+    --player_seed 43 \
+    --engine_seed 43 \
     --end_wait=.25 \
     --log_dir ~/bot/log \
     --turns $TURNS \
@@ -42,10 +42,9 @@ $TOOLS/playgame.py \
     --food_rate 5 11 \
     --food_turn 19 37 \
     --food_start 75 175 \
-    --food_visible 10 15 \
+    --food_visible 3 5 \
     --cutoff_turn 150 \
     --cutoff_percent 0.85 \
     "${BB}8" \
-    "${BB}5" \
-    "python $TOOLS/dist/sample_bots/python/GreedyBot.py" \
+    "${BB}7" \
     "python $TOOLS/dist/sample_bots/python/HunterBot.py" \
