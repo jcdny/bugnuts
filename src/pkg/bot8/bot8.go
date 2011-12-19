@@ -354,7 +354,7 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 				eh := s.EnemyHillLocations(0)
 				nadded := 0
 				if idle > 4*len(eh) {
-					newview := MinV(idle-2*len(eh), MaxV(s.Stats.LTS.Horizon/s.ViewRadius2-len(*bot.Explore), 5))
+					newview := MinV(idle-2*len(eh), MaxV(s.Stats.LTS.Horizon/s.ViewRadius2-len(*bot.Explore), 2))
 					if Debug[DBG_Targets] {
 						log.Print("Adding explore points currently ", len(*bot.Explore), " looking to add ", newview, s.Size(), s.Stats.LTS.Horizon)
 					}
@@ -362,7 +362,8 @@ func (bot *BotV8) DoTurn(s *State) os.Error {
 				}
 				for _, loc := range eh {
 					(*tset)[loc].Count += (idle - nadded) / len(eh)
-					(*tset)[loc].Count = MinV((*tset)[loc].Count, len(s.Ants[0])/4)
+					tc := MinV((s.Turns-s.Turn)/60, 3)
+					(*tset)[loc].Count = MinV((*tset)[loc].Count, len(s.Ants[0])/(5-tc))
 				}
 			}
 		}

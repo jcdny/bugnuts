@@ -147,12 +147,20 @@ func (s *State) GetScorer() func(dead []AntMove, np int) (score float64) {
 		}
 
 		for _, da := range dead {
-			score += s.Stats.LTS.Score[da.Player]
-			if s.Met.FHill.Depth[da.From] < 10 &&
-				s.Met.FHill.Depth[da.From] > 0 &&
-				da.Player != 0 {
-				score += 1.0
+			adj := 0.0
+			if da.Player != 0 {
+				if s.Met.FHill != nil &&
+					s.Met.FHill.Depth[da.From] > 0 &&
+					s.Met.FHill.Depth[da.From] < 12 {
+					adj += 1.0
+				}
+				if s.Met.EHill != nil &&
+					s.Met.EHill.Depth[da.From] > 0 &&
+					s.Met.EHill.Depth[da.From] < 12 {
+					adj = .75
+				}
 			}
+			score += s.Stats.LTS.Score[da.Player] + adj
 		}
 		// log.Print("Scorer: ", dead, " scored with ", s.Stats.LTS.Score)
 

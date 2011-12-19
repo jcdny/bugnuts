@@ -118,7 +118,7 @@ func (s *Statistics) ComputeScore(c *Combat) {
 			s.LTS.Score[i] = math.Fmax(math.Fmin(frac*vis*vis/frace, 2.0), .3)
 		}
 	}
-	s.LTS.Score[0] = -1.0
+	s.LTS.Score[0] = -1.5
 
 	if Debug[DBG_Scoring] {
 		log.Print("Score per player is ", s.LTS.Score[0:s.NP])
