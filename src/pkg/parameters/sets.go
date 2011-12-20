@@ -1,3 +1,7 @@
+// Copyright © 2011 Jeffrey Davis <jeff.davis@gmail.com>
+// Use of this code is governed by the GPL version 2 or later.
+// See the file LICENSE for details.
+
 package parameters
 
 var defaultPriMap = map[string]int{"DEFEND": 15, "HILL": 10, "RALLY": 15, "FOOD": 20, "EXPLORE": 30, "WAYPOINT": 30}

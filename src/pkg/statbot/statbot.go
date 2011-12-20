@@ -1,3 +1,7 @@
+// Copyright © 2011 Jeffrey Davis <jeff.davis@gmail.com>
+// Use of this code is governed by the GPL version 2 or later.
+// See the file LICENSE for details.
+
 // StatBot - Dummy bot that simply outputs the statistics generated out of
 // state.UpdateStatistics().
 package statbot
