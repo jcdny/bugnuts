@@ -2,6 +2,7 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
+// A few useful math routines and a permutation generator.
 package util
 
 import (

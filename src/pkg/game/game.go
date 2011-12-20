@@ -2,6 +2,7 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
+// Game has the game setup parser and various constants and datastructures.
 package game
 
 import (

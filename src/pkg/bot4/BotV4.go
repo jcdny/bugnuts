@@ -2,11 +2,10 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
-package main
-// The v4 Bot -- Marginally less Terrible!!!!
-//
+// The v4 Bot -- First version which used BFS to path to food.
 // Entirely changed from v3 - now uses food and hill locations
 // to set goals and does an iterated greedy BFS to path to goals.
+package bot4
 
 import (
 	"fmt"

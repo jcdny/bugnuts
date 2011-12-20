@@ -2,6 +2,7 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
+// Maps has the map data structures and some of the symmetry code
 package maps
 
 import (

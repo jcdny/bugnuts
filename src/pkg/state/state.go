@@ -2,6 +2,7 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
+// State has the turn parser, state updating, metrics, etc.
 package state
 
 import (

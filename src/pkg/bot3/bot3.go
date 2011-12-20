@@ -2,8 +2,8 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
+// The v3 Bot -- Simple diffusion bot.  I think it ate v2 though.
 package bot3
-// The v3 Bot -- Terrible!!!!
 
 import (
 	"fmt"

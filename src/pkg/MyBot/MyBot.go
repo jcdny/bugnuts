@@ -1,7 +1,4 @@
-// Copyright © 2011 Jeffrey Davis <jeff.davis@gmail.com>
-// Use of this code is governed by the GPL version 2 or later.
-// See the file LICENSE for details.
-
+// MyBot is the original interface definition from the starter package.
 package MyBot
 
 import (

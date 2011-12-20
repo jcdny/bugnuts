@@ -2,11 +2,8 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
-package main
-// The v0 - The NOOP Bot.
-//
-// Useful for testing forcast data from replays 
-
+// The v0 Bot -- NOOP Bot; It does nothing, much like the goggles.
+package bot0
 
 import (
 	"os"

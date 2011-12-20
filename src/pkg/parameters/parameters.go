@@ -2,6 +2,7 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
+// Parameters holds the per bot parameter files.
 package parameters
 
 import (

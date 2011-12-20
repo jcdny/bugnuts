@@ -2,6 +2,7 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
+// Engine implements the game engine, taking turn data in and calling out to combat for move resolution.
 package engine
 
 import (

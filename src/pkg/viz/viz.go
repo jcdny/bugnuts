@@ -2,6 +2,7 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
+// Viz emits visualization data for a variety of metrics.
 package viz
 
 import (

@@ -2,9 +2,7 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
-package bot5
 // The v5 Bot -- Marginally less Terrible!!!!
-//
 // Leson from v4: if you run out of goals don't have your ants just go
 // to sleep.
 //
@@ -16,8 +14,8 @@ package bot5
 //
 // Does not match v5 on aichallenge.org since I uploaded before I wanted to
 // make a BotV6.go but the git tag matches what was uploaded.
-//
-// Subsequently modified to work in a package.
+package bot5
+
 import (
 	"fmt"
 	"os"

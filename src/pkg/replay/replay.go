@@ -2,6 +2,7 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
+// Replay reads json replay files and produces metadata and game state information.
 package replay
 
 import (

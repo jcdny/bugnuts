@@ -2,18 +2,9 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
+// The v6 Bot -- better pathfinding and exploration.
+// Need to track chicken bots vs aggressive bots. Need to guess hills.
 package bot6
-
-// The v6 Bot -- Now Officially not terrible
-//
-// Lesons from v5:
-// The "Explore" concept was a failure.
-//
-// Need to be smarter about target priority
-//
-// Need to track chicken bots vs aggressive bots.
-//
-// Need to guess hills
 
 import (
 	"os"

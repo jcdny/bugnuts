@@ -2,9 +2,8 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
+// The v7 Bot -- Uses montecarlo path in to hill to set defense points but still has no combat.
 package bot7
-
-// The v7 Bot -- Now with combat (eventually)
 
 import (
 	"os"

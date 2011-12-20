@@ -2,9 +2,8 @@
 // Use of this code is governed by the GPL version 2 or later.
 // See the file LICENSE for details.
 
+// The v8 Bot -- Now with combat (no really - not good combat but combat)
 package bot8
-
-// The v8 Bot -- Now with combat (no really)
 
 import (
 	"os"
