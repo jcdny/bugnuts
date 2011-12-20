@@ -8,6 +8,7 @@ import (
 	"testing"
 	"log"
 	"fmt"
+	"time"
 	. "bugnuts/torus"
 	. "bugnuts/util"
 	. "bugnuts/watcher"
@@ -239,7 +240,7 @@ func TestSymMatch(t *testing.T) {
 		}
 		log.Print(name)
 		TPush("UpdateSymmetryData:" + name)
-		m.SymData.UpdateSymmetryData(0)
+		m.SymData.UpdateSymmetryData(time.Nanoseconds() + 5*1e12)
 		TPop()
 
 		peak := Max(m.SymData.NLen[:])
