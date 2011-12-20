@@ -35,17 +35,19 @@ pre {
   width: 100%;
   margin: auto;
 }
-#topnav {
-  height: 55px;
-  background: url(/doc/logo.png) no-repeat top left;
+
+a#logo {
+    height: 64px;
+    width: 280px;
+    background: url(/doc/vs.png) no-repeat;
+    display: inline-block;
 }
-a#logo-box {
-  display: block;
-  height: 55px;
-}
+
 h1#title {
-  display: none;
+    display: inline-block;
+    text-align: top;
 }
+
 #nav-main {
   float: right;
   width: 500px;
@@ -134,9 +136,11 @@ h1#title {
 .end-columns {
   clear: both;
 }
+
 #content h1 {
   padding: 0;
 }
+
 #content h2 {
   border-top: 2px solid #ddd;
   padding: 8px 0;
