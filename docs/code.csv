@@ -1,9 +1,9 @@
-username,repo,id,license,comment
-avdg,https://bitbucket.org/avdg/ai-bot-js,,submitted version
-avdg,https://bitbucket.org/avdg/ai-bot-cpp,0,,C++ rewrite attempt - not submitted
+username,repo,id,comment
+avdg,https://bitbucket.org/avdg/ai-bot-js,submitted version
+avdg,https://bitbucket.org/avdg/ai-bot-cpp,0,C++ rewrite attempt - not submitted
 solifugid,https://github.com/smiley1983/ants-solifugid,37
-teapotahedron,https://bitbucket.org/discombobulator/fight_ants/src/83904cb093be/aichallenge/bot,,https://bitbucket.org/discombobulator/fight_ants/overview
-morloth,git://git.assembla.com/killerants.git,,http://forums.aichallenge.org/viewtopic.php?f=24&t=2177
+teapotahedron,https://bitbucket.org/discombobulator/fight_ants/src/83904cb093be/aichallenge/bot,https://bitbucket.org/discombobulator/fight_ants/overview
+morloth,git://git.assembla.com/killerants.git,http://forums.aichallenge.org/viewtopic.php?f=24&t=2177
 xoposhiy,https://bitbucket.org/xoposhiy/aichallenge2011bot.git,4206
 nionita,https://github.com/nionita/MyAnts.git
 pezzotto,https://github.com/lorenzoriano/AI-Challenge.git
@@ -32,10 +32,10 @@ Kurnevsky,Kurnevsky.7z,6526
 Thomash,Thomash.ml,12973
 minthos,minthos.dbot.dm02.tgz
 lama3oid,lama3oid_v18.zip,453,http://lama.od.ua/ex/lama3oid_v18.zip
-Manwe56,Manwe56.7z,,http://forums.aichallenge.org/memberlist.php?mode=viewprofile&u=1551
+Manwe56,Manwe56.7z,http://forums.aichallenge.org/memberlist.php?mode=viewprofile&u=1551
 UncleVasya,UncleVasya_22_2_6_final_src.zip
-memetix,memetix.zip,,http://www.blackmoor.org.uk/AI.htm
-salarants,salarants-10561.zip,,GPL 2.1,http://salarants.codeplex.com/
+memetix,memetix.zip,http://www.blackmoor.org.uk/AI.htm
+salarants,salarants-10561.zip,http://salarants.codeplex.com/
 
 ************************************************************
 
@@ -46,8 +46,10 @@ lazarant.zip
 RVeerdonk.zip
 Hippo.zip
 
-KonaEarth,,,,http://forums.aichallenge.org/viewtopic.php?f=24&t=2181
 
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
 https://github.com/utoxin/AIChallenge-Ants
+
+darhuuk,darhuuk_0.22.zip,,http://forums.aichallenge.org/viewtopic.php?t=2191&p=13494#p13494
+KonaEarth,,,http://forums.aichallenge.org/viewtopic.php?f=24&t=2181
