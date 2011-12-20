@@ -60,7 +60,7 @@ while [ $GAME -lt $END -a ! -f $STOP ]; do
         fi
         curl -o /dev/null -d "email=jeff.davis@gmail.com&stat=$HOST:game&value=$GAME" http://api.stathat.com/ez &
         curl -o /dev/null -d "email=jeff.davis@gmail.com&stat=$HOST:downloaded&count=1" http://api.stathat.com/ez &
-        sleep `expr $RANDOM % 5 + 3`
+        sleep `expr $RANDOM % 5 + 2`
     fi
     GAME="`expr $GAME + 1`"
     echo $GAME > $LAST
