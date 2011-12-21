@@ -127,6 +127,9 @@ Visualizer = function(container, options, w, h, configOverrides) {
 				case 'turn':
 					this.state.options['turn'] = parseInt(value);
 					break;
+				case 'ai':
+					this.state.aistatePlayer = parseInt(value);
+					break;
 				case 'data_dir':
 					this.state.options['data_dir'] = value;
 					break;
@@ -1721,7 +1724,7 @@ State.prototype.cleanUp = function() {
 	this.order = undefined;
 	this.replay = null;
 	this.fogPlayer = undefined;
-	this.aistatePlayer = undefined;
+    // this.aistatePlayer = undefined;
 	this.time = 0;
 	this.shiftX = 0;
 	this.shiftY = 0;
