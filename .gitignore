@@ -1,0 +1,14 @@
+_*
+._*
+*~
+\#*
+.\#*
+TAGS
+*.tmp
+tmp/
+*.err
+*.log
+nohup.out
+build.out
+.DS_Store
+
