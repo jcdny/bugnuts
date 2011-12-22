@@ -278,9 +278,7 @@ func (s *SymData) UpdateSymmetryData(cutoff int64) {
 			} else {
 				tile.Ignore = true
 			}
-			if false {
-				VizSymTile(s.ToPoints(tile.Locs), valid)
-			}
+			VizSymTile(s.ToPoints(tile.Locs), valid)
 		}
 	}
 

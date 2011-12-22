@@ -21,7 +21,7 @@ export MAP9="cell_maze_p04_03"
 export MAP10="cell_maze_p06_04"
 export MAPT="test"
 
-export MAP=$MAP2
+export MAP=$MAPT
 export MAPFILE="$MAPS/${MAP}.map"
 echo $MAPFILE
 
@@ -46,5 +46,4 @@ $TOOLS/playgame.py \
     --cutoff_turn 150 \
     --cutoff_percent 0.85 \
     "${BB}8" \
-    "${BB}7" \
-    "python $TOOLS/dist/sample_bots/python/HunterBot.py" \
+    "python $TOOLS/dist/sample_bots/python/HoldBot.py"
