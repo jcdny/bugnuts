@@ -21,6 +21,7 @@ type Torus struct {
 // A Location is a linear index to the torus position.
 type Location int
 
+// Sorter for locations
 type LocationSlice []Location
 
 func (p LocationSlice) Len() int           { return len(p) }
@@ -32,13 +33,13 @@ func (t *Torus) Size() int {
 	return t.Rows * t.Cols
 }
 
-// ToLocation converts a Point into a Location
+// ToLocation converts a Point into a Location.
 func (t *Torus) ToLocation(p Point) Location {
 	p = t.Donut(p)
 	return Location(p.R*t.Cols + p.C)
 }
 
-// ToPoint converts a Location into a Point
+// ToPoint converts a Location into a Point.
 func (t *Torus) ToPoint(l Location) (p Point) {
 	p = Point{R: int(l) / t.Cols, C: int(l) % t.Cols}
 

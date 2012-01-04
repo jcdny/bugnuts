@@ -9,6 +9,7 @@ import (
 	. "bugnuts/util"
 )
 
+// Rot determines the rotation origin for a pair of points where p2 is a 90 degree rotation from p1.
 func (t *Torus) Rot(p1, p2 Point, sym int) (orig Point) {
 	var r0, c0 int
 	if sym == 3 {
@@ -34,15 +35,17 @@ func (t *Torus) Rot(p1, p2 Point, sym int) (orig Point) {
 	return
 }
 
+// ReflectRM1 computes the reflection of p1 across origin o.
 func (t Torus) ReflectRM1(p1 Point, o int) Point {
 	return t.Donut(Point{p1.C - o, p1.R + o})
 }
 
+// ReflectRM2 computes the reflection of p1 across origin o.
 func (t Torus) ReflectRM2(p1 Point, o int) Point {
 	return t.Donut(Point{o - p1.C, o - p1.R})
 }
 
-// Either vert or horiz diagonal
+// Diag computes the origin of a pair of points which are diagonal mirrorings.
 func (t *Torus) Diag(p1, p2 Point, sym int) (orig int) {
 	orig = -1
 	if sym == 6 {
