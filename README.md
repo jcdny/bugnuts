@@ -1,6 +1,6 @@
 # [Bugnuts Bot](http://aichallenge.org/profile.php?user=33)
 
-My code for the [AI Challege 2011](http://aichallenge.org)
+My code for the [AI Challenge 2011](http://aichallenge.org)
 
 A Go learning experience...
 
